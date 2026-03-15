@@ -1,0 +1,150 @@
+@import '../../styles/variables.scss';
+
+.profile-page {
+  &__guest-card {
+    margin: 24rpx 32rpx;
+    padding: 40rpx 32rpx;
+    background: $color-white;
+    border-radius: $radius-lg;
+    border: 1rpx solid $color-border;
+  }
+
+  &__section-label {
+    display: block;
+    font-size: $font-xs;
+    color: $color-caption;
+    margin-bottom: 16rpx;
+  }
+
+  &__guest-title {
+    display: block;
+    font-size: $font-lg;
+    color: $color-title;
+    font-weight: 700;
+    margin-bottom: 12rpx;
+  }
+
+  &__guest-desc {
+    display: block;
+    font-size: $font-sm;
+    color: $color-body;
+    line-height: 1.7;
+    margin-bottom: 28rpx;
+  }
+
+  &__secondary-btn {
+    margin-top: 16rpx;
+  }
+
+  &__summary {
+    margin: 24rpx 32rpx;
+  }
+
+  &__summary-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16rpx;
+    margin-bottom: 16rpx;
+  }
+
+  &__company-name {
+    flex: 1;
+    font-size: 36rpx;
+    font-weight: 600;
+    color: $color-title;
+    line-height: 1.4;
+  }
+
+  &__badge {
+    font-size: $font-xs;
+    padding: 8rpx 16rpx;
+    background: $color-primary-bg;
+    color: $color-primary;
+    border-radius: 999rpx;
+  }
+
+  &__summary-desc {
+    display: block;
+    font-size: $font-sm;
+    color: $color-body;
+    line-height: 1.7;
+  }
+
+  &__status-card {
+    margin: 0 32rpx 24rpx;
+  }
+
+  &__status-title {
+    display: block;
+    font-size: $font-base;
+    color: $color-title;
+    font-weight: 600;
+    margin-bottom: 12rpx;
+  }
+
+  &__status-desc {
+    display: block;
+    font-size: $font-sm;
+    color: $color-body;
+    line-height: 1.7;
+    margin-bottom: 24rpx;
+  }
+
+  &__status-card--pending {
+    background: $color-warning-bg;
+  }
+
+  &__status-card--rejected {
+    background: $color-error-bg;
+  }
+
+  &__status-card--none {
+    background: $color-primary-bg;
+  }
+
+  &__status-card--approved {
+    background: $color-primary-bg;
+  }
+
+  &__menu {
+    background: $color-white;
+    margin: 0 32rpx 24rpx;
+    border-radius: 16rpx;
+    overflow: hidden;
+  }
+  &__item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 32rpx;
+    font-size: 32rpx;
+    color: $color-title;
+    border-bottom: 1rpx solid $color-border;
+    &:last-child { border-bottom: none; }
+  }
+
+  &__info {
+    margin: 0 32rpx 24rpx;
+  }
+
+  &__row {
+    display: block;
+    padding: 16rpx 0;
+    font-size: 28rpx;
+    color: $color-body;
+  }
+  &__logout {
+    margin: 48rpx 32rpx;
+    padding: 24rpx;
+    text-align: center;
+    font-size: 32rpx;
+    color: $color-error;
+  }
+  &__version {
+    display: block;
+    text-align: center;
+    padding: 24rpx;
+    font-size: 24rpx;
+  }
+}

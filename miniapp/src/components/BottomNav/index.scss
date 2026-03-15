@@ -1,0 +1,38 @@
+@import '../../styles/variables.scss';
+
+.bottom-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 80;
+  background: $color-white;
+  border-top: 1rpx solid $color-border;
+  padding-bottom: calc(env(safe-area-inset-bottom) + 8rpx);
+
+  &__inner {
+    display: flex;
+  }
+
+  &__item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8rpx;
+    padding: 18rpx 0 14rpx;
+
+    &--active {
+      .bottom-nav__label {
+        color: $color-primary;
+      }
+    }
+  }
+
+  &__label {
+    font-size: $font-xs;
+    color: $color-caption;
+    line-height: 1;
+  }
+}

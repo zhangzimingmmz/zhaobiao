@@ -1,0 +1,34 @@
+@import '../../styles/variables.scss';
+
+.primary-tabs {
+  display: flex;
+  background: $color-white;
+  border-bottom: 1rpx solid $color-border;
+  padding: 0 20rpx;
+
+  &__item {
+    flex: 1;
+    padding: 28rpx 0 22rpx;
+    text-align: center;
+    font-size: $font-base;
+    color: $color-body;
+    position: relative;
+    font-weight: 500;
+
+    &--active {
+      color: $color-primary;
+      font-weight: 600;
+
+      &::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 4rpx;
+        background: $color-primary;
+        border-radius: 999rpx;
+      }
+    }
+  }
+}

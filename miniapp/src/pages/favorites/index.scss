@@ -1,0 +1,43 @@
+@import '../../styles/variables.scss';
+
+.favorites-page {
+  &__content {
+    padding: 24rpx 32rpx 32rpx;
+  }
+
+  &__banner {
+    margin-bottom: 24rpx;
+    padding: 32rpx;
+    background: $color-white;
+    border-radius: $radius-lg;
+    border: 1rpx solid $color-border;
+  }
+
+  &__banner-title {
+    display: block;
+    font-size: $font-base;
+    color: $color-title;
+    font-weight: 600;
+    margin-bottom: 16rpx;
+  }
+
+  &__banner-desc {
+    display: block;
+    font-size: $font-sm;
+    color: $color-body;
+    line-height: 1.7;
+    margin-bottom: 20rpx;
+  }
+
+  &__banner-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16rpx 28rpx;
+    background: $color-primary-bg;
+    border-radius: 999rpx;
+    color: $color-primary;
+    font-size: $font-sm;
+    font-weight: 600;
+  }
+}

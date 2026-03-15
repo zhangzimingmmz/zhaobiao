@@ -1,0 +1,40 @@
+# syntax=docker/dockerfile:1.7
+
+FROM python:3.12-slim
+
+ARG TARGETARCH
+ARG SUPERCRONIC_VERSION=v0.2.36
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PYTHONPATH=/app
+
+WORKDIR /app
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates curl \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY server/requirements.txt /tmp/server-requirements.txt
+COPY crawler/requirements.txt /tmp/crawler-requirements.txt
+
+RUN python -m pip install --upgrade pip \
+    && python -m pip install -r /tmp/server-requirements.txt -r /tmp/crawler-requirements.txt
+
+RUN case "${TARGETARCH}" in \
+        amd64) SUPERCRONIC_ARCH="amd64" ;; \
+        arm64) SUPERCRONIC_ARCH="arm64" ;; \
+        *) echo "Unsupported TARGETARCH: ${TARGETARCH}" >&2; exit 1 ;; \
+    esac \
+    && curl -fsSL \
+        "https://github.com/aptible/supercronic/releases/download/${SUPERCRONIC_VERSION}/supercronic-linux-${SUPERCRONIC_ARCH}" \
+        -o /usr/local/bin/supercronic \
+    && chmod +x /usr/local/bin/supercronic
+
+COPY . /app
+
+RUN chmod +x /app/scripts/docker/api-entrypoint.sh
+
+ENTRYPOINT ["/app/scripts/docker/api-entrypoint.sh"]
+CMD ["python", "-m", "uvicorn", "server.main:app", "--host", "0.0.0.0", "--port", "8000"]

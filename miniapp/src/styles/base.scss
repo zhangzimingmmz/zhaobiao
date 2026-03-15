@@ -1,0 +1,94 @@
+@import './variables.scss';
+
+/* 基础布局与字号、圆角等通用样式类 */
+.page {
+  min-height: 100vh;
+  background: $color-bg;
+  box-sizing: border-box;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.page--tab {
+  padding-bottom: calc(124rpx + env(safe-area-inset-bottom));
+}
+
+.page--secondary {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.secondary-page {
+  &__body {
+    padding: 32rpx;
+  }
+
+  &__intro {
+    margin-bottom: 32rpx;
+  }
+
+  &__eyebrow {
+    display: block;
+    margin-bottom: 12rpx;
+    font-size: $font-xs;
+    font-weight: 600;
+    color: $color-primary;
+    letter-spacing: 1rpx;
+  }
+
+  &__title {
+    display: block;
+    font-size: $font-2xl;
+    font-weight: 700;
+    color: $color-title;
+    line-height: 1.3;
+  }
+
+  &__desc {
+    display: block;
+    margin-top: 16rpx;
+    font-size: $font-sm;
+    color: $color-caption;
+    line-height: 1.6;
+  }
+}
+
+.secondary-card {
+  background: $color-white;
+  border-radius: $radius-lg;
+  border: 1rpx solid $color-border;
+  box-shadow: 0 12rpx 32rpx rgba(15, 35, 95, 0.06);
+}
+
+.page-content {
+  padding: 32rpx;
+}
+
+.text-title { color: $color-title; font-size: $font-lg; font-weight: 500; }
+.text-body { color: $color-body; font-size: $font-body; }
+.text-caption { color: $color-caption; font-size: $font-sm; }
+.text-primary { color: $color-primary; }
+.text-wechat { color: $color-wechat; }
+
+.card {
+  background: $color-white;
+  border-radius: $radius-lg;
+  padding: 32rpx;
+  margin-bottom: 24rpx;
+}
+
+.btn-primary {
+  background: $color-primary;
+  color: $color-white;
+  border-radius: $radius-md;
+  padding: 24rpx 32rpx;
+  font-size: $font-base;
+  text-align: center;
+}
+
+.btn-wechat {
+  background: $color-wechat;
+  color: $color-white;
+  border-radius: $radius-md;
+  padding: 24rpx 32rpx;
+  font-size: $font-base;
+  text-align: center;
+}

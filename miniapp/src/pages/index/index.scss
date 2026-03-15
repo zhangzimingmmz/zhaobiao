@@ -1,0 +1,11 @@
+@import '../../styles/variables.scss';
+
+.index-page {
+  &__content {
+    min-height: calc(100vh - 124rpx - env(safe-area-inset-bottom));
+  }
+
+  &__list {
+    padding: 24rpx 32rpx 32rpx;
+  }
+}

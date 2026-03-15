@@ -1,0 +1,36 @@
+# miniapp-login-ui Specification
+
+## Purpose
+TBD - created by archiving change fix-miniapp-login-registration-flow. Update Purpose after archive.
+## Requirements
+### Requirement: 移除误导性的"去注册"按钮
+登录页面 SHALL 移除"没有企业账号？去注册"按钮及其对应的点击处理函数，避免用户陷入死循环。
+
+#### Scenario: 登录页面不显示"去注册"按钮
+- **WHEN** 用户打开登录页面
+- **THEN** 页面不显示"没有企业账号？去注册"按钮
+- **THEN** 页面不包含 `handleRegister` 函数
+
+### Requirement: 显示清晰的注册流程提示
+登录页面 SHALL 显示清晰的提示文案，告知首次使用用户登录后需要完成企业认证。
+
+#### Scenario: 显示注册流程提示文案
+- **WHEN** 用户打开登录页面
+- **THEN** 页面在登录按钮下方显示提示文案："首次使用？登录后系统将引导你完成企业认证"
+- **THEN** 提示文案使用次要文本样式（text-caption 或类似样式）
+
+### Requirement: 保持其他登录页面功能不变
+登录页面 SHALL 保持手机号输入、验证码获取、登录按钮等现有功能不变。
+
+#### Scenario: 手机号和验证码输入功能正常
+- **WHEN** 用户在登录页面操作
+- **THEN** 用户可以输入手机号
+- **THEN** 用户可以点击"获取验证码"按钮
+- **THEN** 用户可以输入验证码
+- **THEN** 用户可以点击"登录"按钮
+
+#### Scenario: 用户协议和隐私政策链接保持不变
+- **WHEN** 用户查看登录页面底部
+- **THEN** 页面显示"登录即表示同意《用户协议》与《隐私政策》"文案
+- **THEN** 文案样式和位置保持不变
+

@@ -1,0 +1,144 @@
+import { useState, useEffect } from 'react'
+import { View, Text, ScrollView, RichText } from '@tarojs/components'
+import Taro from '@tarojs/taro'
+import TopBar from '../../components/TopBar'
+import { api } from '../../services/api'
+import {
+  inferFavoritesType,
+  isFavoriteRecord,
+  removeFavoriteRecord,
+  saveFavoriteRecord,
+} from '../../utils/favorites'
+import './index.scss'
+
+export default function Detail() {
+  const [detail, setDetail] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [favorited, setFavorited] = useState(false)
+  const id = Taro.getCurrentInstance().router?.params?.id || ''
+
+  useEffect(() => {
+    if (!id) {
+      setLoading(false)
+      return
+    }
+    api.detailBid(id)
+      .then((res) => {
+        if (res.data && res.data.code === 200 && res.data.data) {
+          setDetail(res.data.data)
+          setFavorited(isFavoriteRecord(res.data.data.id, 'bid'))
+        }
+      })
+      .catch(() => setDetail(null))
+      .finally(() => setLoading(false))
+  }, [id])
+
+  const handleViewOriginal = () => {
+    if (detail && detail.originUrl) {
+      Taro.navigateTo({
+        url: '/pages/webview/index?url=' + encodeURIComponent(detail.originUrl),
+      })
+    }
+  }
+
+  const handleFavoriteToggle = () => {
+    if (!detail) return
+
+    if (favorited) {
+      removeFavoriteRecord(detail.id, 'bid')
+      setFavorited(false)
+      Taro.showToast({ title: '已取消收藏', icon: 'none' })
+      return
+    }
+
+    const favoritesType =
+      detail.categoryNum
+        ? inferFavoritesType(detail)
+        : detail.planId || /采购/.test(detail.categoryName || detail.title || '')
+          ? 'government'
+          : 'construction'
+
+    saveFavoriteRecord(detail, { viewType: 'bid', favoritesType })
+    setFavorited(true)
+    Taro.showToast({ title: '已加入收藏', icon: 'none' })
+  }
+
+  const structuredRows = detail
+    ? [
+        ['预算金额', detail.budget],
+        ['地点', detail.location],
+        ['招标人/采购人', detail.tenderer],
+        ['代理机构', detail.agency],
+        ['报名开始', detail.enrollStart],
+        ['报名截止', detail.enrollEnd],
+        ['开标时间', detail.openTime],
+      ].filter(([, value]) => !!value)
+    : []
+
+  if (loading) {
+    return (
+      <View className="page page--secondary detail-page">
+        <TopBar title="招投标详情" showBack right="favorite" variant="secondary" />
+        <View className="detail-page__loading"><Text>加载中...</Text></View>
+      </View>
+    )
+  }
+  if (!detail) {
+    return (
+      <View className="page page--secondary detail-page">
+        <TopBar title="招投标详情" showBack variant="secondary" />
+        <View className="detail-page__empty"><Text>暂无详情</Text></View>
+      </View>
+    )
+  }
+
+  return (
+    <View className="page page--secondary detail-page">
+      <TopBar
+        title="招投标详情"
+        showBack
+        right={favorited ? 'favorite-active' : 'favorite'}
+        variant="secondary"
+        onRight={handleFavoriteToggle}
+      />
+      <ScrollView scrollY className="detail-page__scroll">
+        <View className="secondary-card detail-card">
+          {detail.categoryName && <Text className="detail-card__tag">{detail.categoryName}</Text>}
+          <Text className="detail-card__title">{detail.title}</Text>
+          {detail.publishTime && (
+            <Text className="detail-card__time">发布时间：{detail.publishTime}</Text>
+          )}
+          <View className="detail-card__actions">
+            {detail.originUrl && (
+              <View className="btn-primary detail-card__action" onClick={handleViewOriginal}>
+                查看原文
+              </View>
+            )}
+            {!detail.originUrl && detail.sourceSiteName && (
+              <Text className="detail-card__source">来源：{detail.sourceSiteName}</Text>
+            )}
+          </View>
+        </View>
+        {structuredRows.length > 0 && (
+          <View className="secondary-card detail-section">
+            <Text className="detail-section__label">关键信息</Text>
+            {structuredRows.map(([label, value]) => (
+              <View className="detail-section__item" key={label}>
+                <Text className="detail-section__item-label">{label}</Text>
+                <Text className="detail-section__item-value">{value}</Text>
+              </View>
+            ))}
+          </View>
+        )}
+        <View className="secondary-card detail-section">
+          <Text className="detail-section__label">公告正文</Text>
+          {detail.content ? (
+            <RichText className="detail-section__content" nodes={detail.content} />
+          ) : (
+            <Text className="detail-section__empty">暂无正文内容</Text>
+          )}
+        </View>
+      </ScrollView>
+    </View>
+  )
+}

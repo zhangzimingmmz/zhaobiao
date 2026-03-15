@@ -1,0 +1,30 @@
+@import '../../styles/variables.scss';
+
+.empty-state {
+  padding: 72rpx 32rpx;
+  text-align: center;
+  background: $color-white;
+  border: 1rpx solid $color-border;
+  border-radius: $radius-lg;
+
+  &--error {
+    .empty-state__title {
+      color: $color-error;
+    }
+  }
+
+  &__title {
+    display: block;
+    font-size: $font-base;
+    color: $color-title;
+    font-weight: 600;
+    margin-bottom: 12rpx;
+  }
+
+  &__description {
+    display: block;
+    font-size: $font-sm;
+    color: $color-caption;
+    line-height: 1.6;
+  }
+}

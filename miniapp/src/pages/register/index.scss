@@ -1,0 +1,46 @@
+@import '../../styles/variables.scss';
+
+.register-page {
+  &__body {
+    padding-top: 40rpx;
+  }
+
+  &__intro {
+    margin-bottom: 28rpx;
+  }
+
+  &__tip {
+    background: $color-primary-bg;
+    padding: 24rpx;
+    border-radius: 12rpx;
+    margin-bottom: 32rpx;
+    font-size: 28rpx;
+    color: $color-body;
+  }
+
+  &__form {
+    padding: 28rpx;
+  }
+
+  &__input {
+    width: 100%;
+    height: 88rpx;
+    padding: 0 24rpx;
+    margin-bottom: 24rpx;
+    background: $color-white;
+    border: 1rpx solid $color-border;
+    border-radius: 12rpx;
+    box-sizing: border-box;
+    font-size: 32rpx;
+  }
+  &__input--multiline {
+    height: 120rpx;
+    padding-top: 24rpx;
+  }
+
+  &__submit {
+    width: 100%;
+    height: 88rpx;
+    line-height: 88rpx;
+  }
+}

@@ -1,0 +1,9 @@
+CRON_TZ=Asia/Shanghai
+
+# site1 routine windows
+5 */2 * * * python /app/scripts/scheduler_submit.py site1.incremental
+40 3 * * * python /app/scripts/scheduler_submit.py site1.recovery
+
+# site2 routine windows
+20 */2 * * * python /app/scripts/scheduler_submit.py site2.incremental
+0 6 * * * python /app/scripts/scheduler_submit.py site2.recovery

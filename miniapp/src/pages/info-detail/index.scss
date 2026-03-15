@@ -1,0 +1,83 @@
+@import '../../styles/variables.scss';
+
+.info-detail-page {
+  min-height: 100vh;
+
+  &__loading, &__empty {
+    padding: 80rpx;
+    text-align: center;
+    color: $color-caption;
+  }
+  &__scroll {
+    height: calc(100vh - var(--top-bar-height, 88rpx));
+  }
+
+}
+
+.info-detail__head {
+  padding: 32rpx;
+  margin: 24rpx 32rpx;
+}
+
+.info-detail__title {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: $color-title;
+  line-height: 1.5;
+  display: block;
+  margin-bottom: 16rpx;
+}
+
+.info-detail__time {
+  font-size: 28rpx;
+  color: $color-caption;
+}
+
+.info-detail__head-actions {
+  margin-top: 16rpx;
+}
+
+.info-detail__head-action {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.info-detail__head-source {
+  display: block;
+  font-size: 24rpx;
+  color: $color-caption;
+}
+
+.info-detail__summary {
+  padding: 24rpx 32rpx;
+  margin: 0 32rpx 24rpx;
+  font-size: 28rpx;
+  color: $color-body;
+  line-height: 1.6;
+}
+
+.info-detail__body {
+  padding: 32rpx;
+  margin: 0 32rpx 24rpx;
+}
+
+.info-detail__body-label {
+  display: block;
+  margin-bottom: 20rpx;
+  font-size: $font-base;
+  font-weight: 600;
+  color: $color-title;
+}
+
+.info-detail__content {
+  font-size: 28rpx;
+  color: $color-body;
+  line-height: 1.6;
+}
+
+.info-detail__empty {
+  font-size: $font-sm;
+  color: $color-caption;
+}

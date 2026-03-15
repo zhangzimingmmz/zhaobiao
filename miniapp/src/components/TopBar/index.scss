@@ -1,0 +1,101 @@
+@import '../../styles/variables.scss';
+
+.top-bar {
+  box-sizing: border-box;
+
+  &__inner {
+    display: flex;
+    align-items: center;
+    box-sizing: border-box;
+    position: relative;
+  }
+
+  &__title {
+    display: block;
+  }
+
+  &--tab {
+    background: $color-white;
+    border-bottom: 1rpx solid $color-border;
+    color: $color-title;
+  }
+
+  &__inner--tab {
+    padding-left: 32rpx;
+  }
+
+  &__title--tab {
+    font-size: $font-xl;
+    font-weight: 700;
+    color: $color-title;
+  }
+
+  &--secondary {
+    background: $color-white;
+    color: $color-title;
+    border-bottom: 1rpx solid $color-border;
+  }
+
+  &__inner--secondary {
+    padding-left: 24rpx;
+  }
+
+  &__side {
+    display: flex;
+    align-items: center;
+    min-width: 120rpx;
+    z-index: 2;
+  }
+
+  &__side--right {
+    margin-left: auto;
+    justify-content: flex-end;
+  }
+
+  &__title--secondary {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    max-width: calc(100% - 280rpx);
+    font-size: $font-base;
+    font-weight: 600;
+    color: $color-title;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__back {
+    display: flex;
+    align-items: center;
+    padding: 16rpx 12rpx 16rpx 0;
+  }
+
+  &__back-text {
+    font-size: $font-sm;
+    color: $color-body;
+  }
+
+  &__right {
+    width: 56rpx;
+    height: 56rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 18rpx;
+    background: transparent;
+  }
+
+  &__right--active {
+    background: $color-primary-bg;
+  }
+
+  &__right-text {
+    font-size: $font-sm;
+    color: $color-primary;
+  }
+
+  &__legacy-actions {
+    display: none;
+  }
+}

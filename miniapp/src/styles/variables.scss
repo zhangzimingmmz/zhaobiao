@@ -1,0 +1,41 @@
+/* 设计 token，与当前小程序样式体系一致 */
+
+/* 主色（政务蓝） */
+$color-primary: #1677FF;
+$color-primary-bg: #E6F4FF;
+$color-primary-border: #91CAFF;
+$color-primary-deep: #0958d9;
+
+/* 中性色 */
+$color-title: #1D2129;
+$color-body: #4E5969;
+$color-caption: #86909C;
+$color-border: #E5E7EB;
+$color-bg: #F7F8FA;
+$color-white: #FFFFFF;
+
+/* 功能色 */
+$color-success: #52C41A;
+$color-success-bg: #E6F7ED;
+$color-warning: #FA8C16;
+$color-warning-bg: #FFF7E6;
+$color-error: #FF4D4F;
+$color-error-bg: #FFF1F0;
+
+/* 微信绿 */
+$color-wechat: #07C160;
+$color-wechat-hover: #06AD56;
+
+/* 字号 (rpx 约等于 750 设计稿下 1px = 2rpx) */
+$font-2xl: 48rpx;   /* 24px */
+$font-xl: 40rpx;    /* 20px */
+$font-lg: 36rpx;    /* 18px */
+$font-base: 32rpx;  /* 16px */
+$font-body: 30rpx;  /* 15px */
+$font-sm: 28rpx;    /* 14px */
+$font-xs: 24rpx;    /* 12px */
+
+/* 圆角 */
+$radius-md: 12rpx;
+$radius-lg: 16rpx;
+$radius-xl: 24rpx;

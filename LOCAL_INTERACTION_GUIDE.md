@@ -165,6 +165,31 @@ sqlite3 data/notices.db "SELECT * FROM enterprise_applications WHERE user_id='<u
 - 检查 backfill / reconcile 参数是否超出允许范围
 - 检查目标站点是否已有 `queued` 或 `running` 的控制面任务
 
+### 采集任务失败
+
+常见原因：
+
+1. 代理配置问题
+   - 检查 `crawler/site2/config.py` 中的代理认证信息
+   - 查看日志是否有 `ProxyError` 或 `Failed to extract proxy` 错误
+   - 确认代理账号余额充足且未过期
+
+2. 验证码识别失败
+   - 查看日志中的验证码识别错误
+   - 验证码服务可能暂时不可用
+
+3. 网络连接问题
+   - 确认服务器可以访问目标站点
+   - 检查代理服务商 API 是否可用
+
+查看采集日志：
+
+```bash
+# 查看最近的采集任务日志
+ls -lt logs/admin-crawl/
+tail -f logs/admin-crawl/run_<run_id>.log
+```
+
 ### 当前没有 Web 页面可访问
 
 这是预期行为。`ui` 样例工程已经退役，当前仓库保留的是服务端管理接口，而不是正式 Web 管理后台前端。

@@ -23,6 +23,7 @@
 ### 配置来源
 
 - 环境变量：`.env.backend`；API 需 `NOTICES_DB`、`JWT_SECRET`、`ADMIN_TOKEN` 等；admin-frontend 需 `ADMIN_FRONTEND_API_BASE` 指向 API 公网地址。
+- IP 池配置：`crawler/site2/config.py` 中的 `PROXY_EXTRACT_URL`、`PROXY_USER`、`PROXY_PASS` 用于配置青果短效代理的认证信息。
 
 ### 日志与监控
 
@@ -50,6 +51,8 @@
 
 - API 单实例：同一时间只处理一个 run；查看 API 日志与 `logs/admin-crawl/` 对应 run 日志。
 - site2 依赖代理与验证码：代理不可用或验证码失败会导致失败，需检查网络与站点可访问性。
+- IP 池配置问题：检查 `crawler/site2/config.py` 中的代理认证信息是否正确，青果短效代理 IP 有效期为 60 秒，系统会在 50 秒时主动轮换。
+- 代理提取失败：查看日志中是否有 `ProxyError`、`RemoteDisconnected` 等错误，可能是代理服务不可用或认证信息过期。
 
 ### 管理端 403
 

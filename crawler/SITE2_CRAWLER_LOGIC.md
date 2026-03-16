@@ -96,6 +96,28 @@
 - 验证码大概率与当前会话绑定
 - 不应在同一个采集窗口中频繁更换 cookie jar
 
+### 3.4 代理配置
+
+site2 采集使用青果短效代理服务，配置位于 `crawler/site2/config.py`：
+
+- `PROXY_EXTRACT_URL`：代理提取接口，包含 key 参数用于认证
+- `PROXY_USER`：代理认证用户名（对应 authkey）
+- `PROXY_PASS`：代理认证密码（对应 authpwd）
+- `SESSION_TTL`：会话生存时间，默认 50 秒（青果短效代理有效期 60 秒）
+
+代理特性：
+
+- 短效代理 IP 有效期为 60 秒
+- 系统在 50 秒时主动轮换 session，避免代理过期错误
+- 同一 session 在有效期内可复用，减少 IP 消耗
+- 代理提取失败会重试最多 8 次（`PROXY_EXTRACT_ATTEMPTS`）
+
+更新代理配置：
+
+1. 修改 `crawler/site2/config.py` 中的认证信息
+2. 重新构建后端镜像：`docker compose -f docker-compose.backend.yml build --no-cache`
+3. 重启服务：`docker compose -f docker-compose.backend.yml up -d`
+
 ## 4. 固定参数
 
 ### 4.1 站点参数

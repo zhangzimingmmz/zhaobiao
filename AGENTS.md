@@ -68,6 +68,7 @@
 
 ## 3. 关键约定速查
 
+- **提交代码前**：先 `git pull --rebase` 拉取最新代码，避免推送冲突。可安装 pre-push hook 自动执行：`cp scripts/git-hooks/pre-push .git/hooks/pre-push && chmod +x .git/hooks/pre-push`。
 - **API 入口**：`uvicorn server.main:app`，默认 8000；健康探测 `GET /openapi.json`。
 - **数据库**：SQLite，路径由 `NOTICES_DB` 指定，默认 `data/notices.db`。
 - **生产部署**：100.64.0.5 运行 Docker Compose；100.64.0.7 运行 Traefik 转发至 100.64.0.5:8000、100.64.0.5:8091。

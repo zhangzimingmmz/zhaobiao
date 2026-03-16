@@ -1,0 +1,31 @@
+#!/bin/sh
+# 推送前先拉取最新代码，避免冲突
+# 若 pull 有冲突，推送会中止，需先本地解决冲突
+#
+# 安装: cp scripts/git-hooks/pre-push .git/hooks/pre-push && chmod +x .git/hooks/pre-push
+
+remote="$1"
+url="$2"
+
+# 获取当前分支名
+branch=$(git symbolic-ref --short HEAD 2>/dev/null)
+[ -z "$branch" ] && exit 0
+
+# 若有未暂存或未提交的修改，pull --rebase 会失败，先提示
+if ! git diff-index --quiet HEAD -- 2>/dev/null; then
+  echo ">>> 存在未提交的修改，无法执行 pull --rebase。"
+  echo "    请先 git add/commit 或 git stash，再 git push"
+  exit 1
+fi
+
+echo ">>> 推送前拉取最新代码 (git pull --rebase $remote $branch)..."
+if ! git pull --rebase "$remote" "$branch" 2>&1; then
+  echo ""
+  echo ">>> 拉取失败，可能存在冲突。请先解决冲突后执行："
+  echo "    git rebase --continue   # 或 git rebase --abort 取消"
+  echo "    然后再次 git push"
+  exit 1
+fi
+
+echo ">>> 拉取完成，继续推送..."
+exit 0

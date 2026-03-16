@@ -17,13 +17,29 @@ export default {
     navigationBarTextStyle: 'white',
   },
   tabBar: {
-    color: '#86909C',
+    color: '#4E5969',
     selectedColor: '#1677FF',
     backgroundColor: '#fff',
+    borderStyle: 'black',
     list: [
-      { pagePath: 'pages/index/index', text: '首页' },
-      { pagePath: 'pages/favorites/index', text: '收藏' },
-      { pagePath: 'pages/profile/index', text: '我的' },
+      { 
+        pagePath: 'pages/index/index', 
+        text: '首页',
+        iconPath: 'assets/tabbar/home.png',
+        selectedIconPath: 'assets/tabbar/home-active.png'
+      },
+      { 
+        pagePath: 'pages/favorites/index', 
+        text: '收藏',
+        iconPath: 'assets/tabbar/favorites.png',
+        selectedIconPath: 'assets/tabbar/favorites-active.png'
+      },
+      { 
+        pagePath: 'pages/profile/index', 
+        text: '我的',
+        iconPath: 'assets/tabbar/profile.png',
+        selectedIconPath: 'assets/tabbar/profile-active.png'
+      },
     ],
   },
 }

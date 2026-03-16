@@ -81,31 +81,43 @@ export default function AuditStatus() {
         </View>
         <View className={'secondary-card audit-status audit-status--' + status}>
           {status === 'pending' && (
-            <View className="audit-status__timeline">
-              <View className="audit-status__step audit-status__step--done">
-                <Text className="audit-status__step-label">注册资料已提交</Text>
-                <Text className="audit-status__step-help">账号和企业资料已经进入审核队列</Text>
+            <>
+              <View className="audit-status__progress">
+                <View className="audit-status__progress-bar">
+                  <View className="audit-status__progress-step audit-status__progress-step--done">
+                    <View className="audit-status__progress-dot">✓</View>
+                    <Text className="audit-status__progress-label">提交资料</Text>
+                  </View>
+                  <View className="audit-status__progress-line audit-status__progress-line--active" />
+                  <View className="audit-status__progress-step audit-status__progress-step--active">
+                    <View className="audit-status__progress-dot">●</View>
+                    <Text className="audit-status__progress-label">审核中</Text>
+                  </View>
+                  <View className="audit-status__progress-line" />
+                  <View className="audit-status__progress-step">
+                    <View className="audit-status__progress-dot">○</View>
+                    <Text className="audit-status__progress-label">开通</Text>
+                  </View>
+                </View>
               </View>
-              <View className="audit-status__step audit-status__step--current">
-                <Text className="audit-status__step-label">平台审核中</Text>
-                <Text className="audit-status__step-help">审核通过后才能使用账号密码登录</Text>
+              
+              <View className="audit-status__current">
+                <Text className="audit-status__current-title">当前状态：平台审核中</Text>
+                <Text className="audit-status__current-desc">审核通过后才能使用账号密码登录</Text>
               </View>
-              <View className="audit-status__step">
-                <Text className="audit-status__step-label">开通登录</Text>
-                <Text className="audit-status__step-help">通过后即可前往登录页</Text>
-              </View>
-            </View>
+            </>
           )}
 
-          {data && (data.username || data.creditCode || data.auditTime) && (
-            <View className="audit-status__summary">
-              {data.username && <Text className="audit-status__summary-row">登录名：{data.username}</Text>}
-              {data.mobile && <Text className="audit-status__summary-row">注册手机号：{data.mobile}</Text>}
-              {data.creditCode && <Text className="audit-status__summary-row">营业执照代码：{data.creditCode}</Text>}
-              {data.legalPersonName && <Text className="audit-status__summary-row">法人姓名：{data.legalPersonName}</Text>}
-              {data.businessAddress && <Text className="audit-status__summary-row">经营场所地址：{data.businessAddress}</Text>}
-              {data.createdAt && <Text className="audit-status__summary-row">提交时间：{data.createdAt}</Text>}
-              {data.auditTime && <Text className="audit-status__summary-row">审核时间：{data.auditTime}</Text>}
+          {data && (data.username || data.creditCode || data.createdAt) && (
+            <View className="audit-status__info">
+              <Text className="audit-status__info-title">📋 提交的资料</Text>
+              {data.username && <Text className="audit-status__info-row">登录名：{data.username}</Text>}
+              {data.mobile && <Text className="audit-status__info-row">手机号：{data.mobile.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2')}</Text>}
+              {data.creditCode && <Text className="audit-status__info-row">营业执照代码：{data.creditCode}</Text>}
+              {data.legalPersonName && <Text className="audit-status__info-row">法人姓名：{data.legalPersonName}</Text>}
+              {data.businessAddress && <Text className="audit-status__info-row">经营场所地址：{data.businessAddress}</Text>}
+              {data.createdAt && <Text className="audit-status__info-row">提交时间：{data.createdAt.replace('T', ' ').split('.')[0]}</Text>}
+              {data.auditTime && <Text className="audit-status__info-row">审核时间：{data.auditTime.replace('T', ' ').split('.')[0]}</Text>}
             </View>
           )}
 

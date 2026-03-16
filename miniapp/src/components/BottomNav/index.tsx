@@ -25,8 +25,8 @@ export default function BottomNav({
             >
               <AppIcon
                 name={item.icon}
-                size={38}
-                color={isActive ? '#1677FF' : '#86909C'}
+                size={56}
+                color={isActive ? '#1677FF' : '#4E5969'}
               />
               <Text className="bottom-nav__label">{item.label}</Text>
             </View>

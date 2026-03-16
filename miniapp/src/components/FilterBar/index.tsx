@@ -4,7 +4,7 @@ import './index.scss'
 
 const FILTER_MODES = {
   'engineering-engineering': {
-    placeholder: '搜索标题关键词',
+    placeholder: '搜索标题、内容和描述关键词',
     segment: true,
     buttons: [
       { key: 'time', label: '发布时间', icon: 'calendar' },
@@ -13,7 +13,7 @@ const FILTER_MODES = {
     layout: 'row',
   },
   'engineering-procurement': {
-    placeholder: '搜索标题关键词',
+    placeholder: '搜索标题、内容和描述关键词',
     buttons: [
       { key: 'time', label: '发布时间', icon: 'calendar' },
       { key: 'source', label: '交易来源', icon: 'mappin' },
@@ -39,7 +39,7 @@ const FILTER_MODES = {
     layout: 'grid',
   },
   information: {
-    placeholder: '搜索标题关键词',
+    placeholder: '搜索标题、内容和描述关键词',
     buttons: [],
     layout: 'row',
   },

@@ -36,9 +36,9 @@ const METHOD_OPTIONS = [
   { code: '1', label: '公开招标' },
   { code: '2', label: '邀请招标' },
   { code: '3', label: '竞争性谈判' },
-  { code: '4', label: '竞争性磋商' },
+  { code: '4', label: '询价' },
   { code: '5', label: '单一来源' },
-  { code: '6', label: '询价' },
+  { code: '6', label: '竞争性磋商' },
 ]
 
 const NATURE_OPTIONS = [

@@ -147,4 +147,55 @@
     padding: 24rpx;
     font-size: 24rpx;
   }
+
+  // 登录表单样式
+  &__login-section {
+    margin: 24rpx 32rpx;
+  }
+
+  &__login-intro {
+    margin-bottom: 24rpx;
+  }
+
+  &__login-form {
+    padding: 32rpx;
+  }
+
+  &__input {
+    width: 100%;
+    padding: 24rpx 0;
+    font-size: $font-base;
+    color: $color-title;
+    border-bottom: 1rpx solid $color-border;
+    margin-bottom: 24rpx;
+    
+    &::placeholder {
+      color: $color-caption;
+    }
+  }
+
+  &__login-btn {
+    width: 100%;
+    margin: 32rpx 0 24rpx;
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24rpx;
+  }
+
+  &__link {
+    font-size: $font-sm;
+    color: $color-primary;
+    text-decoration: none;
+  }
+
+  &__agreement {
+    text-align: center;
+    font-size: $font-xs;
+    color: $color-caption;
+    line-height: 1.6;
+  }
 }

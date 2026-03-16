@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
-import { View, Text } from '@tarojs/components'
+import { View, Text, Input, Button } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 import TopBar from '../../components/TopBar'
 import { api } from '../../services/api'
-import { getRegistrationContext } from '../../utils/registration'
+import { getRegistrationContext, saveRegistrationContext } from '../../utils/registration'
 import './index.scss'
 
 export default function Profile() {
@@ -12,6 +12,11 @@ export default function Profile() {
   const [auditStatus, setAuditStatus] = useState('')
   const [nextAction, setNextAction] = useState('')
   const [auditLoading, setAuditLoading] = useState(false)
+  
+  // 登录表单状态
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
+  const [loginLoading, setLoginLoading] = useState(false)
 
   useDidShow(() => {
     setIsLoggedIn(!!Taro.getStorageSync('token'))
@@ -50,6 +55,7 @@ export default function Profile() {
 
   const handleSettings = () => Taro.showToast({ title: '设置', icon: 'none' })
   const handleContact = () => Taro.showToast({ title: '联系客服', icon: 'none' })
+  
   const handleLogout = () => {
     Taro.showModal({
       title: '提示',
@@ -58,9 +64,48 @@ export default function Profile() {
         if (res.confirm) {
           Taro.removeStorageSync('token')
           setIsLoggedIn(false)
+          setUsername('')
+          setPassword('')
         }
       },
     })
+  }
+
+  const handleLogin = () => {
+    if (!username || !password) {
+      Taro.showToast({ title: '请填写登录名和密码', icon: 'none' })
+      return
+    }
+
+    setLoginLoading(true)
+    api.login({ username, password })
+      .then((res) => {
+        if (res.data?.code === 200 && res.data?.data?.token) {
+          Taro.setStorageSync('token', res.data.data.token)
+          Taro.showToast({ title: '登录成功' })
+          setIsLoggedIn(true)
+          setUsername('')
+          setPassword('')
+          return
+        }
+
+        if (res.data?.code === 403 && res.data?.data?.applicationId) {
+          saveRegistrationContext({
+            applicationId: res.data.data.applicationId,
+            username,
+          })
+          const title = res.data?.data?.status === 'rejected' ? '账号审核未通过，请重新提交资料' : '账号审核中'
+          const target =
+            res.data?.data?.status === 'rejected' ? '/pages/register/index' : '/pages/audit-status/index'
+          Taro.showToast({ title, icon: 'none', duration: 2000 })
+          setTimeout(() => Taro.redirectTo({ url: target }), 1000)
+          return
+        }
+
+        Taro.showToast({ title: res.data?.message || '登录失败', icon: 'none' })
+      })
+      .catch(() => Taro.showToast({ title: '登录失败', icon: 'none' }))
+      .finally(() => setLoginLoading(false))
   }
 
   const handleVerificationAction = () => {
@@ -97,25 +142,72 @@ export default function Profile() {
     handleVerificationAction()
   }
 
+  // 未登录状态 - 显示登录表单
   if (!isLoggedIn && !auditStatus) {
     return (
       <View className="page page--tab profile-page">
         <TopBar title="我的" variant="tab" />
-        <View className="profile-page__guest-card">
-          <Text className="profile-page__section-label">账号状态</Text>
-          <Text className="profile-page__guest-title">未登录</Text>
-          <Text className="profile-page__guest-desc">注册并审核通过后，可使用账号密码登录并查看招投标内容。</Text>
-          <View className="btn-primary" onClick={() => Taro.navigateTo({ url: '/pages/login/index' })}>
-            去登录
+        <View className="profile-page__login-section">
+          <View className="profile-page__login-intro">
+            <Text className="profile-page__section-label">账号状态</Text>
+            <Text className="profile-page__guest-title">未登录</Text>
+            <Text className="profile-page__guest-desc">
+              审核通过后使用账号密码登录，即可查看招投标内容。
+            </Text>
           </View>
-          <View className="btn-secondary profile-page__secondary-btn" onClick={() => Taro.navigateTo({ url: '/pages/register/index' })}>
-            去注册
+          
+          <View className="profile-page__login-form card">
+            <Input
+              className="profile-page__input"
+              placeholder="请输入登录名"
+              value={username}
+              onInput={(e) => setUsername(e.detail.value)}
+            />
+            <Input
+              className="profile-page__input"
+              password
+              placeholder="请输入登录密码"
+              value={password}
+              onInput={(e) => setPassword(e.detail.value)}
+            />
+            <Button 
+              className="btn-primary profile-page__login-btn" 
+              onClick={handleLogin} 
+              loading={loginLoading}
+            >
+              登录
+            </Button>
+            
+            <View className="profile-page__actions">
+              <Text 
+                className="profile-page__link" 
+                onClick={() => Taro.navigateTo({ url: '/pages/register/index' })}
+              >
+                还没有账号？去注册
+              </Text>
+              <Text 
+                className="profile-page__link" 
+                onClick={() => Taro.navigateTo({ url: '/pages/audit-status/index' })}
+              >
+                查询审核状态
+              </Text>
+            </View>
+            
+            <View className="profile-page__agreement">
+              <Text className="text-caption">登录即表示同意</Text>
+              <Text className="text-primary">《用户协议》</Text>
+              <Text className="text-caption"> 与 </Text>
+              <Text className="text-primary">《隐私政策》</Text>
+            </View>
           </View>
         </View>
+        
+        <Text className="profile-page__version text-caption">版本 0.0.1</Text>
       </View>
     )
   }
 
+  // 已登录状态 - 显示用户信息
   return (
     <View className="page page--tab profile-page">
       <TopBar title="我的" variant="tab" />

@@ -62,7 +62,7 @@ export default function Register() {
       Taro.showToast({ title: '请输入正确手机号', icon: 'none' })
       return
     }
-    if (!/^\d{18}$/.test(creditCode)) {
+    if (!/^[0-9A-Z]{18}$/.test(creditCode)) {
       Taro.showToast({ title: '请输入18位统一社会信用代码', icon: 'none' })
       return
     }

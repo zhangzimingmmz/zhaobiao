@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { apiRequest } from "../lib/api";
 import type { CrawlAction, CrawlRun } from "../lib/types";
 import { EmptyState, ErrorState, LoadingState } from "../components/States";
-import { crawlRunStatusLabel } from "../lib/statusLabels";
+import { actionKeyLabel, crawlRunStatusLabel } from "../lib/statusLabels";
 
 type ActionsResponse = { actions: CrawlAction[] };
 
@@ -79,7 +79,7 @@ export function CrawlPage({ navigate }: { navigate: (path: string) => void }) {
           <select value={actionKey} onChange={(e) => setActionKey(e.target.value)}>
             {actions.map((action) => (
               <option key={action.actionKey} value={action.actionKey}>
-                {action.actionKey}
+                {actionKeyLabel(action.actionKey)}
               </option>
             ))}
           </select>
@@ -118,7 +118,7 @@ export function CrawlPage({ navigate }: { navigate: (path: string) => void }) {
         {lastRun ? (
           <>
             <div className="metric status-text">{crawlRunStatusLabel(lastRun.status)}</div>
-            <div>{lastRun.actionKey}</div>
+            <div>{actionKeyLabel(lastRun.actionKey)}</div>
             <div className="muted">{lastRun.statusReason ?? lastRun.summary ?? "请求已提交"}</div>
             <button className="secondary-button" onClick={() => navigate(`/runs/${lastRun.id}`)}>
               打开运行详情

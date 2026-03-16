@@ -156,8 +156,9 @@ function normalizeInfoItem(item) {
     id: item.id,
     title: item.title || '',
     summary: item.summary || item.description || '',
-    publishLabel: formatListDate(item.publishTime || item.webdate || item.noticeTime || ''),
-    cover: item.cover || '',
+    publishLabel: formatListDate(item.publishTime || item.publishTime || item.webdate || item.noticeTime || ''),
+    cover: item.coverImageUrl || item.cover || '',
+    wechatArticleUrl: item.wechatArticleUrl || '',
   }
 }
 
@@ -217,36 +218,69 @@ export default function Index() {
     setList([])
     setPage(1)
     setTotal(0)
-    api.list(buildParams(1))
-      .then((res) => {
-        if (res.data && res.data.code === 200 && res.data.data) {
-          setList(res.data.data.list || [])
-          setTotal(res.data.data.total || 0)
-        } else {
-          setError(true)
-        }
-      })
-      .catch(() => setError(true))
-      .finally(() => setLoading(false))
-  }, [category, keyword, filterValues])
+    
+    // 信息展示 tab 使用文章接口
+    if (primary === 'info') {
+      api.getArticles({ page: 1, pageSize: PAGE_SIZE, category: filterValues.category?.code })
+        .then((res) => {
+          if (res.data && res.data.code === 200 && res.data.data) {
+            setList(res.data.data.list || [])
+            setTotal(res.data.data.total || 0)
+          } else {
+            setError(true)
+          }
+        })
+        .catch(() => setError(true))
+        .finally(() => setLoading(false))
+    } else {
+      api.list(buildParams(1))
+        .then((res) => {
+          if (res.data && res.data.code === 200 && res.data.data) {
+            setList(res.data.data.list || [])
+            setTotal(res.data.data.total || 0)
+          } else {
+            setError(true)
+          }
+        })
+        .catch(() => setError(true))
+        .finally(() => setLoading(false))
+    }
+  }, [category, keyword, filterValues, primary])
 
   /** 加载更多 */
   const handleLoadMore = () => {
     if (loadingMore || isEnd) return
     const nextPage = page + 1
     setLoadingMore(true)
-    api.list(buildParams(nextPage))
-      .then((res) => {
-        if (res.data && res.data.code === 200 && res.data.data) {
-          setList((prev) => [...prev, ...(res.data.data.list || [])])
-          setTotal(res.data.data.total || 0)
-          setPage(nextPage)
-        } else {
-          Taro.showToast({ title: '加载失败，请重试', icon: 'none' })
-        }
-      })
-      .catch(() => Taro.showToast({ title: '加载失败，请重试', icon: 'none' }))
-      .finally(() => setLoadingMore(false))
+    
+    // 信息展示 tab 使用文章接口
+    if (primary === 'info') {
+      api.getArticles({ page: nextPage, pageSize: PAGE_SIZE, category: filterValues.category?.code })
+        .then((res) => {
+          if (res.data && res.data.code === 200 && res.data.data) {
+            setList((prev) => [...prev, ...(res.data.data.list || [])])
+            setTotal(res.data.data.total || 0)
+            setPage(nextPage)
+          } else {
+            Taro.showToast({ title: '加载失败，请重试', icon: 'none' })
+          }
+        })
+        .catch(() => Taro.showToast({ title: '加载失败，请重试', icon: 'none' }))
+        .finally(() => setLoadingMore(false))
+    } else {
+      api.list(buildParams(nextPage))
+        .then((res) => {
+          if (res.data && res.data.code === 200 && res.data.data) {
+            setList((prev) => [...prev, ...(res.data.data.list || [])])
+            setTotal(res.data.data.total || 0)
+            setPage(nextPage)
+          } else {
+            Taro.showToast({ title: '加载失败，请重试', icon: 'none' })
+          }
+        })
+        .catch(() => Taro.showToast({ title: '加载失败，请重试', icon: 'none' }))
+        .finally(() => setLoadingMore(false))
+    }
   }
 
   const handlePrimaryChange = (id) => {
@@ -276,7 +310,15 @@ export default function Index() {
 
   const handleCardClick = (item) => {
     if (isInfoState) {
-      Taro.navigateTo({ url: `/pages/info-detail/index?id=${item.id}` })
+      // 如果是文章，跳转到 webview 页面
+      if (item.wechatArticleUrl) {
+        const encodedUrl = encodeURIComponent(item.wechatArticleUrl)
+        Taro.navigateTo({ url: `/pages/webview/index?url=${encodedUrl}` })
+        // 记录浏览
+        api.recordArticleView(item.id).catch(() => {})
+      } else {
+        Taro.navigateTo({ url: `/pages/info-detail/index?id=${item.id}` })
+      }
     } else {
       Taro.navigateTo({ url: `/pages/detail/index?id=${item.id}` })
     }

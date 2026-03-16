@@ -131,6 +131,36 @@ CREATE TABLE IF NOT EXISTS enterprise_applications (
     audit_at       TEXT,
     audited_by     TEXT
 );
+
+CREATE TABLE IF NOT EXISTS articles (
+    id                  TEXT PRIMARY KEY,
+    title               TEXT NOT NULL,
+    summary             TEXT,
+    cover_image_url     TEXT,
+    wechat_article_url  TEXT NOT NULL,
+    category            TEXT,
+    status              TEXT NOT NULL DEFAULT 'draft',
+    sort_order          INTEGER DEFAULT 0,
+    publish_time        TEXT,
+    created_at          TEXT NOT NULL,
+    updated_at          TEXT NOT NULL,
+    author_id           TEXT,
+    author_name         TEXT,
+    link_status         TEXT DEFAULT 'active',
+    view_count          INTEGER DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS article_operation_logs (
+    id              TEXT PRIMARY KEY,
+    article_id      TEXT NOT NULL,
+    operation       TEXT NOT NULL,
+    operator_id     TEXT NOT NULL,
+    operator_name   TEXT,
+    old_data        TEXT,
+    new_data        TEXT,
+    created_at      TEXT NOT NULL,
+    FOREIGN KEY (article_id) REFERENCES articles(id) ON DELETE CASCADE
+);
 """
 
 
@@ -152,6 +182,25 @@ def _init_db() -> None:
         )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_enterprise_applications_user_created_at ON enterprise_applications(user_id, created_at DESC)"
+        )
+        # Articles table indexes
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_articles_status_publish ON articles(status, publish_time DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_articles_category ON articles(category)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_articles_created ON articles(created_at DESC)"
+        )
+        conn.execute(
+            "CREATE UNIQUE INDEX IF NOT EXISTS idx_articles_wechat_url ON articles(wechat_article_url)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_article_logs_article ON article_operation_logs(article_id, created_at DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_article_logs_operator ON article_operation_logs(operator_id, created_at DESC)"
         )
         conn.commit()
     finally:
@@ -1273,3 +1322,633 @@ def admin_crawl_submit_run(
         "message": "请求已受理",
         "data": run,
     }
+
+
+# ────────────────────────────────────────────────────────────
+# 文章管理接口 (Article Management)
+# ────────────────────────────────────────────────────────────
+
+from server.models import ArticleCreate, ArticleUpdate, ArticleResponse
+from server.article_utils import extract_article_info, now_iso, generate_id
+
+
+class ValidateUrlRequest(BaseModel):
+    url: str
+
+
+@app.post("/api/admin/articles/validate-url")
+def validate_article_url(req: ValidateUrlRequest, authorization: Optional[str] = Header(None)):
+    """管理员校验公众号链接并提取文章信息。"""
+    get_admin_user(authorization)
+    
+    result = extract_article_info(req.url)
+    return {"code": 200, "data": result}
+
+
+class CheckDuplicateRequest(BaseModel):
+    url: str
+    excludeId: Optional[str] = None
+
+
+@app.post("/api/admin/articles/check-duplicate")
+def check_duplicate_article(req: CheckDuplicateRequest, authorization: Optional[str] = Header(None)):
+    """管理员检查文章链接是否重复。"""
+    get_admin_user(authorization)
+    
+    conn = _get_conn()
+    try:
+        if req.excludeId:
+            row = conn.execute(
+                "SELECT id, title, status FROM articles WHERE wechat_article_url = ? AND id != ? LIMIT 1",
+                (req.url, req.excludeId),
+            ).fetchone()
+        else:
+            row = conn.execute(
+                "SELECT id, title, status FROM articles WHERE wechat_article_url = ? LIMIT 1",
+                (req.url,),
+            ).fetchone()
+        
+        if row:
+            return {
+                "code": 200,
+                "data": {
+                    "exists": True,
+                    "article": {
+                        "id": row["id"],
+                        "title": row["title"],
+                        "status": row["status"],
+                    }
+                }
+            }
+        else:
+            return {"code": 200, "data": {"exists": False}}
+    finally:
+        conn.close()
+
+
+@app.post("/api/admin/articles")
+def create_article(req: ArticleCreate, authorization: Optional[str] = Header(None)):
+    """管理员创建文章。"""
+    admin = get_admin_user(authorization)
+    admin_id = admin.get("adminId", "admin")
+    admin_name = admin.get("username", "admin")
+    
+    conn = _get_conn()
+    try:
+        # Check duplicate
+        existing = conn.execute(
+            "SELECT id FROM articles WHERE wechat_article_url = ? LIMIT 1",
+            (req.wechatArticleUrl,),
+        ).fetchone()
+        
+        if existing:
+            return {"code": 409, "message": "该公众号文章链接已存在"}
+        
+        # Create article
+        article_id = generate_id()
+        now = now_iso()
+        
+        conn.execute(
+            """INSERT INTO articles 
+               (id, title, summary, cover_image_url, wechat_article_url, category, 
+                status, sort_order, created_at, updated_at, author_id, author_name)
+               VALUES (?, ?, ?, ?, ?, ?, 'draft', ?, ?, ?, ?, ?)""",
+            (
+                article_id,
+                req.title,
+                req.summary,
+                req.coverImageUrl,
+                req.wechatArticleUrl,
+                req.category,
+                req.sortOrder,
+                now,
+                now,
+                admin_id,
+                admin_name,
+            ),
+        )
+        
+        # Log operation
+        log_id = generate_id()
+        conn.execute(
+            """INSERT INTO article_operation_logs 
+               (id, article_id, operation, operator_id, operator_name, new_data, created_at)
+               VALUES (?, ?, 'create', ?, ?, ?, ?)""",
+            (log_id, article_id, admin_id, admin_name, req.model_dump_json(), now),
+        )
+        
+        conn.commit()
+        
+        # Return created article
+        row = conn.execute("SELECT * FROM articles WHERE id = ?", (article_id,)).fetchone()
+        return {
+            "code": 200,
+            "data": {
+                "id": row["id"],
+                "title": row["title"],
+                "summary": row["summary"],
+                "coverImageUrl": row["cover_image_url"],
+                "wechatArticleUrl": row["wechat_article_url"],
+                "category": row["category"],
+                "status": row["status"],
+                "sortOrder": row["sort_order"],
+                "publishTime": row["publish_time"],
+                "createdAt": row["created_at"],
+                "updatedAt": row["updated_at"],
+                "authorId": row["author_id"],
+                "authorName": row["author_name"],
+                "linkStatus": row["link_status"],
+                "viewCount": row["view_count"],
+            }
+        }
+    finally:
+        conn.close()
+
+
+@app.get("/api/admin/articles")
+def get_admin_articles(
+    status: Optional[str] = Query(None),
+    category: Optional[str] = Query(None),
+    keyword: Optional[str] = Query(None),
+    page: int = Query(1, ge=1),
+    pageSize: int = Query(10, ge=1, le=100),
+    authorization: Optional[str] = Header(None),
+):
+    """管理员查看文章列表，支持分页、筛选、搜索。"""
+    get_admin_user(authorization)
+    
+    conn = _get_conn()
+    try:
+        conditions = ["1=1"]
+        params: list[Any] = []
+        
+        if status:
+            conditions.append("status = ?")
+            params.append(status)
+        
+        if category:
+            conditions.append("category = ?")
+            params.append(category)
+        
+        if keyword:
+            escaped = _escape_like(keyword)
+            q = f"%{escaped}%"
+            conditions.append("(title LIKE ? ESCAPE '\\' OR summary LIKE ? ESCAPE '\\')")
+            params.extend([q, q])
+        
+        where = " AND ".join(conditions)
+        count_sql = f"SELECT COUNT(*) FROM articles WHERE {where}"
+        total = conn.execute(count_sql, params).fetchone()[0]
+        
+        offset = (page - 1) * pageSize
+        order = "ORDER BY created_at DESC LIMIT ? OFFSET ?"
+        params.extend([pageSize, offset])
+        
+        rows = conn.execute(
+            f"SELECT * FROM articles WHERE {where} {order}",
+            params,
+        ).fetchall()
+        
+        list_data = [
+            {
+                "id": row["id"],
+                "title": row["title"],
+                "summary": row["summary"],
+                "coverImageUrl": row["cover_image_url"],
+                "wechatArticleUrl": row["wechat_article_url"],
+                "category": row["category"],
+                "status": row["status"],
+                "sortOrder": row["sort_order"],
+                "publishTime": row["publish_time"],
+                "createdAt": row["created_at"],
+                "updatedAt": row["updated_at"],
+                "authorId": row["author_id"],
+                "authorName": row["author_name"],
+                "linkStatus": row["link_status"],
+                "viewCount": row["view_count"],
+            }
+            for row in rows
+        ]
+        
+        return {"code": 200, "data": {"total": total, "list": list_data}}
+    finally:
+        conn.close()
+
+
+@app.get("/api/admin/articles/{article_id}")
+def get_admin_article(article_id: str, authorization: Optional[str] = Header(None)):
+    """管理员查看文章详情。"""
+    get_admin_user(authorization)
+    
+    conn = _get_conn()
+    try:
+        row = conn.execute(
+            "SELECT * FROM articles WHERE id = ? LIMIT 1",
+            (article_id,),
+        ).fetchone()
+        
+        if not row:
+            return {"code": 404, "message": "文章不存在"}
+        
+        return {
+            "code": 200,
+            "data": {
+                "id": row["id"],
+                "title": row["title"],
+                "summary": row["summary"],
+                "coverImageUrl": row["cover_image_url"],
+                "wechatArticleUrl": row["wechat_article_url"],
+                "category": row["category"],
+                "status": row["status"],
+                "sortOrder": row["sort_order"],
+                "publishTime": row["publish_time"],
+                "createdAt": row["created_at"],
+                "updatedAt": row["updated_at"],
+                "authorId": row["author_id"],
+                "authorName": row["author_name"],
+                "linkStatus": row["link_status"],
+                "viewCount": row["view_count"],
+            }
+        }
+    finally:
+        conn.close()
+
+
+@app.put("/api/admin/articles/{article_id}")
+def update_article(article_id: str, req: ArticleUpdate, authorization: Optional[str] = Header(None)):
+    """管理员更新文章。"""
+    admin = get_admin_user(authorization)
+    admin_id = admin.get("adminId", "admin")
+    admin_name = admin.get("username", "admin")
+    
+    conn = _get_conn()
+    try:
+        # Check if article exists
+        old_row = conn.execute(
+            "SELECT * FROM articles WHERE id = ? LIMIT 1",
+            (article_id,),
+        ).fetchone()
+        
+        if not old_row:
+            return {"code": 404, "message": "文章不存在"}
+        
+        # Check duplicate URL if URL is being changed
+        if req.wechatArticleUrl and req.wechatArticleUrl != old_row["wechat_article_url"]:
+            existing = conn.execute(
+                "SELECT id FROM articles WHERE wechat_article_url = ? AND id != ? LIMIT 1",
+                (req.wechatArticleUrl, article_id),
+            ).fetchone()
+            
+            if existing:
+                return {"code": 409, "message": "该公众号文章链接已存在"}
+        
+        # Build update query
+        updates = []
+        params: list[Any] = []
+        
+        if req.title is not None:
+            updates.append("title = ?")
+            params.append(req.title)
+        
+        if req.summary is not None:
+            updates.append("summary = ?")
+            params.append(req.summary)
+        
+        if req.coverImageUrl is not None:
+            updates.append("cover_image_url = ?")
+            params.append(req.coverImageUrl)
+        
+        if req.wechatArticleUrl is not None:
+            updates.append("wechat_article_url = ?")
+            params.append(req.wechatArticleUrl)
+        
+        if req.category is not None:
+            updates.append("category = ?")
+            params.append(req.category)
+        
+        if req.sortOrder is not None:
+            updates.append("sort_order = ?")
+            params.append(req.sortOrder)
+        
+        if not updates:
+            return {"code": 400, "message": "没有需要更新的字段"}
+        
+        now = now_iso()
+        updates.append("updated_at = ?")
+        params.append(now)
+        params.append(article_id)
+        
+        conn.execute(
+            f"UPDATE articles SET {', '.join(updates)} WHERE id = ?",
+            params,
+        )
+        
+        # Log operation
+        log_id = generate_id()
+        old_data = dict(old_row)
+        conn.execute(
+            """INSERT INTO article_operation_logs 
+               (id, article_id, operation, operator_id, operator_name, old_data, new_data, created_at)
+               VALUES (?, ?, 'update', ?, ?, ?, ?, ?)""",
+            (log_id, article_id, admin_id, admin_name, str(old_data), req.model_dump_json(), now),
+        )
+        
+        conn.commit()
+        
+        # Return updated article
+        row = conn.execute("SELECT * FROM articles WHERE id = ?", (article_id,)).fetchone()
+        return {
+            "code": 200,
+            "data": {
+                "id": row["id"],
+                "title": row["title"],
+                "summary": row["summary"],
+                "coverImageUrl": row["cover_image_url"],
+                "wechatArticleUrl": row["wechat_article_url"],
+                "category": row["category"],
+                "status": row["status"],
+                "sortOrder": row["sort_order"],
+                "publishTime": row["publish_time"],
+                "createdAt": row["created_at"],
+                "updatedAt": row["updated_at"],
+                "authorId": row["author_id"],
+                "authorName": row["author_name"],
+                "linkStatus": row["link_status"],
+                "viewCount": row["view_count"],
+            }
+        }
+    finally:
+        conn.close()
+
+
+@app.post("/api/admin/articles/{article_id}/publish")
+def publish_article(article_id: str, authorization: Optional[str] = Header(None)):
+    """管理员发布文章。"""
+    admin = get_admin_user(authorization)
+    admin_id = admin.get("adminId", "admin")
+    admin_name = admin.get("username", "admin")
+    
+    conn = _get_conn()
+    try:
+        row = conn.execute(
+            "SELECT * FROM articles WHERE id = ? LIMIT 1",
+            (article_id,),
+        ).fetchone()
+        
+        if not row:
+            return {"code": 404, "message": "文章不存在"}
+        
+        if row["status"] == "published":
+            return {"code": 400, "message": "文章已发布"}
+        
+        now = now_iso()
+        conn.execute(
+            "UPDATE articles SET status = 'published', publish_time = ?, updated_at = ? WHERE id = ?",
+            (now, now, article_id),
+        )
+        
+        # Log operation
+        log_id = generate_id()
+        conn.execute(
+            """INSERT INTO article_operation_logs 
+               (id, article_id, operation, operator_id, operator_name, created_at)
+               VALUES (?, ?, 'publish', ?, ?, ?)""",
+            (log_id, article_id, admin_id, admin_name, now),
+        )
+        
+        conn.commit()
+        
+        return {
+            "code": 200,
+            "data": {
+                "id": article_id,
+                "status": "published",
+                "publishTime": now,
+            }
+        }
+    finally:
+        conn.close()
+
+
+@app.post("/api/admin/articles/{article_id}/unpublish")
+def unpublish_article(article_id: str, authorization: Optional[str] = Header(None)):
+    """管理员下线文章。"""
+    admin = get_admin_user(authorization)
+    admin_id = admin.get("adminId", "admin")
+    admin_name = admin.get("username", "admin")
+    
+    conn = _get_conn()
+    try:
+        row = conn.execute(
+            "SELECT * FROM articles WHERE id = ? LIMIT 1",
+            (article_id,),
+        ).fetchone()
+        
+        if not row:
+            return {"code": 404, "message": "文章不存在"}
+        
+        if row["status"] != "published":
+            return {"code": 400, "message": "文章未发布"}
+        
+        now = now_iso()
+        conn.execute(
+            "UPDATE articles SET status = 'draft', updated_at = ? WHERE id = ?",
+            (now, article_id),
+        )
+        
+        # Log operation
+        log_id = generate_id()
+        conn.execute(
+            """INSERT INTO article_operation_logs 
+               (id, article_id, operation, operator_id, operator_name, created_at)
+               VALUES (?, ?, 'unpublish', ?, ?, ?)""",
+            (log_id, article_id, admin_id, admin_name, now),
+        )
+        
+        conn.commit()
+        
+        return {
+            "code": 200,
+            "data": {
+                "id": article_id,
+                "status": "draft",
+            }
+        }
+    finally:
+        conn.close()
+
+
+@app.delete("/api/admin/articles/{article_id}")
+def delete_article(article_id: str, authorization: Optional[str] = Header(None)):
+    """管理员删除文章。"""
+    admin = get_admin_user(authorization)
+    admin_id = admin.get("adminId", "admin")
+    admin_name = admin.get("username", "admin")
+    
+    conn = _get_conn()
+    try:
+        row = conn.execute(
+            "SELECT * FROM articles WHERE id = ? LIMIT 1",
+            (article_id,),
+        ).fetchone()
+        
+        if not row:
+            return {"code": 404, "message": "文章不存在"}
+        
+        # Log operation before deletion
+        now = now_iso()
+        log_id = generate_id()
+        old_data = dict(row)
+        conn.execute(
+            """INSERT INTO article_operation_logs 
+               (id, article_id, operation, operator_id, operator_name, old_data, created_at)
+               VALUES (?, ?, 'delete', ?, ?, ?, ?)""",
+            (log_id, article_id, admin_id, admin_name, str(old_data), now),
+        )
+        
+        # Delete article
+        conn.execute("DELETE FROM articles WHERE id = ?", (article_id,))
+        conn.commit()
+        
+        return {"code": 200, "message": "删除成功"}
+    finally:
+        conn.close()
+
+
+@app.get("/api/admin/articles/{article_id}/logs")
+def get_article_logs(article_id: str, authorization: Optional[str] = Header(None)):
+    """管理员查询文章操作历史。"""
+    get_admin_user(authorization)
+    
+    conn = _get_conn()
+    try:
+        rows = conn.execute(
+            """SELECT * FROM article_operation_logs 
+               WHERE article_id = ? 
+               ORDER BY created_at DESC""",
+            (article_id,),
+        ).fetchall()
+        
+        logs = [
+            {
+                "id": row["id"],
+                "articleId": row["article_id"],
+                "operation": row["operation"],
+                "operatorId": row["operator_id"],
+                "operatorName": row["operator_name"],
+                "oldData": row["old_data"],
+                "newData": row["new_data"],
+                "createdAt": row["created_at"],
+            }
+            for row in rows
+        ]
+        
+        return {"code": 200, "data": {"list": logs}}
+    finally:
+        conn.close()
+
+
+# ────────────────────────────────────────────────────────────
+# 小程序端文章接口
+# ────────────────────────────────────────────────────────────
+
+@app.get("/api/articles")
+def get_articles(
+    category: Optional[str] = Query(None),
+    page: int = Query(1, ge=1),
+    pageSize: int = Query(10, ge=1, le=100),
+):
+    """小程序获取已发布文章列表，支持分页、分类筛选。"""
+    conn = _get_conn()
+    try:
+        conditions = ["status = 'published'"]
+        params: list[Any] = []
+        
+        if category:
+            conditions.append("category = ?")
+            params.append(category)
+        
+        where = " AND ".join(conditions)
+        count_sql = f"SELECT COUNT(*) FROM articles WHERE {where}"
+        total = conn.execute(count_sql, params).fetchone()[0]
+        
+        offset = (page - 1) * pageSize
+        order = "ORDER BY sort_order DESC, publish_time DESC LIMIT ? OFFSET ?"
+        params.extend([pageSize, offset])
+        
+        rows = conn.execute(
+            f"SELECT * FROM articles WHERE {where} {order}",
+            params,
+        ).fetchall()
+        
+        list_data = [
+            {
+                "id": row["id"],
+                "title": row["title"],
+                "summary": row["summary"],
+                "coverImageUrl": row["cover_image_url"],
+                "wechatArticleUrl": row["wechat_article_url"],
+                "category": row["category"],
+                "publishTime": row["publish_time"],
+                "viewCount": row["view_count"],
+            }
+            for row in rows
+        ]
+        
+        return {"code": 200, "data": {"total": total, "list": list_data}}
+    finally:
+        conn.close()
+
+
+@app.get("/api/articles/{article_id}")
+def get_article(article_id: str):
+    """小程序获取文章详情，只返回已发布文章。"""
+    conn = _get_conn()
+    try:
+        row = conn.execute(
+            "SELECT * FROM articles WHERE id = ? AND status = 'published' LIMIT 1",
+            (article_id,),
+        ).fetchone()
+        
+        if not row:
+            return {"code": 404, "message": "文章不存在或未发布"}
+        
+        return {
+            "code": 200,
+            "data": {
+                "id": row["id"],
+                "title": row["title"],
+                "summary": row["summary"],
+                "coverImageUrl": row["cover_image_url"],
+                "wechatArticleUrl": row["wechat_article_url"],
+                "category": row["category"],
+                "publishTime": row["publish_time"],
+                "viewCount": row["view_count"],
+            }
+        }
+    finally:
+        conn.close()
+
+
+@app.post("/api/articles/{article_id}/view")
+def record_article_view(article_id: str):
+    """小程序记录文章浏览（可选功能）。"""
+    conn = _get_conn()
+    try:
+        row = conn.execute(
+            "SELECT id FROM articles WHERE id = ? AND status = 'published' LIMIT 1",
+            (article_id,),
+        ).fetchone()
+        
+        if not row:
+            return {"code": 404, "message": "文章不存在或未发布"}
+        
+        conn.execute(
+            "UPDATE articles SET view_count = view_count + 1 WHERE id = ?",
+            (article_id,),
+        )
+        conn.commit()
+        
+        return {"code": 200, "message": "记录成功"}
+    finally:
+        conn.close()

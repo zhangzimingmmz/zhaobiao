@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { apiRequest } from "../lib/api";
 import type { CrawlRun } from "../lib/types";
 import { ErrorState, LoadingState } from "../components/States";
-import { crawlRunStatusLabel, siteLabel } from "../lib/statusLabels";
+import { actionKeyLabel, crawlRunStatusLabel, siteLabel } from "../lib/statusLabels";
 
 export function RunDetailPage({ id }: { id: string }) {
   const [loading, setLoading] = useState(true);
@@ -32,7 +32,7 @@ export function RunDetailPage({ id }: { id: string }) {
   return (
     <div className="stack">
       <div className="card detail-grid">
-        <div><div className="detail-label">动作</div><div>{run.actionKey}</div></div>
+        <div><div className="detail-label">动作</div><div>{actionKeyLabel(run.actionKey)}</div></div>
         <div><div className="detail-label">状态</div><div>{crawlRunStatusLabel(run.status)}</div></div>
         <div><div className="detail-label">站点</div><div>{siteLabel(run.site)}</div></div>
         <div><div className="detail-label">请求时间</div><div>{run.requestedAt}</div></div>

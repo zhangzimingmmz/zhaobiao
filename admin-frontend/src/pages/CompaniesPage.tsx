@@ -43,8 +43,8 @@ export function CompaniesPage() {
         <tbody>
           {items.map((item) => (
             <tr key={item.id}>
-              <td>{item.companyName}<div className="muted">{item.username}</div></td>
-              <td>{item.contactName || "-"}<div className="muted">{item.contactPhone}</div></td>
+              <td>{item.companyName}<br /><span className="muted">{item.username}</span></td>
+              <td>{item.contactName || "-"}<br /><span className="muted">{item.contactPhone}</span></td>
               <td>{reviewStatusLabel(item.status)}</td>
               <td>{item.auditAt ?? "-"}</td>
             </tr>

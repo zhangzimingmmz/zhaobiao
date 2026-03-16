@@ -38,3 +38,151 @@ export async function apiRequest<T>(
 }
 
 export const apiBase = API_BASE;
+
+
+// ────────────────────────────────────────────────────────────
+// Article Management API
+// ────────────────────────────────────────────────────────────
+
+export type Article = {
+  id: string;
+  title: string;
+  summary: string | null;
+  coverImageUrl: string | null;
+  wechatArticleUrl: string;
+  category: string | null;
+  status: string;
+  sortOrder: number;
+  publishTime: string | null;
+  createdAt: string;
+  updatedAt: string;
+  authorId: string | null;
+  authorName: string | null;
+  linkStatus: string;
+  viewCount: number;
+};
+
+export type ArticleCreateInput = {
+  title: string;
+  summary?: string;
+  coverImageUrl?: string;
+  wechatArticleUrl: string;
+  category?: string;
+  sortOrder?: number;
+};
+
+export type ArticleUpdateInput = {
+  title?: string;
+  summary?: string;
+  coverImageUrl?: string;
+  wechatArticleUrl?: string;
+  category?: string;
+  sortOrder?: number;
+};
+
+export type ValidateUrlResult = {
+  valid: boolean;
+  title?: string;
+  cover?: string;
+  summary?: string;
+  error?: string;
+};
+
+export type CheckDuplicateResult = {
+  exists: boolean;
+  article?: {
+    id: string;
+    title: string;
+    status: string;
+  };
+};
+
+export async function validateArticleUrl(url: string): Promise<ValidateUrlResult> {
+  return apiRequest<ValidateUrlResult>("/api/admin/articles/validate-url", {
+    method: "POST",
+    body: { url },
+  });
+}
+
+export async function checkDuplicateArticle(
+  url: string,
+  excludeId?: string,
+): Promise<CheckDuplicateResult> {
+  return apiRequest<CheckDuplicateResult>("/api/admin/articles/check-duplicate", {
+    method: "POST",
+    body: { url, excludeId },
+  });
+}
+
+export async function createArticle(data: ArticleCreateInput): Promise<Article> {
+  return apiRequest<Article>("/api/admin/articles", {
+    method: "POST",
+    body: data,
+  });
+}
+
+export async function getAdminArticles(params: {
+  status?: string;
+  category?: string;
+  keyword?: string;
+  page?: number;
+  pageSize?: number;
+}): Promise<{ total: number; list: Article[] }> {
+  const query = new URLSearchParams();
+  if (params.status) query.set("status", params.status);
+  if (params.category) query.set("category", params.category);
+  if (params.keyword) query.set("keyword", params.keyword);
+  if (params.page) query.set("page", String(params.page));
+  if (params.pageSize) query.set("pageSize", String(params.pageSize));
+
+  return apiRequest<{ total: number; list: Article[] }>(
+    `/api/admin/articles?${query.toString()}`,
+  );
+}
+
+export async function getArticle(id: string): Promise<Article> {
+  return apiRequest<Article>(`/api/admin/articles/${id}`);
+}
+
+export async function updateArticle(id: string, data: ArticleUpdateInput): Promise<Article> {
+  return apiRequest<Article>(`/api/admin/articles/${id}`, {
+    method: "POST",
+    body: data,
+  });
+}
+
+export async function publishArticle(id: string): Promise<{ id: string; status: string; publishTime: string }> {
+  return apiRequest<{ id: string; status: string; publishTime: string }>(
+    `/api/admin/articles/${id}/publish`,
+    { method: "POST", body: {} },
+  );
+}
+
+export async function unpublishArticle(id: string): Promise<{ id: string; status: string }> {
+  return apiRequest<{ id: string; status: string }>(
+    `/api/admin/articles/${id}/unpublish`,
+    { method: "POST", body: {} },
+  );
+}
+
+export async function deleteArticle(id: string): Promise<{ message: string }> {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+
+  const token = getAdminToken();
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  const response = await fetch(`${apiBase}/api/admin/articles/${id}`, {
+    method: "DELETE",
+    headers,
+  });
+
+  const payload = (await response.json()) as ApiResponse<{ message: string }>;
+  if (payload.code !== 200 || payload.data === undefined) {
+    throw new Error(payload.message ?? "删除失败");
+  }
+  return payload.data;
+}

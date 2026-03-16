@@ -5,6 +5,7 @@ const NAV_ITEMS = [
   { path: "/dashboard", label: "总览" },
   { path: "/reviews", label: "企业审核" },
   { path: "/companies", label: "企业目录" },
+  { path: "/articles", label: "内容管理" },
   { path: "/crawl", label: "采集控制" },
   { path: "/runs", label: "运行记录" },
 ];

@@ -36,6 +36,7 @@
 | 生产部署架构 | [docs/others/生产部署架构.md](docs/others/生产部署架构.md) | 完整部署步骤、迁移、公网接入 |
 | 接口文档-前端与小程序 | [docs/others/接口文档-前端与小程序.md](docs/others/接口文档-前端与小程序.md) | 前端/小程序与后端 API 契约 |
 | 后台管理接口文档 | [docs/others/后台管理接口文档.md](docs/others/后台管理接口文档.md) | 管理端接口契约 |
+| 功能需求清单 | [docs/others/功能需求清单.md](docs/others/功能需求清单.md) | 产品功能需求（信息查询、收藏、企业备案等） |
 | 原始数据接口文档 | [docs/others/原始数据接口文档.md](docs/others/原始数据接口文档.md) | 爬虫与数据源契约 |
 | 开发联调指南 | [docs/others/开发联调指南.md](docs/others/开发联调指南.md) | 本地联调、Mock、调试 |
 | 项目架构与需求清单 PRD | [docs/others/项目架构与需求清单PRD.md](docs/others/项目架构与需求清单PRD.md) | 需求与架构背景 |

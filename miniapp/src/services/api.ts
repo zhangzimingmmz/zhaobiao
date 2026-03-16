@@ -22,4 +22,14 @@ export const api = {
   auditStatus(params) {
     return get('/api/auth/audit-status', params)
   },
+  // 文章相关接口
+  getArticles(params) {
+    return get('/api/articles', params)
+  },
+  getArticle(id) {
+    return get(`/api/articles/${id}`)
+  },
+  recordArticleView(id) {
+    return post(`/api/articles/${id}/view`, {})
+  },
 }

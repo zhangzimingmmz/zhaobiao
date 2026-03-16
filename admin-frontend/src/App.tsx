@@ -8,6 +8,8 @@ import { CompaniesPage } from "./pages/CompaniesPage";
 import { CrawlPage } from "./pages/CrawlPage";
 import { RunsPage } from "./pages/RunsPage";
 import { RunDetailPage } from "./pages/RunDetailPage";
+import { ArticlesPage } from "./pages/ArticlesPage";
+import { ArticleEditorPage } from "./pages/ArticleEditorPage";
 import { getAdminToken } from "./lib/auth";
 
 type RouteMeta = {
@@ -75,6 +77,27 @@ export function App() {
         title: "企业目录",
         subtitle: "查看企业清单和认证状态。",
         content: <CompaniesPage />,
+      };
+    }
+    if (path === "/articles") {
+      return {
+        title: "内容管理",
+        subtitle: "管理公众号文章发布。",
+        content: <ArticlesPage navigate={navigate} />,
+      };
+    }
+    if (path === "/articles/new") {
+      return {
+        title: "新增文章",
+        subtitle: "创建并发布公众号文章。",
+        content: <ArticleEditorPage navigate={navigate} />,
+      };
+    }
+    if (path.startsWith("/articles/edit/")) {
+      return {
+        title: "编辑文章",
+        subtitle: "修改文章信息。",
+        content: <ArticleEditorPage id={path.replace("/articles/edit/", "")} navigate={navigate} />,
       };
     }
     if (path === "/crawl") {

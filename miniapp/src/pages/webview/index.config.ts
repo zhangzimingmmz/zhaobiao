@@ -1,3 +1,3 @@
-export default {
-  navigationBarTitleText: '原文',
-}
+export default definePageConfig({
+  navigationBarTitleText: '文章详情',
+})

@@ -49,9 +49,9 @@ SESSION_BOOTSTRAP_RETRIES = 3
 # ==========================================
 # 您的业务类型为“短效代理-弹性提取”，需要通过接口动态获取 IP
 # 提取链接来自当前可用的短效代理账号
-PROXY_EXTRACT_URL = "https://share.proxy.qg.net/get?key=993C932C&num=1&area=&isp=0&format=json&distinct=false"
-PROXY_PASS = "81E38F618564"
-PROXY_USER = "993C932C"
+PROXY_EXTRACT_URL = "https://share.proxy.qg.net/get?key=F06GBX89&num=1&area=&isp=0&format=json&distinct=false"
+PROXY_PASS = "009FE8C868B4"
+PROXY_USER = "F06GBX89"
 PROXY_EXTRACT_ATTEMPTS = 8
 
 PROXY_ERROR_KEYWORDS = ["ProxyError", "RemoteDisconnected", "SSLError", "SSLEOFError", "IncompleteRead"]

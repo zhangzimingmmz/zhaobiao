@@ -28,7 +28,7 @@
 ## Impact
 
 - 后端 `server/main.py` 的用户表、注册接口、登录接口、审核状态接口、管理员审核接口及 JWT 负载。
-- 小程序 `miniapp/src/pages/login`、`miniapp/src/pages/register`、`miniapp/src/pages/audit-status`、`miniapp/src/pages/profile` 与对应 API 调用。
+- 小程/序 `miniapp/src/pages/login`、`miniapp/src/pages/register`、`miniapp/src/pages/audit-status`、`miniapp/src/pages/profile` 与对应 API 调用。
 - SQLite 数据模型需从仅保存手机号的轻量账号，升级为带登录名、密码摘要、审核门禁状态的企业账号模型。
 - 现有基于手机号验证码的普通用户登录流程会失效，需要同步迁移或废弃相关前端引导与接口约定。
 

@@ -1,0 +1,31 @@
+# 招标系统公网路由模板
+# 放置位置（公网入口机）: /opt/traefik/dynamic/zhaobiao.yml
+
+http:
+  routers:
+    zhaobiao-admin:
+      rule: Host(`admin-zhaobiao.zhangziming.cn`)
+      entryPoints:
+        - websecure
+      service: zhaobiao-admin-svc
+      tls:
+        certResolver: letsencrypt
+
+    zhaobiao-api:
+      rule: Host(`api-zhaobiao.zhangziming.cn`)
+      entryPoints:
+        - websecure
+      service: zhaobiao-api-svc
+      tls:
+        certResolver: letsencrypt
+
+  services:
+    zhaobiao-admin-svc:
+      loadBalancer:
+        servers:
+          - url: http://100.64.0.5:8091
+
+    zhaobiao-api-svc:
+      loadBalancer:
+        servers:
+          - url: http://100.64.0.5:8000

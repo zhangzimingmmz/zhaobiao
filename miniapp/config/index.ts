@@ -14,7 +14,9 @@ export default defineConfig({
   framework: 'react',
   compiler: 'webpack5',
   plugins: [],
-  defineConstants: {},
+  defineConstants: {
+    'process.env.TARO_APP_API_BASE': JSON.stringify(process.env.TARO_APP_API_BASE || ''),
+  },
   copy: {
     patterns: [{ from: 'project.config.json', to: 'dist/' }],
     options: {},

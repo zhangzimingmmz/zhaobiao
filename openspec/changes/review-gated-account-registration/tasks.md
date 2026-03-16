@@ -1,31 +1,31 @@
-## 1. Database And Data Model
+## 1. 数据库与数据模型
 
-- [x] 1.1 Add idempotent schema migration for `users` to include `username`, `password_hash`, `account_status`, and `updated_at`
-- [x] 1.2 Extend `enterprise_applications` with `legal_person_name`, `legal_person_phone`, `business_scope`, and `business_address`
-- [x] 1.3 Ensure uniqueness and lookup paths for `username` and latest `applicationId` are enforced in SQLite queries
+- [x] 1.1 为 `users` 表添加幂等的模式迁移，以包含 `username`、`password_hash`、`account_status` 和 `updated_at` 字段
+- [x] 1.2 扩展 `enterprise_applications` 表，增加 `legal_person_name`、`legal_person_phone`、`business_scope` 和 `business_address` 字段
+- [x] 1.3 在 SQLite 查询中确保 `username` 和最新的 `applicationId` 的唯一性和查询路径得到强制执行
 
-## 2. User Auth APIs
+## 2. 用户认证 API
 
-- [x] 2.1 Rewrite `POST /api/auth/register` as anonymous registration that creates a pending account and application record
-- [x] 2.2 Rewrite `POST /api/auth/login` to use `username` and `password`, returning token only for `approved` accounts
-- [x] 2.3 Redefine `GET /api/auth/audit-status` to query by registration identifiers instead of Bearer token
-- [x] 2.4 Update JWT payload creation and auth helpers to match the new account model
+- [x] 2.1 重写 `POST /api/auth/register` 为匿名注册，创建待审核的账户和申请记录
+- [x] 2.2 重写 `POST /api/auth/login` 以使用 `username` 和 `password`，仅对 `approved`（已批准）账户返回令牌
+- [x] 2.3 重新定义 `GET /api/auth/audit-status`，改为通过注册标识符而非 Bearer 令牌进行查询
+- [x] 2.4 更新 JWT 载荷创建和认证辅助函数，以匹配新的账户模型
 
-## 3. Admin Review Flow
+## 3. 管理员审核流程
 
-- [x] 3.1 Expand admin review list/detail responses to expose the new enterprise registration fields
-- [x] 3.2 Update admin approve/reject handlers to synchronize `users.account_status` with review outcomes
-- [x] 3.3 Verify non-admin requests remain blocked from `/api/admin/*` review endpoints
+- [x] 3.1 扩展管理员审核列表/详情响应，以暴露新的企业注册字段
+- [x] 3.2 更新管理员批准/拒绝处理程序，使 `users.account_status` 与审核结果同步
+- [x] 3.3 验证非管理员请求仍被阻止访问 `/api/admin/*` 审核端点
 
-## 4. Miniapp Auth And Routing
+## 4. 小程序认证与路由
 
-- [x] 4.1 Replace miniapp login form fields and service calls from phone-captcha to username-password
-- [x] 4.2 Expand miniapp register form to capture all required account and enterprise review fields
-- [x] 4.3 Update login result routing so pending accounts go to audit status, rejected accounts go to resubmission, and only approved accounts enter the home page
-- [x] 4.4 Update audit-status and profile flows to use registration identifiers instead of login token for pending or rejected accounts
+- [x] 4.1 将小程序登录表单字段和服务调用从手机验证码方式替换为用户名-密码方式
+- [x] 4.2 扩展小程序注册表单，以捕获所有必需的账户和企业审核字段
+- [x] 4.3 更新登录结果路由：待审核账户跳转至审核状态页，被拒账户跳转至重新提交页，仅已批准账户进入主页
+- [x] 4.4 更新审核状态和个人资料流程，对于待审核或被拒账户，使用注册标识符而非登录令牌
 
-## 5. Verification
+## 5. 验证
 
-- [x] 5.1 Verify registration creates a pending account and returns an `applicationId`
-- [x] 5.2 Verify pending and rejected accounts cannot obtain login tokens and receive the correct status responses
-- [x] 5.3 Verify approved accounts can log in successfully and admin review actions correctly transition account status
+- [x] 5.1 验证注册会创建一个待审核账户并返回一个 `applicationId`
+- [x] 5.2 验证待审核和被拒账户无法获取登录令牌，并收到正确的状态响应
+- [x] 5.3 验证已批准账户可以成功登录，并且管理员审核操作能正确转换账户状态

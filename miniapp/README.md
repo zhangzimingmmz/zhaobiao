@@ -36,5 +36,10 @@ npm install
 
 ## 环境变量与配置
 
-- **API Base URL**：在 `src/config.ts` 中修改 `config.baseUrl`，或通过 Taro 环境变量 `TARO_APP_API_BASE` 注入（需在 `config/index.ts` 的 `defineConstants` 中配置 `process.env.TARO_APP_API_BASE`）。未配置时默认为 `https://api.example.com`，列表/详情在无后端时可使用 Mock 数据。
+- **API Base URL**：默认走 `src/config.ts` 中的本地开发地址 `http://localhost:8000`。生产-like 构建请通过 Taro 环境变量 `TARO_APP_API_BASE` 注入，例如 `https://api-zhaobiao.zhangziming.cn`。
+- **生产-like 构建示例**：
+  ```bash
+  TARO_APP_API_BASE=https://api-zhaobiao.zhangziming.cn npm run build:weapp
+  ```
+- **微信 request 合法域名**：真机预览或线上发布前，需在微信小程序后台把 `https://api-zhaobiao.zhangziming.cn` 加入 request 合法域名白名单。
 - **本地/真机调试**：开发时执行 `npm run dev:weapp`，用微信开发者工具打开 `miniapp/dist` 目录；真机预览时在开发者工具中点击「预览」生成二维码，扫码即可。若请求跨域或域名未备案，需在小程序后台配置 request 合法域名。

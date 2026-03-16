@@ -12,6 +12,7 @@
 ## Capabilities
 
 ### New Capabilities
+
 - `containerized-backend-runtime`: 定义后端在 Docker Compose 下的服务拓扑、调度方式、持久化和运行边界。
 
 ### Modified Capabilities
@@ -21,3 +22,4 @@
 - Affected code: `server/`, `crawler/`, deployment manifests, runtime env wiring, and `docs/`
 - Affected systems: FastAPI service runtime, crawl dispatcher, scheduled incremental/recovery orchestration, SQLite/log persistence
 - Dependencies: container image build inputs, `curl_cffi` runtime dependency for `site2`, Docker Compose, container-friendly scheduler
+

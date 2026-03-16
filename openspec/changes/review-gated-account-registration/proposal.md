@@ -14,9 +14,11 @@
 ## Capabilities
 
 ### New Capabilities
+
 - `admin-enterprise-review`: 后台审核中心展示并审核账号注册时提交的完整企业资料。
 
 ### Modified Capabilities
+
 - `auth-login`: 将普通用户登录方式从手机号验证码改为登录名和密码，并在登录时校验审核通过状态。
 - `auth-register`: 将注册接口改为匿名注册申请入口，并接收完整账号/企业资料集。
 - `auth-audit-status`: 调整审核状态查询语义，使待审核或驳回用户可查询注册申请状态与处理结果。
@@ -29,3 +31,4 @@
 - 小程序 `miniapp/src/pages/login`、`miniapp/src/pages/register`、`miniapp/src/pages/audit-status`、`miniapp/src/pages/profile` 与对应 API 调用。
 - SQLite 数据模型需从仅保存手机号的轻量账号，升级为带登录名、密码摘要、审核门禁状态的企业账号模型。
 - 现有基于手机号验证码的普通用户登录流程会失效，需要同步迁移或废弃相关前端引导与接口约定。
+

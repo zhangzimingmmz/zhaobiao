@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { apiRequest } from "../lib/api";
 import type { CrawlRun, ReviewsData } from "../lib/types";
 import { EmptyState, ErrorState, LoadingState } from "../components/States";
+import { crawlRunStatusLabel } from "../lib/statusLabels";
 
 type DashboardProps = {
   navigate: (path: string) => void;
@@ -47,7 +48,7 @@ export function DashboardPage({ navigate }: DashboardProps) {
         <div className="card-label">最近一次采集运行</div>
         {latestRun ? (
           <div className="stack">
-            <div className="metric status-text">{latestRun.status}</div>
+            <div className="metric status-text">{crawlRunStatusLabel(latestRun.status)}</div>
             <div>{latestRun.actionKey}</div>
             <div className="muted">{latestRun.summary ?? "暂无摘要"}</div>
             <button className="secondary-button" onClick={() => navigate(`/runs/${latestRun.id}`)}>

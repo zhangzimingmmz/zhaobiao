@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { apiRequest } from "../lib/api";
 import type { ReviewDetail } from "../lib/types";
 import { ErrorState, LoadingState } from "../components/States";
+import { reviewStatusLabel } from "../lib/statusLabels";
 
 export function ReviewDetailPage({
   id,
@@ -99,7 +100,7 @@ export function ReviewDetailPage({
         </div>
         <div>
           <div className="detail-label">状态</div>
-          <div>{item.status}</div>
+          <div>{reviewStatusLabel(item.status)}</div>
         </div>
       </div>
       <div className="card stack">

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { apiRequest } from "../lib/api";
 import type { CrawlRun } from "../lib/types";
 import { EmptyState, ErrorState, LoadingState } from "../components/States";
+import { crawlRunStatusLabel, siteLabel } from "../lib/statusLabels";
 
 export function RunsPage({ navigate }: { navigate: (path: string) => void }) {
   const [loading, setLoading] = useState(true);
@@ -34,16 +35,16 @@ export function RunsPage({ navigate }: { navigate: (path: string) => void }) {
       <div className="toolbar">
         <select value={status} onChange={(e) => setStatus(e.target.value)}>
           <option value="">全部状态</option>
-          <option value="queued">queued</option>
-          <option value="running">running</option>
-          <option value="succeeded">succeeded</option>
-          <option value="failed">failed</option>
-          <option value="rejected">rejected</option>
+          <option value="queued">排队中</option>
+          <option value="running">运行中</option>
+          <option value="succeeded">成功</option>
+          <option value="failed">失败</option>
+          <option value="rejected">已拒绝</option>
         </select>
         <select value={site} onChange={(e) => setSite(e.target.value)}>
           <option value="">全部站点</option>
-          <option value="site1">site1</option>
-          <option value="site2">site2</option>
+          <option value="site1">站点一</option>
+          <option value="site2">站点二</option>
         </select>
       </div>
       {loading ? <LoadingState /> : null}
@@ -65,8 +66,8 @@ export function RunsPage({ navigate }: { navigate: (path: string) => void }) {
               {items.map((item) => (
                 <tr key={item.id}>
                   <td>{item.actionKey}</td>
-                  <td>{item.site}</td>
-                  <td>{item.status}</td>
+                  <td>{siteLabel(item.site)}</td>
+                  <td>{crawlRunStatusLabel(item.status)}</td>
                   <td>{item.summary ?? item.statusReason ?? "-"}</td>
                   <td>
                     <button className="secondary-button" onClick={() => navigate(`/runs/${item.id}`)}>

@@ -8,6 +8,12 @@
 
 ---
 
+## AI Agent 入口
+
+**AI 助手（Cursor、Claude 等）请先读**：[AGENTS.md](../AGENTS.md)。该文档提供项目文档索引、必读规则与关键约定，确保每次协作前掌握正确上下文。项目已配置 `.cursor/rules/` 规则，建议每次会话开始前读取 AGENTS.md。
+
+---
+
 ## 文档目录
 
 | 文档 | 用途 |

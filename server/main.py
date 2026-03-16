@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import base64
 import os
 import re
 import sys
@@ -583,6 +584,29 @@ def dict_purchase_manner():
 # ────────────────────────────────────────────────────────────
 # 认证接口
 # ────────────────────────────────────────────────────────────
+
+# 验证码 Mock 存储：key -> 验证码，用于 GET /api/auth/captcha 与（若恢复手机号登录）登录校验
+_captcha_store: dict[str, str] = {}
+
+# 1x1 透明 PNG 的 base64，用于 Mock 验证码图片
+_CAPTCHA_PLACEHOLDER_B64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+
+
+@app.get("/api/auth/captcha")
+def get_captcha(mobile: Optional[str] = Query(None)):
+    """获取验证码（Mock 模式）。固定验证码 123456，返回 base64 占位图。"""
+    captcha_code = "123456"
+    key = mobile.strip() if mobile and mobile.strip() else str(uuid.uuid4())
+    _captcha_store[key] = captcha_code
+    return {
+        "code": 200,
+        "data": {
+            "imageBase64": _CAPTCHA_PLACEHOLDER_B64,
+            "key": key,
+        },
+    }
+
+
 class LoginRequest(BaseModel):
     username: str
     password: str

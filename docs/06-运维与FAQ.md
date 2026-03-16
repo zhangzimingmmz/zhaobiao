@@ -58,12 +58,95 @@
 
 - 确认请求头带 `Authorization: Bearer <ADMIN_TOKEN>`，且与后端配置的 ADMIN_TOKEN 一致。
 
+### 公网访问 Bad Gateway（502）
+
+- 通常表示 Traefik（100.64.0.7）无法从上游 100.64.0.5 获取响应。
+- 在 100.64.0.5 上检查：`docker compose ... ps` 确认 api 容器在跑；`curl http://127.0.0.1:8000/openapi.json` 确认本机 API 可访问。
+- 在 100.64.0.7 上检查：`curl http://100.64.0.5:8000/openapi.json` 确认 Traefik 能连通上游。
+- 若本机正常、跨机不通，检查 Tailscale/防火墙；若 Traefik 配置有误，检查 `/opt/traefik/dynamic/zhaobiao.yml` 是否生效。
+
+#### 案例：端口绑定错误导致 502（2026-03-16）
+
+**现象**：公网访问 `https://api-zhaobiao.zhangziming.cn` 返回 502 Bad Gateway。
+
+**根因**：API 容器端口只绑定在 `127.0.0.1:8000`，未绑定到 `100.64.0.5:8000`。Traefik 从 100.64.0.7 访问 100.64.0.5:8000 时无法建立连接。
+
+**排查**：在 100.64.0.5 上执行 `ss -tlnp | grep 8000`，若显示 `127.0.0.1:8000` 则说明绑定错误。
+
+**修复**：确保 `.env.backend` 中 `API_PUBLISH_BIND=100.64.0.5:8000`，然后重启容器使配置生效：
+
+```bash
+cd /opt/zhaobiao  # 或项目实际路径
+docker compose --env-file .env.backend -f docker-compose.backend.yml down
+docker compose --env-file .env.backend -f docker-compose.backend.yml up -d
+```
+
+**说明**：若容器在修改 `.env.backend` 之前启动，会沿用旧端口绑定；必须 `down` 后重新 `up` 才能应用新配置。
+
 ### 已知限制
 
 - 单机 SQLite；API 单点；scheduler 依赖 API 可用；大批量或高危采集动作需受控，不开放给后台直接执行。
 
 ---
 
-## 三、更详细的部署步骤
+## 三、部署到 100.64.0.5 的步骤
+
+在目标机 `100.64.0.5` 上执行：
+
+### 1. 准备环境
+
+- 安装 Docker 与 Docker Compose
+- 克隆或拉取本仓库到目标目录
+
+### 2. 配置环境变量
+
+```bash
+cp .env.backend.example .env.backend
+```
+
+编辑 `.env.backend`，**必须**替换以下占位符：
+
+- `ADMIN_TOKEN`：强随机字符串
+- `JWT_SECRET`：强随机字符串
+- `ADMIN_PASSWORD`：管理员登录密码
+
+100.64.0.5 上默认已配置：
+
+- `API_PUBLISH_BIND=100.64.0.5:8000`
+- `ADMIN_FRONTEND_PUBLISH_BIND=100.64.0.5:8091`
+- `ADMIN_FRONTEND_API_BASE=https://api-zhaobiao.zhangziming.cn`
+
+### 3. 准备持久目录
+
+```bash
+mkdir -p data logs
+```
+
+### 4. 启动服务
+
+```bash
+docker compose --env-file .env.backend -f docker-compose.backend.yml up -d --build
+```
+
+### 5. 验证
+
+```bash
+# 查看容器状态
+docker compose --env-file .env.backend -f docker-compose.backend.yml ps
+
+# 本机验证 API
+curl -I http://100.64.0.5:8000/openapi.json
+
+# 本机验证运营平台
+curl -I http://100.64.0.5:8091
+```
+
+### 6. 公网访问前提
+
+公网域名 `api-zhaobiao.zhangziming.cn`、`admin-zhaobiao.zhangziming.cn` 需在 **100.64.0.7** 上的 Traefik 中配置，将流量转发到 100.64.0.5:8000 和 100.64.0.5:8091。详见 [生产部署架构.md](./生产部署架构.md)。
+
+---
+
+## 四、更详细的部署步骤
 
 完整步骤、迁移、公网域名接入、首次部署验证等见原 [生产部署架构.md](./生产部署架构.md)。

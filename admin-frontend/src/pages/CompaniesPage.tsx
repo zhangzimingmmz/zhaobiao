@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { apiRequest } from "../lib/api";
 import type { CompaniesData } from "../lib/types";
 import { EmptyState, ErrorState, LoadingState } from "../components/States";
+import { reviewStatusLabel } from "../lib/statusLabels";
 
 export function CompaniesPage() {
   const [loading, setLoading] = useState(true);
@@ -44,7 +45,7 @@ export function CompaniesPage() {
             <tr key={item.id}>
               <td>{item.companyName}<div className="muted">{item.username}</div></td>
               <td>{item.contactName || "-"}<div className="muted">{item.contactPhone}</div></td>
-              <td>{item.status}</td>
+              <td>{reviewStatusLabel(item.status)}</td>
               <td>{item.auditAt ?? "-"}</td>
             </tr>
           ))}

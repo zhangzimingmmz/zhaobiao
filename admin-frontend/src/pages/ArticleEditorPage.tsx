@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { Card, Form, Input, Select, Button, message } from "antd";
 import {
   createArticle,
   updateArticle,
@@ -9,84 +10,74 @@ import {
   type ArticleCreateInput,
   type ArticleUpdateInput,
 } from "../lib/api";
-import { LoadingState, ErrorState } from "../components/States";
 
 type ArticleEditorPageProps = {
   id?: string;
   navigate: (path: string) => void;
 };
 
+const CATEGORY_OPTIONS = [
+  { value: "", label: "请选择" },
+  { value: "company_news", label: "单位动态" },
+  { value: "policy", label: "政策法规" },
+  { value: "announcement", label: "相关公告" },
+  { value: "other", label: "其他" },
+];
+
 export function ArticleEditorPage({ id, navigate }: ArticleEditorPageProps) {
+  const [form] = Form.useForm();
   const [loading, setLoading] = useState(!!id);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  
-  const [title, setTitle] = useState("");
-  const [summary, setSummary] = useState("");
-  const [coverImageUrl, setCoverImageUrl] = useState("");
-  const [wechatArticleUrl, setWechatArticleUrl] = useState("");
-  const [category, setCategory] = useState("");
-  const [sortOrder, setSortOrder] = useState(0);
-  
   const [urlValidating, setUrlValidating] = useState(false);
   const [urlError, setUrlError] = useState<string | null>(null);
   const [duplicateWarning, setDuplicateWarning] = useState<string | null>(null);
 
   useEffect(() => {
     if (id) {
-      loadArticle();
+      getArticle(id)
+        .then((article) => {
+          form.setFieldsValue({
+            title: article.title,
+            summary: article.summary || "",
+            coverImageUrl: article.coverImageUrl || "",
+            wechatArticleUrl: article.wechatArticleUrl,
+            category: article.category || "",
+            sortOrder: article.sortOrder,
+          });
+        })
+        .catch((err) => setError(err instanceof Error ? err.message : "加载失败"))
+        .finally(() => setLoading(false));
     }
-  }, [id]);
-
-  const loadArticle = async () => {
-    if (!id) return;
-    try {
-      setLoading(true);
-      const article = await getArticle(id);
-      setTitle(article.title);
-      setSummary(article.summary || "");
-      setCoverImageUrl(article.coverImageUrl || "");
-      setWechatArticleUrl(article.wechatArticleUrl);
-      setCategory(article.category || "");
-      setSortOrder(article.sortOrder);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "加载失败");
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [id, form]);
 
   const handleUrlBlur = async () => {
-    if (!wechatArticleUrl) return;
-    
+    const url = form.getFieldValue("wechatArticleUrl");
+    if (!url) return;
+
     setUrlValidating(true);
     setUrlError(null);
     setDuplicateWarning(null);
 
     try {
-      // Validate URL
-      const validateResult = await validateArticleUrl(wechatArticleUrl);
+      const validateResult = await validateArticleUrl(url);
       if (!validateResult.valid) {
         setUrlError(validateResult.error || "链接无效");
         return;
       }
-
-      // Auto-fill fields
-      if (validateResult.title && !title) {
-        setTitle(validateResult.title);
+      if (validateResult.title && !form.getFieldValue("title")) {
+        form.setFieldValue("title", validateResult.title);
       }
-      if (validateResult.cover && !coverImageUrl) {
-        setCoverImageUrl(validateResult.cover);
+      if (validateResult.cover && !form.getFieldValue("coverImageUrl")) {
+        form.setFieldValue("coverImageUrl", validateResult.cover);
       }
-      if (validateResult.summary && !summary) {
-        setSummary(validateResult.summary);
+      if (validateResult.summary && !form.getFieldValue("summary")) {
+        form.setFieldValue("summary", validateResult.summary);
       }
-
-      // Check duplicate
-      const duplicateResult = await checkDuplicateArticle(wechatArticleUrl, id);
+      const duplicateResult = await checkDuplicateArticle(url, id);
       if (duplicateResult.exists && duplicateResult.article) {
         setDuplicateWarning(
-          `该文章已存在: ${duplicateResult.article.title} (${duplicateResult.article.status})`
+          `该文章已存在: ${duplicateResult.article.title} (${duplicateResult.article.status})`,
         );
       }
     } catch (err) {
@@ -97,171 +88,137 @@ export function ArticleEditorPage({ id, navigate }: ArticleEditorPageProps) {
   };
 
   const handleSaveDraft = async () => {
-    if (!title || !wechatArticleUrl) {
-      alert("标题和公众号链接为必填项");
-      return;
-    }
-
     setSubmitting(true);
     try {
+      const values = await form.validateFields();
       const data: ArticleCreateInput | ArticleUpdateInput = {
-        title,
-        summary: summary || undefined,
-        coverImageUrl: coverImageUrl || undefined,
-        wechatArticleUrl,
-        category: category || undefined,
-        sortOrder,
+        title: values.title,
+        summary: values.summary || undefined,
+        coverImageUrl: values.coverImageUrl || undefined,
+        wechatArticleUrl: values.wechatArticleUrl,
+        category: values.category || undefined,
+        sortOrder: values.sortOrder ?? 0,
       };
-
       if (id) {
         await updateArticle(id, data);
-        alert("保存成功");
+        message.success("保存成功");
       } else {
         await createArticle(data as ArticleCreateInput);
-        alert("创建成功");
+        message.success("创建成功");
       }
       navigate("/articles");
     } catch (err) {
-      alert(err instanceof Error ? err.message : "保存失败");
+      if (err instanceof Error && err.message) {
+        message.error(err.message);
+      }
     } finally {
       setSubmitting(false);
     }
   };
 
   const handlePublish = async () => {
-    if (!title || !wechatArticleUrl) {
-      alert("标题和公众号链接为必填项");
-      return;
-    }
-
     setSubmitting(true);
     try {
-      let articleId = id;
-      
+      const values = await form.validateFields();
       const data: ArticleCreateInput | ArticleUpdateInput = {
-        title,
-        summary: summary || undefined,
-        coverImageUrl: coverImageUrl || undefined,
-        wechatArticleUrl,
-        category: category || undefined,
-        sortOrder,
+        title: values.title,
+        summary: values.summary || undefined,
+        coverImageUrl: values.coverImageUrl || undefined,
+        wechatArticleUrl: values.wechatArticleUrl,
+        category: values.category || undefined,
+        sortOrder: values.sortOrder ?? 0,
       };
-
+      let articleId = id;
       if (id) {
         await updateArticle(id, data);
       } else {
         const created = await createArticle(data as ArticleCreateInput);
         articleId = created.id;
       }
-
       if (articleId) {
         await publishArticle(articleId);
-        alert("发布成功");
+        message.success("发布成功");
         navigate("/articles");
       }
     } catch (err) {
-      alert(err instanceof Error ? err.message : "发布失败");
+      if (err instanceof Error && err.message) {
+        message.error(err.message);
+      }
     } finally {
       setSubmitting(false);
     }
   };
 
-  if (loading) return <LoadingState />;
-  if (error) return <ErrorState error={error} />;
+  if (loading) return <Card loading />;
+  if (error) return <Card><p style={{ color: "#ff4d4f" }}>{error}</p></Card>;
 
   return (
-    <div className="card stack" style={{ maxWidth: "800px" }}>
-      <label>
-        公众号文章链接 <span className="inline-error">*</span>
-        <input
-          type="text"
-          value={wechatArticleUrl}
-          onChange={(e) => setWechatArticleUrl(e.target.value)}
-          onBlur={handleUrlBlur}
-          placeholder="https://mp.weixin.qq.com/s/..."
-          disabled={submitting}
-        />
-        {urlValidating && <p className="muted" style={{ fontSize: "0.9rem", marginTop: "4px" }}>正在校验...</p>}
-        {urlError && <p className="inline-error" style={{ fontSize: "0.9rem", marginTop: "4px" }}>{urlError}</p>}
-        {duplicateWarning && <p style={{ color: "#b8860b", fontSize: "0.9rem", marginTop: "4px" }}>{duplicateWarning}</p>}
-      </label>
-
-      <label>
-        标题 <span className="inline-error">*</span>
-        <input
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="文章标题"
-          disabled={submitting}
-        />
-      </label>
-
-      <label>
-        摘要
-        <textarea
-          value={summary}
-          onChange={(e) => setSummary(e.target.value)}
-          placeholder="文章摘要"
-          disabled={submitting}
-          rows={3}
-        />
-      </label>
-
-      <label>
-        封面图 URL
-        <input
-          type="text"
-          value={coverImageUrl}
-          onChange={(e) => setCoverImageUrl(e.target.value)}
-          placeholder="https://..."
-          disabled={submitting}
-        />
-        {coverImageUrl && (
-          <img
-            src={coverImageUrl}
-            alt="封面预览"
-            style={{ marginTop: "0.5rem", maxWidth: "200px", maxHeight: "200px", display: "block" }}
-            onError={(e) => {
-              (e.target as HTMLImageElement).style.display = "none";
-            }}
+    <Card style={{ maxWidth: 800 }}>
+      <Form form={form} layout="vertical">
+        <Form.Item
+          name="wechatArticleUrl"
+          label="公众号文章链接"
+          rules={[{ required: true, message: "请输入公众号链接" }]}
+        >
+          <Input
+            placeholder="https://mp.weixin.qq.com/s/..."
+            onBlur={handleUrlBlur}
+            disabled={submitting}
           />
-        )}
-      </label>
+        </Form.Item>
+        {urlValidating && <p style={{ color: "#8c8c8c", fontSize: 14, marginTop: -16 }}>正在校验...</p>}
+        {urlError && <p style={{ color: "#ff4d4f", fontSize: 14, marginTop: -16 }}>{urlError}</p>}
+        {duplicateWarning && <p style={{ color: "#faad14", fontSize: 14, marginTop: -16 }}>{duplicateWarning}</p>}
 
-      <label>
-        分类
-        <select value={category} onChange={(e) => setCategory(e.target.value)} disabled={submitting}>
-          <option value="">请选择</option>
-          <option value="company_news">单位动态</option>
-          <option value="policy">政策法规</option>
-          <option value="announcement">相关公告</option>
-          <option value="other">其他</option>
-        </select>
-      </label>
+        <Form.Item name="title" label="标题" rules={[{ required: true, message: "请输入标题" }]}>
+          <Input placeholder="文章标题" disabled={submitting} />
+        </Form.Item>
 
-      <label>
-        排序权重
-        <input
-          type="number"
-          value={sortOrder}
-          onChange={(e) => setSortOrder(Number(e.target.value))}
-          disabled={submitting}
-        />
-        <p className="muted" style={{ fontSize: "0.9rem", marginTop: "4px" }}>数值越大越靠前</p>
-      </label>
+        <Form.Item name="summary" label="摘要">
+          <Input.TextArea placeholder="文章摘要" rows={3} disabled={submitting} />
+        </Form.Item>
 
-      <div className="button-row">
-        <button className="primary-button" onClick={handleSaveDraft} disabled={submitting}>
-          {submitting ? "保存中..." : "保存草稿"}
-        </button>
-        <button className="primary-button" onClick={handlePublish} disabled={submitting}>
-          {submitting ? "发布中..." : id ? "保存并发布" : "创建并发布"}
-        </button>
-        <button className="secondary-button" onClick={() => navigate("/articles")} disabled={submitting}>
-          返回
-        </button>
-      </div>
-    </div>
+        <Form.Item name="coverImageUrl" label="封面图 URL">
+          <Input placeholder="自动从公众号文章提取，也可手动填写" disabled={submitting} />
+        </Form.Item>
+        <Form.Item noStyle shouldUpdate={(_, v) => v.coverImageUrl}>
+          {({ getFieldValue }) =>
+            getFieldValue("coverImageUrl") ? (
+              <img
+                src={getFieldValue("coverImageUrl")}
+                alt="封面预览"
+                style={{ marginTop: 8, maxWidth: 200, maxHeight: 200, display: "block" }}
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = "none";
+                }}
+              />
+            ) : null
+          }
+        </Form.Item>
+
+        <Form.Item name="category" label="分类">
+          <Select options={CATEGORY_OPTIONS} disabled={submitting} />
+        </Form.Item>
+
+        <Form.Item name="sortOrder" label="排序权重" initialValue={0}>
+          <Input type="number" disabled={submitting} />
+        </Form.Item>
+        <p style={{ color: "#8c8c8c", fontSize: 14, marginTop: -16 }}>数值越大越靠前</p>
+
+        <Form.Item>
+          <div style={{ display: "flex", gap: 12 }}>
+            <Button type="primary" onClick={handleSaveDraft} loading={submitting}>
+              {submitting ? "保存中..." : "保存草稿"}
+            </Button>
+            <Button type="primary" onClick={handlePublish} loading={submitting}>
+              {submitting ? "发布中..." : id ? "保存并发布" : "创建并发布"}
+            </Button>
+            <Button onClick={() => navigate("/articles")} disabled={submitting}>
+              返回
+            </Button>
+          </div>
+        </Form.Item>
+      </Form>
+    </Card>
   );
 }

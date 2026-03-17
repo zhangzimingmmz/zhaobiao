@@ -9,16 +9,17 @@ import requests
 from bs4 import BeautifulSoup
 
 
-def extract_article_info(url: str, timeout: int = 10) -> dict[str, Any]:
+def extract_article_info(url: str, timeout: int = 10, extract_all_images: bool = False) -> dict[str, Any]:
     """
     Extract article information from WeChat article URL.
     
     Args:
         url: WeChat article URL (must start with https://mp.weixin.qq.com/s)
         timeout: Request timeout in seconds
+        extract_all_images: If True, extract all images from article content
         
     Returns:
-        dict with keys: valid, title, cover, summary, error
+        dict with keys: valid, title, cover, summary, images (optional), error
     """
     if not url.startswith('https://mp.weixin.qq.com/s'):
         return {
@@ -41,7 +42,7 @@ def extract_article_info(url: str, timeout: int = 10) -> dict[str, Any]:
         if title_tag:
             title = title_tag.get_text(strip=True)
         
-        # Extract cover image
+        # Extract cover image (official og:image)
         cover = None
         cover_tag = soup.find('meta', property='og:image')
         if cover_tag:
@@ -53,18 +54,36 @@ def extract_article_info(url: str, timeout: int = 10) -> dict[str, Any]:
         if desc_tag:
             summary = desc_tag.get('content')
         
+        # Extract all images from article content (optional)
+        images = []
+        if extract_all_images:
+            content_div = soup.find('div', id='js_content')
+            if content_div:
+                img_tags = content_div.find_all('img')
+                for img in img_tags:
+                    img_url = img.get('data-src') or img.get('src')
+                    if img_url and img_url.startswith('http'):
+                        images.append(img_url)
+                # Remove duplicates and limit to first 10 images
+                images = list(dict.fromkeys(images))[:10]
+        
         if not title:
             return {
                 'valid': False,
                 'error': '无法提取文章标题，请检查链接是否有效'
             }
         
-        return {
+        result = {
             'valid': True,
             'title': title,
             'cover': cover,
             'summary': summary
         }
+        
+        if extract_all_images and images:
+            result['images'] = images
+        
+        return result
         
     except requests.Timeout:
         return {

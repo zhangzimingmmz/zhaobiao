@@ -1,75 +1,41 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
+import { ProTable } from "@ant-design/pro-components";
+import type { ProColumns } from "@ant-design/pro-components";
+import { Button } from "antd";
 import { apiRequest } from "../lib/api";
 import type { ReviewItem, ReviewsData } from "../lib/types";
-import { EmptyState, ErrorState, LoadingState } from "../components/States";
 import { reviewStatusLabel } from "../lib/statusLabels";
+import { createEnterpriseColumns } from "../components/EnterpriseColumns";
 
 export function ReviewsPage({ navigate }: { navigate: (path: string) => void }) {
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [status, setStatus] = useState("pending");
-  const [items, setItems] = useState<ReviewItem[]>([]);
-
-  useEffect(() => {
-    async function load() {
-      setLoading(true);
-      setError("");
-      try {
-        const data = await apiRequest<ReviewsData>(
-          `/api/admin/reviews?status=${encodeURIComponent(status)}&page=1&pageSize=50`,
-        );
-        setItems(data.list);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "加载失败");
-      } finally {
-        setLoading(false);
-      }
-    }
-    void load();
-  }, [status]);
+  const columns = createEnterpriseColumns({
+    showActions: true,
+    showCreatedAt: true,
+    showAuditAt: false,
+    onView: (r) => navigate(`/reviews/${r.id}`),
+  });
 
   return (
-    <div className="stack">
-      <div className="toolbar">
-        <select value={status} onChange={(e) => setStatus(e.target.value)}>
-          <option value="pending">待审核</option>
-          <option value="approved">已通过</option>
-          <option value="rejected">已驳回</option>
-        </select>
-      </div>
-      {loading ? <LoadingState /> : null}
-      {error ? <ErrorState error={error} /> : null}
-      {!loading && !error && items.length === 0 ? <EmptyState /> : null}
-      {!loading && !error && items.length > 0 ? (
-        <div className="table-card">
-          <table>
-            <thead>
-              <tr>
-                <th>登录名 / 企业标识</th>
-                <th>法人 / 手机号</th>
-                <th>状态</th>
-                <th>提交时间</th>
-                <th />
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((item) => (
-                <tr key={item.id}>
-                  <td>{item.companyName}<br /><span className="muted">{item.username}</span></td>
-                  <td>{item.contactName || "-"}<br /><span className="muted">{item.contactPhone}</span></td>
-                  <td>{reviewStatusLabel(item.status)}</td>
-                  <td>{item.createdAt}</td>
-                  <td>
-                    <button className="secondary-button" onClick={() => navigate(`/reviews/${item.id}`)}>
-                      查看
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : null}
-    </div>
+    <ProTable<ReviewItem>
+      columns={columns}
+      request={async (params) => {
+        const status = params.status ?? "pending";
+        const page = params.current ?? 1;
+        const pageSize = params.pageSize ?? 20;
+        const data = await apiRequest<ReviewsData>(
+          `/api/admin/reviews?status=${encodeURIComponent(status)}&page=${page}&pageSize=${pageSize}`,
+        );
+        return { data: data.list, success: true, total: data.total };
+      }}
+      rowKey="id"
+      search={{
+        labelWidth: "auto",
+        defaultCollapsed: false,
+      }}
+      form={{
+        initialValues: { status: "pending" },
+      }}
+      pagination={{ defaultPageSize: 20, showSizeChanger: true }}
+    />
   );
 }

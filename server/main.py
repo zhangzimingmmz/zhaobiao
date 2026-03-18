@@ -932,6 +932,45 @@ def audit_status(
     return {"code": 200, "data": _application_snapshot(row)}
 
 
+@app.get("/api/auth/me")
+def auth_me(authorization: Optional[str] = Header(None)):
+    """根据 token 获取当前登录用户的账号与审核状态，供「我的」页展示。"""
+    payload = get_current_user(authorization)
+    user_id = payload.get("userId")
+    if not user_id:
+        return {"code": 401, "message": "token 无效，请重新登录"}
+
+    conn = _get_conn()
+    try:
+        row = _latest_application_for_user(conn, user_id)
+    finally:
+        conn.close()
+
+    if not row:
+        # 用户存在但无申请记录（异常情况），返回基础用户信息
+        conn = _get_conn()
+        try:
+            user_row = conn.execute(
+                "SELECT id, username, mobile, account_status FROM users WHERE id = ?",
+                (user_id,),
+            ).fetchone()
+        finally:
+            conn.close()
+        if not user_row:
+            return {"code": 404, "message": "用户不存在"}
+        return {
+            "code": 200,
+            "data": {
+                "username": user_row["username"],
+                "mobile": user_row["mobile"],
+                "status": user_row["account_status"] or "pending",
+                "nextAction": "register",
+            },
+        }
+
+    return {"code": 200, "data": _application_snapshot(row)}
+
+
 # ────────────────────────────────────────────────────────────
 # 管理员审核接口
 # ────────────────────────────────────────────────────────────

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
-import { View, Text, Input, Button } from '@tarojs/components'
+import { View, Text } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
+import { AtInput, AtButton } from 'taro-ui'
 import TopBar from '../../components/TopBar'
 import { api } from '../../services/api'
 import { getRegistrationContext, saveRegistrationContext } from '../../utils/registration'
@@ -23,6 +24,30 @@ export default function Profile() {
   })
 
   useEffect(() => {
+    if (isLoggedIn) {
+      setAuditLoading(true)
+      api.me()
+        .then((res) => {
+          if (res.data?.code === 200 && res.data?.data) {
+            const { status, nextAction: na, ...rest } = res.data.data
+            setAuditData(rest)
+            setAuditStatus(status || '')
+            setNextAction(na || '')
+          } else {
+            setAuditData(null)
+            setAuditStatus('')
+            setNextAction('')
+          }
+        })
+        .catch(() => {
+          setAuditData(null)
+          setAuditStatus('')
+          setNextAction('')
+        })
+        .finally(() => setAuditLoading(false))
+      return
+    }
+
     const context = getRegistrationContext()
     if (!context.applicationId || (!context.username && !context.mobile)) {
       setAuditData(null)
@@ -156,27 +181,12 @@ export default function Profile() {
             </Text>
           </View>
           
-          <View className="profile-page__login-form card">
-            <Input
-              className="profile-page__input"
-              placeholder="请输入登录名"
-              value={username}
-              onInput={(e) => setUsername(e.detail.value)}
-            />
-            <Input
-              className="profile-page__input"
-              password
-              placeholder="请输入登录密码"
-              value={password}
-              onInput={(e) => setPassword(e.detail.value)}
-            />
-            <Button 
-              className="btn-primary profile-page__login-btn" 
-              onClick={handleLogin} 
-              loading={loginLoading}
-            >
+          <View className="profile-page__login-form card form-card">
+            <AtInput name="username" placeholder="请输入登录名" value={username} onChange={(v) => setUsername(v)} />
+            <AtInput name="password" type="password" placeholder="请输入登录密码" value={password} onChange={(v) => setPassword(v)} />
+            <AtButton type="primary" full onClick={handleLogin} loading={loginLoading} className="profile-page__login-btn">
               登录
-            </Button>
+            </AtButton>
             
             <View className="profile-page__actions">
               <Text 
@@ -247,9 +257,9 @@ export default function Profile() {
                 ? '可进入审核状态页查看当前处理进度。'
                 : '已审核通过，可直接登录或进入首页。'}
           </Text>
-          <View className="btn-primary profile-page__register-btn" onClick={handlePrimaryAction}>
+          <AtButton type="primary" full onClick={handlePrimaryAction} className="profile-page__register-btn">
             {getActionLabel()}
-          </View>
+          </AtButton>
         </View>
       ) : null}
 

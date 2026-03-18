@@ -22,6 +22,10 @@ export const api = {
   auditStatus(params) {
     return get('/api/auth/audit-status', params)
   },
+  /** 根据 token 获取当前用户账号与审核状态，需已登录 */
+  me() {
+    return get('/api/auth/me')
+  },
   // 文章相关接口
   getArticles(params) {
     return get('/api/articles', params)

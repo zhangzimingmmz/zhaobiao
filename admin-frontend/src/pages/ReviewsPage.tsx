@@ -4,7 +4,6 @@ import type { ProColumns } from "@ant-design/pro-components";
 import { Button } from "antd";
 import { apiRequest } from "../lib/api";
 import type { ReviewItem, ReviewsData } from "../lib/types";
-import { reviewStatusLabel } from "../lib/statusLabels";
 import { createEnterpriseColumns } from "../components/EnterpriseColumns";
 
 export function ReviewsPage({ navigate }: { navigate: (path: string) => void }) {
@@ -19,11 +18,13 @@ export function ReviewsPage({ navigate }: { navigate: (path: string) => void }) 
     <ProTable<ReviewItem>
       columns={columns}
       request={async (params) => {
-        const status = params.status ?? "pending";
+        const status = params.status ?? "";
         const page = params.current ?? 1;
         const pageSize = params.pageSize ?? 20;
+        const qs = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
+        if (status) qs.set("status", status);
         const data = await apiRequest<ReviewsData>(
-          `/api/admin/reviews?status=${encodeURIComponent(status)}&page=${page}&pageSize=${pageSize}`,
+          `/api/admin/reviews?${qs.toString()}`,
         );
         return { data: data.list, success: true, total: data.total };
       }}
@@ -33,7 +34,7 @@ export function ReviewsPage({ navigate }: { navigate: (path: string) => void }) 
         defaultCollapsed: false,
       }}
       form={{
-        initialValues: { status: "pending" },
+        initialValues: { status: "" },
       }}
       pagination={{ defaultPageSize: 20, showSizeChanger: true }}
     />

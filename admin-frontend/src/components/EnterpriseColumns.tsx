@@ -2,7 +2,7 @@ import React from "react";
 import type { ProColumns } from "@ant-design/pro-components";
 import { Button } from "antd";
 import type { ReviewItem } from "../lib/types";
-import { reviewStatusLabel } from "../lib/statusLabels";
+import { reviewStatusLabel, reviewStatusBadgeClass } from "../lib/statusLabels";
 
 export interface EnterpriseColumnsOptions {
   showActions?: boolean;
@@ -58,11 +58,14 @@ export const createEnterpriseColumns = (
       key: "status",
       valueType: "select",
       valueEnum: {
+        "": { text: "全部" },
         pending: { text: "待审核" },
         approved: { text: "已通过" },
         rejected: { text: "已驳回" },
       },
-      render: (_, r) => reviewStatusLabel(r.status),
+      render: (_, r) => (
+        <span className={reviewStatusBadgeClass(r.status)}>{reviewStatusLabel(r.status)}</span>
+      ),
     },
   ];
 

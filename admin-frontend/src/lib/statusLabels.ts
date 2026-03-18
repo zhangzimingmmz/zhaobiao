@@ -12,6 +12,16 @@ export function reviewStatusLabel(status: string): string {
   return map[status] ?? status;
 }
 
+/** 企业审核状态对应的 badge 类名（待审核橙、已通过绿、已驳回红） */
+export function reviewStatusBadgeClass(status: string): string {
+  const map: Record<string, string> = {
+    pending: "badge badge-pending",
+    approved: "badge badge-success",
+    rejected: "badge badge-fail",
+  };
+  return map[status] ?? "badge badge-pending";
+}
+
 /** 采集运行状态 */
 export function crawlRunStatusLabel(status: string): string {
   const map: Record<string, string> = {

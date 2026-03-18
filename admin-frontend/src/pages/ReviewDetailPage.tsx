@@ -3,7 +3,7 @@ import { message } from "antd";
 import { apiRequest } from "../lib/api";
 import type { ReviewDetail } from "../lib/types";
 import { ErrorState, LoadingState } from "../components/States";
-import { reviewStatusLabel } from "../lib/statusLabels";
+import { reviewStatusLabel, reviewStatusBadgeClass } from "../lib/statusLabels";
 
 export function ReviewDetailPage({
   id,
@@ -72,6 +72,12 @@ export function ReviewDetailPage({
     <div className="stack">
       {error ? <ErrorState error={error} /> : null}
       <div className="card">
+        <div style={{ marginBottom: 16, display: "flex", alignItems: "center", gap: 12 }}>
+          <span className="detail-label">审核状态</span>
+          <span className={reviewStatusBadgeClass(item.status)} style={{ fontSize: "1rem", padding: "4px 12px" }}>
+            {reviewStatusLabel(item.status)}
+          </span>
+        </div>
         <div className="detail-label" style={{ marginBottom: 8 }}>企业信息</div>
         <div className="detail-grid">
           <div>
@@ -93,10 +99,6 @@ export function ReviewDetailPage({
           <div>
             <div className="detail-label">经营场所地址</div>
             <div>{item.businessAddress || "-"}</div>
-          </div>
-          <div>
-            <div className="detail-label">状态</div>
-            <div>{reviewStatusLabel(item.status)}</div>
           </div>
         </div>
       </div>

@@ -999,7 +999,8 @@ def admin_review_list(
         total = conn.execute(count_sql, params).fetchone()[0]
 
         offset = (page - 1) * pageSize
-        order = "ORDER BY ea.created_at DESC LIMIT ? OFFSET ?"
+        # 待审核优先，其次驳回，最后其他
+        order = "ORDER BY CASE ea.status WHEN 'pending' THEN 0 WHEN 'rejected' THEN 1 ELSE 2 END, ea.created_at DESC LIMIT ? OFFSET ?"
         params.extend([pageSize, offset])
         
         rows = conn.execute(

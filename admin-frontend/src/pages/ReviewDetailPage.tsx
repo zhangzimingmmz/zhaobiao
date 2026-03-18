@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { message } from "antd";
 import { apiRequest } from "../lib/api";
 import type { ReviewDetail } from "../lib/types";
 import { ErrorState, LoadingState } from "../components/States";
@@ -37,7 +38,7 @@ export function ReviewDetailPage({
 
   async function submitDecision(type: "approve" | "reject") {
     if (type === "reject" && !rejectReason.trim()) {
-      setError("请填写驳回原因");
+      message.warning("请填写驳回原因");
       return;
     }
     setSubmitting(true);
@@ -50,13 +51,18 @@ export function ReviewDetailPage({
           body: type === "approve" ? {} : { rejectReason },
         },
       );
+      message.success(type === "approve" ? "审核已通过" : "已驳回");
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "提交失败");
+      const msg = err instanceof Error ? err.message : "提交失败";
+      setError(msg);
+      message.error(msg);
     } finally {
       setSubmitting(false);
     }
   }
+
+  const isFinal = item?.status === "approved" || item?.status === "rejected";
 
   if (loading) return <LoadingState />;
   if (error && !item) return <ErrorState error={error} />;
@@ -126,15 +132,28 @@ export function ReviewDetailPage({
           驳回原因
           <textarea value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} />
         </label>
+        {isFinal ? (
+          <div style={{ marginBottom: 12, color: "#8c8c8c", fontSize: 14 }}>
+            该申请已处理，无需重复操作
+          </div>
+        ) : null}
         <div className="button-row">
           <button className="secondary-button" onClick={() => navigate("/reviews")}>
             返回列表
           </button>
-          <button className="secondary-button" disabled={submitting} onClick={() => void submitDecision("reject")}>
-            驳回
+          <button
+            className="secondary-button"
+            disabled={submitting || isFinal}
+            onClick={() => void submitDecision("reject")}
+          >
+            {submitting ? "处理中..." : "驳回"}
           </button>
-          <button className="primary-button" disabled={submitting} onClick={() => void submitDecision("approve")}>
-            通过
+          <button
+            className="primary-button"
+            disabled={submitting || isFinal}
+            onClick={() => void submitDecision("approve")}
+          >
+            {submitting ? "处理中..." : "通过"}
           </button>
         </div>
       </div>

@@ -12,6 +12,7 @@ export type ReviewItem = {
   companyName: string;
   creditCode: string;
   contactName: string | null;
+  contactPersonName?: string | null;
   contactPhone: string;
   legalPersonName: string | null;
   legalPersonPhone: string | null;

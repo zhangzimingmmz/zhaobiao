@@ -65,42 +65,54 @@ export function ReviewDetailPage({
   return (
     <div className="stack">
       {error ? <ErrorState error={error} /> : null}
-      <div className="card detail-grid">
-        <div>
-          <div className="detail-label">登录名</div>
-          <div>{item.username}</div>
+      <div className="card">
+        <div className="detail-label" style={{ marginBottom: 8 }}>企业信息</div>
+        <div className="detail-grid">
+          <div>
+            <div className="detail-label">企业名称</div>
+            <div>{item.companyName}</div>
+          </div>
+          <div>
+            <div className="detail-label">统一社会信用代码</div>
+            <div>{item.creditCode}</div>
+          </div>
+          <div>
+            <div className="detail-label">登录名</div>
+            <div>{item.username}</div>
+          </div>
+          <div>
+            <div className="detail-label">经营范围</div>
+            <div>{item.businessScope || "-"}</div>
+          </div>
+          <div>
+            <div className="detail-label">经营场所地址</div>
+            <div>{item.businessAddress || "-"}</div>
+          </div>
+          <div>
+            <div className="detail-label">状态</div>
+            <div>{reviewStatusLabel(item.status)}</div>
+          </div>
         </div>
-        <div>
-          <div className="detail-label">企业名称</div>
-          <div>{item.companyName}</div>
-        </div>
-        <div>
-          <div className="detail-label">统一信用代码</div>
-          <div>{item.creditCode}</div>
-        </div>
-        <div>
-          <div className="detail-label">法人姓名</div>
-          <div>{item.legalPersonName || item.contactName || "-"}</div>
-        </div>
-        <div>
-          <div className="detail-label">法人电话</div>
-          <div>{item.legalPersonPhone || "-"}</div>
-        </div>
-        <div>
-          <div className="detail-label">注册手机号</div>
-          <div>{item.contactPhone}</div>
-        </div>
-        <div>
-          <div className="detail-label">经营范围</div>
-          <div>{item.businessScope || "-"}</div>
-        </div>
-        <div>
-          <div className="detail-label">经营场所地址</div>
-          <div>{item.businessAddress || "-"}</div>
-        </div>
-        <div>
-          <div className="detail-label">状态</div>
-          <div>{reviewStatusLabel(item.status)}</div>
+      </div>
+      <div className="card">
+        <div className="detail-label" style={{ marginBottom: 8 }}>人员信息</div>
+        <div className="detail-grid">
+          <div>
+            <div className="detail-label">法人姓名</div>
+            <div>{item.legalPersonName || "-"}</div>
+          </div>
+          <div>
+            <div className="detail-label">法人电话</div>
+            <div>{item.legalPersonPhone || "-"}</div>
+          </div>
+          <div>
+            <div className="detail-label">联系人姓名</div>
+            <div>{item.contactPersonName || item.contactName || "-"}</div>
+          </div>
+          <div>
+            <div className="detail-label">联系人/注册手机号</div>
+            <div>{item.contactPhone || item.userMobile || "-"}</div>
+          </div>
         </div>
       </div>
       <div className="card stack">

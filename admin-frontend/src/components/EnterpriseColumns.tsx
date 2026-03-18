@@ -18,7 +18,7 @@ export const createEnterpriseColumns = (
 
   const columns: ProColumns<ReviewItem>[] = [
     {
-      title: "登录名 / 企业标识",
+      title: "企业名称 / 登录名",
       dataIndex: "companyName",
       key: "company",
       render: (_, r) => (
@@ -30,16 +30,27 @@ export const createEnterpriseColumns = (
       ),
     },
     {
-      title: "法人 / 手机号",
-      dataIndex: "contactName",
+      title: "统一社会信用代码",
+      dataIndex: "creditCode",
+      key: "creditCode",
+      width: 180,
+      render: (v) => v || "-",
+    },
+    {
+      title: "法人 / 联系人",
+      dataIndex: "legalPersonName",
       key: "contact",
-      render: (_, r) => (
-        <span>
-          {r.contactName || "-"}
-          <br />
-          <span style={{ color: "#8c8c8c", fontSize: 12 }}>{r.contactPhone}</span>
-        </span>
-      ),
+      render: (_, r) => {
+        const legal = r.legalPersonName || r.contactName;
+        const phone = r.legalPersonPhone || r.contactPhone;
+        return (
+          <span>
+            {legal || "-"}
+            <br />
+            <span style={{ color: "#8c8c8c", fontSize: 12 }}>{phone || "-"}</span>
+          </span>
+        );
+      },
     },
     {
       title: "状态",

@@ -76,7 +76,7 @@ export function App() {
       return {
         title: "企业目录",
         subtitle: "查看企业清单和认证状态。",
-        content: <CompaniesPage />,
+        content: <CompaniesPage navigate={navigate} />,
       };
     }
     if (path === "/articles") {

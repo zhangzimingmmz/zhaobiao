@@ -1,16 +1,15 @@
 import React from "react";
 import { ProTable } from "@ant-design/pro-components";
-import type { ProColumns } from "@ant-design/pro-components";
 import { apiRequest } from "../lib/api";
 import type { ReviewItem, CompaniesData } from "../lib/types";
-import { reviewStatusLabel } from "../lib/statusLabels";
 import { createEnterpriseColumns } from "../components/EnterpriseColumns";
 
-export function CompaniesPage() {
+export function CompaniesPage({ navigate }: { navigate: (path: string) => void }) {
   const columns = createEnterpriseColumns({
-    showActions: false,
+    showActions: true,
     showCreatedAt: false,
     showAuditAt: true,
+    onView: (r) => navigate(`/reviews/${r.id}`),
   });
 
   return (

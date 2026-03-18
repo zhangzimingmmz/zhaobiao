@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { Card, Descriptions, Typography } from "antd";
 import { apiRequest } from "../lib/api";
 import type { CrawlRun } from "../lib/types";
 import { ErrorState, LoadingState } from "../components/States";
@@ -31,22 +32,30 @@ export function RunDetailPage({ id }: { id: string }) {
 
   return (
     <div className="stack">
-      <div className="card detail-grid">
-        <div><div className="detail-label">动作</div><div>{actionKeyLabel(run.actionKey)}</div></div>
-        <div><div className="detail-label">状态</div><div>{crawlRunStatusLabel(run.status)}</div></div>
-        <div><div className="detail-label">站点</div><div>{siteLabel(run.site)}</div></div>
-        <div><div className="detail-label">请求时间</div><div>{run.requestedAt}</div></div>
-        <div><div className="detail-label">执行摘要</div><div>{run.summary ?? "-"}</div></div>
-        <div><div className="detail-label">失败原因</div><div>{run.statusReason ?? "-"}</div></div>
-      </div>
-      <div className="card stack">
-        <div className="detail-label">请求参数</div>
-        <pre>{JSON.stringify(run.requestPayload ?? {}, null, 2)}</pre>
-      </div>
-      <div className="card stack">
-        <div className="detail-label">结果信息</div>
-        <pre>{JSON.stringify(run.resultPayload ?? {}, null, 2)}</pre>
-      </div>
+      <Card title="运行信息">
+        <Descriptions column={1} bordered size="small">
+          <Descriptions.Item label="动作">{actionKeyLabel(run.actionKey)}</Descriptions.Item>
+          <Descriptions.Item label="状态">{crawlRunStatusLabel(run.status)}</Descriptions.Item>
+          <Descriptions.Item label="站点">{siteLabel(run.site)}</Descriptions.Item>
+          <Descriptions.Item label="请求时间">{run.requestedAt}</Descriptions.Item>
+          <Descriptions.Item label="执行摘要">{run.summary ?? "-"}</Descriptions.Item>
+          <Descriptions.Item label="失败原因">{run.statusReason ?? "-"}</Descriptions.Item>
+        </Descriptions>
+      </Card>
+      <Card title="请求参数">
+        <Typography.Paragraph>
+          <pre style={{ margin: 0, fontSize: 12 }}>
+            {JSON.stringify(run.requestPayload ?? {}, null, 2)}
+          </pre>
+        </Typography.Paragraph>
+      </Card>
+      <Card title="结果信息">
+        <Typography.Paragraph>
+          <pre style={{ margin: 0, fontSize: 12 }}>
+            {JSON.stringify(run.resultPayload ?? {}, null, 2)}
+          </pre>
+        </Typography.Paragraph>
+      </Card>
     </div>
   );
 }

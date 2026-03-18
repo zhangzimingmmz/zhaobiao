@@ -1,4 +1,5 @@
-import { View, Text, Input } from '@tarojs/components'
+import { View, Text } from '@tarojs/components'
+import { AtSearchBar, AtSegmentedControl } from 'taro-ui'
 import AppIcon from '../AppIcon'
 import './index.scss'
 
@@ -40,7 +41,9 @@ const FILTER_MODES = {
   },
   information: {
     placeholder: '搜索标题、内容和描述关键词',
-    buttons: [],
+    buttons: [
+      { key: 'category', label: '分类', icon: 'mappin' },
+    ],
     layout: 'row',
   },
 }
@@ -69,18 +72,11 @@ export default function FilterBar({
   if (!mode) return null
 
   const renderSearch = () => (
-    <View className="filter-bar__search">
-      <View className="filter-bar__search-icon">
-        <AppIcon name="search" size={28} color="#86909C" />
-      </View>
-      <Input
-        className="filter-bar__search-input"
-        type="text"
-        value={keyword}
-        placeholder={mode.placeholder}
-        onInput={(event) => onKeywordChange && onKeywordChange(event.detail.value)}
-      />
-    </View>
+    <AtSearchBar
+      value={keyword}
+      placeholder={mode.placeholder}
+      onChange={(v) => onKeywordChange && onKeywordChange(v)}
+    />
   )
 
   const renderButtons = (buttons) => (
@@ -105,26 +101,11 @@ export default function FilterBar({
   return (
     <View className={'filter-bar' + (mode.buttons.length === 0 ? ' filter-bar--minimal' : '')}>
       {mode.segment && (
-        <View className="filter-bar__segment">
-          <View
-            className={
-              'filter-bar__segment-item' +
-              (announcementType === 'plan' ? ' filter-bar__segment-item--active' : '')
-            }
-            onClick={() => onAnnouncementTypeChange && onAnnouncementTypeChange('plan')}
-          >
-            <Text>招标计划</Text>
-          </View>
-          <View
-            className={
-              'filter-bar__segment-item' +
-              (announcementType === 'announcement' ? ' filter-bar__segment-item--active' : '')
-            }
-            onClick={() => onAnnouncementTypeChange && onAnnouncementTypeChange('announcement')}
-          >
-            <Text>招标公告</Text>
-          </View>
-        </View>
+        <AtSegmentedControl
+          values={['招标计划', '招标公告']}
+          current={announcementType === 'plan' ? 0 : 1}
+          onClick={(index) => onAnnouncementTypeChange && onAnnouncementTypeChange(index === 0 ? 'plan' : 'announcement')}
+        />
       )}
 
       {renderSearch()}

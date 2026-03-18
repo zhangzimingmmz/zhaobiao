@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { View, Text, Input, Button } from '@tarojs/components'
+import { View, Text } from '@tarojs/components'
 import Taro from '@tarojs/taro'
+import { AtInput, AtButton } from 'taro-ui'
 import TopBar from '../../components/TopBar'
 import { api } from '../../services/api'
 import { saveRegistrationContext } from '../../utils/registration'
@@ -54,31 +55,29 @@ export default function Login() {
           <Text className="secondary-page__eyebrow">AUTHENTICATION</Text>
           <Text className="secondary-page__title">审核通过后使用账号密码登录</Text>
           <Text className="secondary-page__desc">
-            只有后台审核通过的账号才能登录。若账号仍在审核中，可进入审核状态页查看进度。
+            只有后台审核通过的账号才能登录。登录时系统会自动提示审核状态。
           </Text>
         </View>
-        <View className="secondary-card login-page__form">
-          <Input
-            className="login-page__input"
+        <View className="secondary-card form-card login-page__form">
+          <AtInput
+            name="username"
+            type="text"
             placeholder="请输入登录名"
             value={username}
-            onInput={(e) => setUsername(e.detail.value)}
+            onChange={(v) => setUsername(v)}
           />
-          <Input
-            className="login-page__input"
-            password
+          <AtInput
+            name="password"
+            type="password"
             placeholder="请输入登录密码"
             value={password}
-            onInput={(e) => setPassword(e.detail.value)}
+            onChange={(v) => setPassword(v)}
           />
-          <Button className="login-page__submit btn-primary" onClick={handleLogin} loading={loading}>
+          <AtButton type="primary" full onClick={handleLogin} loading={loading} className="login-page__submit">
             登录
-          </Button>
+          </AtButton>
           <View className="login-page__register" onClick={() => Taro.redirectTo({ url: '/pages/register/index' })}>
-            <Text className="login-page__register-label">还没有账号？先去注册并提交审核</Text>
-          </View>
-          <View className="login-page__register" onClick={() => Taro.redirectTo({ url: '/pages/audit-status/index' })}>
-            <Text className="login-page__register-label">查询审核状态</Text>
+            <Text className="login-page__register-label">还没有账号？去注册</Text>
           </View>
           <View className="login-page__agreement">
             <Text className="text-caption">登录即表示同意</Text>

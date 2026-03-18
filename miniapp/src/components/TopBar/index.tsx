@@ -4,16 +4,16 @@ import AppIcon from '../AppIcon'
 import './index.scss'
 
 function getNavMetrics() {
-  const systemInfo = Taro.getSystemInfoSync()
+  const windowInfo = Taro.getWindowInfo()
   const menuRect = Taro.getMenuButtonBoundingClientRect
     ? Taro.getMenuButtonBoundingClientRect()
     : null
-  const statusBarHeight = systemInfo.statusBarHeight || 20
+  const statusBarHeight = windowInfo.statusBarHeight ?? 20
   const navHeight = menuRect
     ? menuRect.height + (menuRect.top - statusBarHeight) * 2
     : 44
   const capsuleSpace = menuRect
-    ? Math.max(systemInfo.windowWidth - menuRect.left + 12, 96)
+    ? Math.max(windowInfo.windowWidth - menuRect.left + 12, 96)
     : 108
 
   return {

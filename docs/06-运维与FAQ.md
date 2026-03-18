@@ -15,6 +15,18 @@
 - 生产-like：单机 Docker Compose，API 与 scheduler 分开容器，共享 `data`、`logs` 挂载。
 - 公网：由 100.64.0.7 上 Traefik 将 admin 与 api 域名转发至 100.64.0.5:8091、100.64.0.5:8000。
 
+### 一键部署命令
+
+| 命令 | 说明 |
+|------|------|
+| `make deploy` | 一键部署：自动 commit + push → 若有 miniapp 变更则编译 → 远程部署 |
+| `make deploy MSG="fix: xxx"` | 指定提交信息 |
+| `make deploy-remote` | 仅远程部署（不提交、不编译小程序） |
+| `DEPLOY_SKIP_COMMIT=1 make deploy` | 跳过提交（仅 push + 编译 + 部署） |
+| `DEPLOY_SKIP_MINIAPP=1 make deploy` | 跳过小程序编译 |
+
+小程序编译产出位于 `miniapp/dist`，需在微信开发者工具中手动上传。需确保本地可 SSH 到目标机，且目标机已配置 `.env.backend`。
+
 ### 打包与发布
 
 - 使用仓库内 `Dockerfile.backend`、`docker-compose.backend.yml`；复制 `.env.backend.example` 为 `.env.backend` 并替换 `ADMIN_TOKEN`、`JWT_SECRET` 等。
@@ -42,6 +54,35 @@
 
 - 检查 baseUrl 是否指向正确 API 地址；生产是否已配置 request 合法域名。
 - 本地开发需在微信开发者工具中关闭「校验合法域名」。
+
+### 手机真机加载不出来
+
+真机预览时请求被拦截或超时，常见原因与排查：
+
+1. **request 合法域名未配置**（最常见）
+   - 微信小程序真机**必须**使用已配置的合法域名，无法像开发者工具那样关闭校验。
+   - 登录 [微信公众平台](https://mp.weixin.qq.com) → 小程序 → 开发 → 开发管理 → 开发设置 → 服务器域名。
+   - 在「request 合法域名」中添加：`https://api-zhaobiao.zhangziming.cn`。
+   - 保存后重新编译/预览，或等待几分钟生效。
+
+2. **构建时 API 地址错误**
+   - 真机必须请求公网 HTTPS 地址，不能是 `localhost` 或内网 IP。
+   - 确认构建命令：`npm run build:weapp` 使用默认 `https://api-zhaobiao.zhangziming.cn`；若本地联调时改过 `miniapp/src/config.ts` 的 baseUrl，需改回或使用 `TARO_APP_API_BASE=https://api-zhaobiao.zhangziming.cn npm run build:weapp` 再构建。
+
+3. **API 公网不可达**
+   - 手机需能访问 `https://api-zhaobiao.zhangziming.cn`。在手机浏览器中打开该地址，若打不开则说明网络或 API 有问题。
+   - 检查后端部署、Traefik 转发、502 等（见「公网访问 Bad Gateway」）。
+
+4. **超时**
+   - 默认请求超时 10 秒。弱网环境下可适当增加 `miniapp/src/services/request.ts` 中的 `timeout`。
+
+### 文章详情「无法打开该图文消息」
+
+点击信息展示中的文章，真机提示「无法打开该图文消息」。
+
+**原因**：web-view 加载 `mp.weixin.qq.com` 需配置业务域名，但该域名为微信自有，无法上传校验文件，故无法通过正常流程配置。
+
+**解决**：已改用微信官方 API `wx.openOfficialAccountArticle` 打开公众号文章，无需配置业务域名。需微信基础库 3.4.8+，一般真机均满足。
 
 ### 列表/详情无数据
 

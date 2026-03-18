@@ -1,5 +1,5 @@
-import { View, WebView } from '@tarojs/components'
-import { useRouter } from '@tarojs/taro'
+import { View, WebView, Text } from '@tarojs/components'
+import Taro, { useRouter } from '@tarojs/taro'
 import { useState } from 'react'
 import './index.scss'
 
@@ -32,6 +32,9 @@ export default function WebViewPage() {
 
   return (
     <View className='webview-page'>
+      <View className='webview-page__header' onClick={() => Taro.navigateBack()}>
+        <Text className='webview-page__back'>← 返回</Text>
+      </View>
       {loading && (
         <View className='loading-state'>
           <View className='loading-text'>加载中...</View>
@@ -46,6 +49,7 @@ export default function WebViewPage() {
         src={articleUrl}
         onLoad={handleLoad}
         onError={handleError}
+        className="webview-page__iframe"
       />
     </View>
   )

@@ -30,14 +30,6 @@
   }
 
   &__banner-action {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 16rpx 28rpx;
-    background: $color-primary-bg;
-    border-radius: 999rpx;
-    color: $color-primary;
-    font-size: $font-sm;
-    font-weight: 600;
+    margin-top: 16rpx;
   }
 }

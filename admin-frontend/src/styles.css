@@ -36,8 +36,7 @@ button {
 }
 
 .login-card,
-.card,
-.table-card {
+.card {
   background: #fff;
   border: 1px solid rgba(0, 0, 0, 0.06);
   border-radius: 12px;
@@ -103,29 +102,6 @@ textarea {
   resize: vertical;
 }
 
-.primary-button,
-.secondary-button,
-.nav-item {
-  border-radius: 12px;
-  border: none;
-  padding: 12px 16px;
-}
-
-.primary-button {
-  background: #1f4f6b;
-  color: white;
-}
-
-.secondary-button {
-  background: #f5f5f5;
-  color: #595959;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-}
-
-.secondary-button:hover {
-  background: #e8e8e8;
-  border-color: rgba(0, 0, 0, 0.12);
-}
 
 .inline-error,
 .error {
@@ -258,8 +234,7 @@ textarea {
   gap: 16px;
 }
 
-.card,
-.table-card {
+.card {
   padding: 20px;
 }
 
@@ -314,11 +289,6 @@ textarea {
   border-color: rgba(48, 37, 22, 0.2);
 }
 
-.table-card {
-  overflow: hidden;
-  border-radius: 16px;
-}
-
 .table-wrapper {
   overflow-x: auto;
 }
@@ -339,56 +309,6 @@ td {
 th {
   font-weight: 600;
   color: #182028;
-}
-
-.runs-table .col-action {
-  min-width: 140px;
-  white-space: nowrap;
-}
-
-.runs-table .col-site,
-.runs-table .col-status {
-  min-width: 72px;
-  white-space: nowrap;
-}
-
-.runs-table .col-time {
-  min-width: 90px;
-  color: #8c8c8c;
-  font-size: 0.9rem;
-}
-
-.runs-table .col-result {
-  font-weight: 500;
-}
-
-.runs-table .col-result-fail {
-  color: #ff4d4f;
-}
-
-.runs-table thead {
-  background: rgba(48, 37, 22, 0.04);
-}
-
-.runs-table thead th {
-  padding: 12px 14px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #595959;
-}
-
-.runs-table tbody tr:hover {
-  background: rgba(0, 0, 0, 0.02);
-}
-
-.runs-table tbody td {
-  padding: 10px 14px;
-  font-size: 0.9rem;
-}
-
-.runs-table tbody td:last-child {
-  text-align: right;
-  padding-right: 16px;
 }
 
 /* 状态标签 */
@@ -418,22 +338,6 @@ th {
 .badge-pending {
   background: #fff7e6;
   color: #fa8c16;
-}
-
-/* 弱化操作按钮 */
-.link-button {
-  background: none;
-  border: none;
-  padding: 0;
-  color: #1890ff;
-  font-size: 0.9rem;
-  cursor: pointer;
-  text-decoration: none;
-}
-
-.link-button:hover {
-  color: #40a9ff;
-  text-decoration: underline;
 }
 
 .detail-grid {

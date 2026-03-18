@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Form, Input, Button } from "antd";
 import { apiRequest } from "../lib/api";
 import { saveAdminSession } from "../lib/auth";
 
@@ -7,28 +8,24 @@ type LoginPageProps = {
 };
 
 export function LoginPage({ onSuccess }: LoginPageProps) {
-  const [username, setUsername] = useState("admin");
-  const [password, setPassword] = useState("");
+  const [form] = Form.useForm();
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState("");
 
-  async function handleSubmit(event: React.FormEvent) {
-    event.preventDefault();
+  async function handleFinish(values: { username: string; password: string }) {
     setSubmitting(true);
-    setError("");
     try {
       const data = await apiRequest<{ token: string; tokenType: string; username: string }>(
         "/api/admin/login",
         {
           method: "POST",
-          body: { username, password },
+          body: values,
           auth: false,
         },
       );
       saveAdminSession(data.token, data.username);
       onSuccess();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "登录失败");
+      form.setFields([{ name: "password", errors: [err instanceof Error ? err.message : "登录失败"] }]);
     } finally {
       setSubmitting(false);
     }
@@ -36,29 +33,39 @@ export function LoginPage({ onSuccess }: LoginPageProps) {
 
   return (
     <div className="login-screen">
-      <form className="login-card" onSubmit={handleSubmit}>
+      <div className="login-card">
         <div>
           <div className="eyebrow">招标平台</div>
           <h1>运营后台登录</h1>
           <p>固定账号密码，登录后会长期保存在本地浏览器中。</p>
         </div>
-        <label>
-          账号
-          <input value={username} onChange={(e) => setUsername(e.target.value)} />
-        </label>
-        <label>
-          密码
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </label>
-        {error ? <div className="inline-error">{error}</div> : null}
-        <button className="primary-button" disabled={submitting}>
-          {submitting ? "登录中..." : "登录"}
-        </button>
-      </form>
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleFinish}
+          initialValues={{ username: "admin", password: "" }}
+        >
+          <Form.Item
+            name="username"
+            label="账号"
+            rules={[{ required: true, message: "请输入账号" }]}
+          >
+            <Input />
+          </Form.Item>
+          <Form.Item
+            name="password"
+            label="密码"
+            rules={[{ required: true, message: "请输入密码" }]}
+          >
+            <Input.Password />
+          </Form.Item>
+          <Form.Item>
+            <Button type="primary" htmlType="submit" block loading={submitting}>
+              {submitting ? "登录中..." : "登录"}
+            </Button>
+          </Form.Item>
+        </Form>
+      </div>
     </div>
   );
 }

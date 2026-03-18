@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { View, Text, ScrollView, RichText } from '@tarojs/components'
 import Taro from '@tarojs/taro'
+import { AtButton } from 'taro-ui'
 import TopBar from '../../components/TopBar'
 import { api } from '../../services/api'
 import {
@@ -9,6 +10,7 @@ import {
   removeFavoriteRecord,
   saveFavoriteRecord,
 } from '../../utils/favorites'
+import { formatDate, formatDateTime } from '../../utils/formatDate'
 import './index.scss'
 
 export default function Detail() {
@@ -63,6 +65,7 @@ export default function Detail() {
     Taro.showToast({ title: '已加入收藏', icon: 'none' })
   }
 
+  const dateTimeFields = ['报名开始', '报名截止', '开标时间']
   const structuredRows = detail
     ? [
         ['预算金额', detail.budget],
@@ -72,7 +75,12 @@ export default function Detail() {
         ['报名开始', detail.enrollStart],
         ['报名截止', detail.enrollEnd],
         ['开标时间', detail.openTime],
-      ].filter(([, value]) => !!value)
+      ]
+      .filter(([, value]) => !!value)
+      .map(([label, value]) => [
+        label,
+        dateTimeFields.includes(label) ? formatDateTime(value) : value,
+      ])
     : []
 
   if (loading) {
@@ -106,13 +114,13 @@ export default function Detail() {
           {detail.categoryName && <Text className="detail-card__tag">{detail.categoryName}</Text>}
           <Text className="detail-card__title">{detail.title}</Text>
           {detail.publishTime && (
-            <Text className="detail-card__time">发布时间：{detail.publishTime}</Text>
+            <Text className="detail-card__time">发布时间：{formatDate(detail.publishTime)}</Text>
           )}
           <View className="detail-card__actions">
             {detail.originUrl && (
-              <View className="btn-primary detail-card__action" onClick={handleViewOriginal}>
+              <AtButton type="primary" full onClick={handleViewOriginal} className="detail-card__action">
                 查看原文
-              </View>
+              </AtButton>
             )}
             {!detail.originUrl && detail.sourceSiteName && (
               <Text className="detail-card__source">来源：{detail.sourceSiteName}</Text>

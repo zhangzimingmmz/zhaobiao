@@ -1,4 +1,5 @@
 import Taro from '@tarojs/taro'
+import { formatDate } from './formatDate'
 
 const FAVORITES_STORAGE_KEY = 'favorites_records'
 const FAVORITES_TYPE_KEY = 'favorites_selected_type'
@@ -24,11 +25,6 @@ const CATEGORY_TYPE_MAP = {
   '002002001': 'government',
   '59': 'government',
   '00101': 'government',
-}
-
-function formatDate(value) {
-  if (!value) return ''
-  return String(value).split(' ')[0]
 }
 
 function formatBudget(value) {

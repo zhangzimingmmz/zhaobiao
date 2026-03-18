@@ -1,7 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useRef } from "react";
+import { ProTable } from "@ant-design/pro-components";
+import type { ProColumns } from "@ant-design/pro-components";
+import type { ActionType } from "@ant-design/pro-components";
+import { Button } from "antd";
 import { apiRequest } from "../lib/api";
 import type { CrawlRun } from "../lib/types";
-import { EmptyState, ErrorState, LoadingState } from "../components/States";
 import {
   actionKeyLabel,
   crawlRunDisplayStatus,
@@ -10,99 +13,113 @@ import {
   siteLabel,
 } from "../lib/statusLabels";
 
-export function RunsPage({ navigate }: { navigate: (path: string) => void }) {
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [status, setStatus] = useState("");
-  const [site, setSite] = useState("");
-  const [items, setItems] = useState<CrawlRun[]>([]);
-
-  useEffect(() => {
-    async function load() {
-      setLoading(true);
-      setError("");
-      try {
-        const params = new URLSearchParams({ limit: "50" });
-        if (status) params.set("status", status);
-        if (site) params.set("site", site);
-        const data = await apiRequest<{ list: CrawlRun[] }>(`/api/admin/crawl/runs?${params.toString()}`);
-        setItems(data.list);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "加载失败");
-      } finally {
-        setLoading(false);
-      }
-    }
-    void load();
-  }, [status, site]);
-
-  function formatTime(iso: string): string {
-    try {
-      const d = new Date(iso);
-      return d.toLocaleString("zh-CN", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" });
-    } catch {
-      return "-";
-    }
+function formatTime(iso: string): string {
+  try {
+    const d = new Date(iso);
+    return d.toLocaleString("zh-CN", {
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  } catch {
+    return "-";
   }
+}
+
+export function RunsPage({ navigate }: { navigate: (path: string) => void }) {
+  const actionRef = useRef<ActionType>(null);
+
+  const columns: ProColumns<CrawlRun>[] = [
+    {
+      title: "动作",
+      dataIndex: "actionKey",
+      key: "actionKey",
+      render: (_, r) => actionKeyLabel(r.actionKey),
+    },
+    {
+      title: "站点",
+      dataIndex: "site",
+      key: "site",
+      valueType: "select",
+      valueEnum: {
+        "": { text: "全部站点" },
+        site1: { text: "站点一" },
+        site2: { text: "站点二" },
+      },
+      render: (_, r) => siteLabel(r.site),
+    },
+    {
+      title: "状态",
+      dataIndex: "status",
+      key: "status",
+      valueType: "select",
+      valueEnum: {
+        "": { text: "全部状态" },
+        queued: { text: "排队中" },
+        running: { text: "运行中" },
+        succeeded: { text: "成功" },
+        failed: { text: "失败" },
+        rejected: { text: "已拒绝" },
+      },
+      render: (_, r) => (
+        <span className={runStatusBadgeClass(r)}>{crawlRunDisplayStatus(r)}</span>
+      ),
+    },
+    {
+      title: "结果",
+      dataIndex: "summary",
+      key: "result",
+      render: (_, r) => (
+        <span style={(r.errorCount ?? 0) > 0 ? { color: "#ff4d4f" } : undefined}>
+          {runResultLabel(r)}
+        </span>
+      ),
+    },
+    {
+      title: "运行时间",
+      dataIndex: "requestedAt",
+      key: "requestedAt",
+      render: (_, r) => formatTime(r.requestedAt),
+    },
+    {
+      title: "操作",
+      key: "actions",
+      width: 80,
+      render: (_, r) => (
+        <Button type="link" size="small" onClick={() => navigate(`/runs/${r.id}`)}>
+          查看
+        </Button>
+      ),
+    },
+  ];
 
   return (
-    <div className="runs-page">
-      <div className="card filter-bar">
-        <div className="toolbar">
-          <select value={status} onChange={(e) => setStatus(e.target.value)}>
-            <option value="">全部状态</option>
-            <option value="queued">排队中</option>
-            <option value="running">运行中</option>
-            <option value="succeeded">成功</option>
-            <option value="failed">失败</option>
-            <option value="rejected">已拒绝</option>
-          </select>
-          <select value={site} onChange={(e) => setSite(e.target.value)}>
-            <option value="">全部站点</option>
-            <option value="site1">站点一</option>
-            <option value="site2">站点二</option>
-          </select>
-        </div>
-      </div>
-      {loading ? <LoadingState /> : null}
-      {error ? <ErrorState error={error} /> : null}
-      {!loading && !error && items.length === 0 ? <EmptyState /> : null}
-      {!loading && !error && items.length > 0 ? (
-        <div className="table-card">
-          <table className="runs-table">
-            <thead>
-              <tr>
-                <th>动作</th>
-                <th>站点</th>
-                <th>状态</th>
-                <th>结果</th>
-                <th>运行时间</th>
-                <th />
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((item) => (
-                <tr key={item.id}>
-                  <td className="col-action">{actionKeyLabel(item.actionKey)}</td>
-                  <td className="col-site">{siteLabel(item.site)}</td>
-                  <td className="col-status">
-                    <span className={runStatusBadgeClass(item)}>{crawlRunDisplayStatus(item)}</span>
-                  </td>
-                  <td className={(item.errorCount ?? 0) > 0 ? "col-result col-result-fail" : "col-result"}>
-                    {runResultLabel(item)}
-                  </td>
-                  <td className="col-time">{formatTime(item.requestedAt)}</td>
-                  <td>
-                    <button className="link-button" onClick={() => navigate(`/runs/${item.id}`)}>
-                      查看
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : null}
-    </div>
+    <ProTable<CrawlRun>
+      actionRef={actionRef}
+      columns={columns}
+      rowKey="id"
+      request={async (params) => {
+        const qs = new URLSearchParams({ limit: "50" });
+        if (params.status) qs.set("status", params.status);
+        if (params.site) qs.set("site", params.site);
+        const data = await apiRequest<{ list: CrawlRun[] }>(
+          `/api/admin/crawl/runs?${qs.toString()}`,
+        );
+        return {
+          data: data.list,
+          success: true,
+          total: data.list.length,
+        };
+      }}
+      search={{
+        labelWidth: "auto",
+        defaultCollapsed: false,
+      }}
+      form={{
+        initialValues: { status: "", site: "" },
+      }}
+      pagination={{ defaultPageSize: 50, showSizeChanger: false }}
+    />
   );
 }

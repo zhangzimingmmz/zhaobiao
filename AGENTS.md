@@ -60,6 +60,9 @@
 
 | 文件/目录 | 路径 | 用途 |
 |------------|------|------|
+| 一键部署 | [Makefile](Makefile) | `make deploy`：commit+push + 小程序编译（如有变更）+ 远程部署 |
+| 部署脚本 | [scripts/deploy.sh](scripts/deploy.sh) | 主部署流程 |
+| 仅远程部署 | [scripts/deploy-remote.sh](scripts/deploy-remote.sh) | 仅 SSH + git pull + docker compose |
 | 后端 Compose | [docker-compose.backend.yml](docker-compose.backend.yml) | API、scheduler、admin-frontend 容器编排 |
 | 后端环境示例 | [.env.backend.example](.env.backend.example) | 环境变量模板 |
 | Traefik 路由模板 | [deploy/traefik/zhaobiao-public.yml.example](deploy/traefik/zhaobiao-public.yml.example) | 公网域名转发配置 |

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { View, Text, Input, Picker } from '@tarojs/components'
-import AppIcon from '../AppIcon'
+import { View, Text, Picker } from '@tarojs/components'
+import { AtInput, AtButton } from 'taro-ui'
 import './index.scss'
 
 const SOURCE_OPTIONS = [
@@ -55,6 +55,14 @@ const TIME_OPTIONS = [
   { value: '30d', label: '近一月' },
 ]
 
+const ARTICLE_CATEGORY_OPTIONS = [
+  { code: '', label: '全部分类' },
+  { code: 'company_news', label: '单位动态' },
+  { code: 'policy', label: '政策法规' },
+  { code: 'announcement', label: '相关公告' },
+  { code: 'other', label: '其他' },
+]
+
 const SHEET_META = {
   time: { title: '发布时间', grid: 'two' },
   source: { title: '交易来源', grid: 'two' },
@@ -62,6 +70,7 @@ const SHEET_META = {
   nature: { title: '采购性质', grid: 'one' },
   method: { title: '采购方式', grid: 'one' },
   purchaser: { title: '采购人', grid: 'one' },
+  category: { title: '文章分类', grid: 'one' },
 }
 
 function SheetOption({ active, children, onClick }) {
@@ -215,13 +224,30 @@ export default function FilterSheet({
     if (type === 'purchaser') {
       return (
         <View className="filter-sheet__section">
-          <Input
-            className="filter-sheet__input"
-            type="text"
+          <AtInput
+            name="purchaser"
             value={draftCode}
             placeholder="输入采购人名称"
-            onInput={(event) => setDraftCode(event.detail.value)}
+            onChange={(v) => setDraftCode(v)}
           />
+        </View>
+      )
+    }
+
+    if (type === 'category') {
+      return (
+        <View className="filter-sheet__section">
+          <View className="filter-sheet__list">
+            {ARTICLE_CATEGORY_OPTIONS.map((option) => (
+              <SheetOption
+                key={option.code}
+                active={draftCode === option.code}
+                onClick={() => setDraftCode(option.code)}
+              >
+                {option.label}
+              </SheetOption>
+            ))}
+          </View>
         </View>
       )
     }
@@ -254,6 +280,10 @@ export default function FilterSheet({
       const found = NATURE_OPTIONS.find((o) => o.code === draftCode)
       return { code: draftCode, label: found?.label || draftCode }
     }
+    if (type === 'category') {
+      const found = ARTICLE_CATEGORY_OPTIONS.find((o) => o.code === draftCode)
+      return { code: draftCode, label: found?.label || draftCode }
+    }
     // purchaser: code 即输入文本本身
     return { code: draftCode, label: draftCode }
   }
@@ -267,18 +297,19 @@ export default function FilterSheet({
         </View>
         <View className="filter-sheet__body">{renderBody()}</View>
         <View className="filter-sheet__footer">
-          <View className="filter-sheet__footer-button filter-sheet__footer-button--secondary" onClick={handleReset}>
-            <Text>重置</Text>
-          </View>
-          <View
-            className="filter-sheet__footer-button filter-sheet__footer-button--primary"
+          <AtButton type="secondary" onClick={handleReset} className="filter-sheet__footer-reset">
+            重置
+          </AtButton>
+          <AtButton
+            type="primary"
             onClick={() => {
               const { code, label } = getConfirmValue()
               handleApply(code, label)
             }}
+            className="filter-sheet__footer-apply"
           >
-            <Text>确定</Text>
-          </View>
+            确定
+          </AtButton>
         </View>
       </View>
     </View>

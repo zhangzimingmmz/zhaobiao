@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { message } from "antd";
+import { message, Button, Input, Modal } from "antd";
 import { apiRequest } from "../lib/api";
 import type { ReviewDetail } from "../lib/types";
 import { ErrorState, LoadingState } from "../components/States";
@@ -36,30 +36,38 @@ export function ReviewDetailPage({
     void load();
   }, [id]);
 
-  async function submitDecision(type: "approve" | "reject") {
+  function submitDecision(type: "approve" | "reject") {
     if (type === "reject" && !rejectReason.trim()) {
       message.warning("请填写驳回原因");
       return;
     }
-    setSubmitting(true);
-    setError("");
-    try {
-      await apiRequest(
-        `/api/admin/reviews/${id}/${type}`,
-        {
-          method: "POST",
-          body: type === "approve" ? {} : { rejectReason },
-        },
-      );
-      message.success(type === "approve" ? "审核已通过" : "已驳回");
-      await load();
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "提交失败";
-      setError(msg);
-      message.error(msg);
-    } finally {
-      setSubmitting(false);
-    }
+    const content = type === "approve" ? "确认通过此申请？" : "确认驳回此申请？";
+    Modal.confirm({
+      title: type === "approve" ? "确认通过" : "确认驳回",
+      content,
+      onOk: async () => {
+        setSubmitting(true);
+        setError("");
+        try {
+          await apiRequest(
+            `/api/admin/reviews/${id}/${type}`,
+            {
+              method: "POST",
+              body: type === "approve" ? {} : { rejectReason },
+            },
+          );
+          message.success(type === "approve" ? "审核已通过" : "已驳回");
+          await load();
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : "提交失败";
+          setError(msg);
+          message.error(msg);
+          throw err;
+        } finally {
+          setSubmitting(false);
+        }
+      },
+    });
   }
 
   const isFinal = item?.status === "approved" || item?.status === "rejected";
@@ -130,33 +138,26 @@ export function ReviewDetailPage({
         </a>
       </div>
       <div className="card stack">
-        <label>
-          驳回原因
-          <textarea value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} />
-        </label>
+        <div className="detail-label" style={{ marginBottom: 8 }}>驳回原因</div>
+        <Input.TextArea
+            value={rejectReason}
+            onChange={(e) => setRejectReason(e.target.value)}
+            rows={4}
+            placeholder="驳回时请填写原因"
+          />
         {isFinal ? (
           <div style={{ marginBottom: 12, color: "#8c8c8c", fontSize: 14 }}>
             该申请已处理，无需重复操作
           </div>
         ) : null}
-        <div className="button-row">
-          <button className="secondary-button" onClick={() => navigate("/reviews")}>
-            返回列表
-          </button>
-          <button
-            className="secondary-button"
-            disabled={submitting || isFinal}
-            onClick={() => void submitDecision("reject")}
-          >
+        <div style={{ display: "flex", gap: 8 }}>
+          <Button onClick={() => navigate("/reviews")}>返回列表</Button>
+          <Button disabled={submitting || isFinal} onClick={() => submitDecision("reject")}>
             {submitting ? "处理中..." : "驳回"}
-          </button>
-          <button
-            className="primary-button"
-            disabled={submitting || isFinal}
-            onClick={() => void submitDecision("approve")}
-          >
+          </Button>
+          <Button type="primary" disabled={submitting || isFinal} onClick={() => submitDecision("approve")}>
             {submitting ? "处理中..." : "通过"}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

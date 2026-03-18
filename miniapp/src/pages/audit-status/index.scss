@@ -13,81 +13,15 @@
 .audit-status {
   padding: 32rpx;
 
-  // 进度条样式
   &__progress {
     margin-bottom: 32rpx;
-    padding: 24rpx;
-    background: $color-bg;
-    border-radius: 12rpx;
-  }
-
-  &__progress-bar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  &__progress-step {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8rpx;
-    flex: 0 0 auto;
-  }
-
-  &__progress-dot {
-    width: 48rpx;
-    height: 48rpx;
-    border-radius: 50%;
-    background: $color-border;
-    color: $color-caption;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 24rpx;
-    font-weight: 600;
-  }
-
-  &__progress-step--done &__progress-dot {
-    background: $color-primary;
-    color: $color-white;
-  }
-
-  &__progress-step--active &__progress-dot {
-    background: $color-primary;
-    color: $color-white;
-    animation: pulse 2s ease-in-out infinite;
-  }
-
-  &__progress-label {
-    font-size: 24rpx;
-    color: $color-caption;
-    white-space: nowrap;
-  }
-
-  &__progress-step--done &__progress-label,
-  &__progress-step--active &__progress-label {
-    color: $color-title;
-    font-weight: 500;
-  }
-
-  &__progress-line {
-    flex: 1;
-    height: 2rpx;
-    background: $color-border;
-    margin: 0 8rpx;
-    margin-bottom: 32rpx;
-  }
-
-  &__progress-line--active {
-    background: $color-primary;
   }
 
   // 当前状态卡片
   &__current {
     padding: 24rpx;
     background: $color-warning-bg;
-    border: 1rpx solid #FFD591;
+    border: 1rpx solid $color-warning-border;
     border-radius: 12rpx;
     margin-bottom: 24rpx;
   }
@@ -158,29 +92,10 @@
   }
 
   &__primary {
-    width: 100%;
-    height: 88rpx;
-    line-height: 88rpx;
-    text-align: center;
+    margin-bottom: 0;
   }
 
   &__secondary {
-    width: 100%;
-    height: 88rpx;
-    line-height: 88rpx;
-    text-align: center;
     margin-top: 16rpx;
-  }
-}
-
-// 脉冲动画
-@keyframes pulse {
-  0%, 100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  50% {
-    transform: scale(1.1);
-    opacity: 0.8;
   }
 }

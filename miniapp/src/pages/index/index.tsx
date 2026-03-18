@@ -11,6 +11,7 @@ import InfoCard from '../../components/InfoCard'
 import EmptyState from '../../components/EmptyState'
 import BidCardSkeleton from '../../components/BidCardSkeleton'
 import { api } from '../../services/api'
+import { formatDate } from '../../utils/formatDate'
 import './index.scss'
 
 const NATURE_LABELS = {
@@ -123,11 +124,6 @@ function parseTimeFilter(value) {
 
 const PAGE_SIZE = 10
 
-function formatListDate(value) {
-  if (!value) return ''
-  return String(value).split(' ')[0]
-}
-
 function formatBudget(value) {
   if (!value) return ''
   const amount = Number(value)
@@ -146,17 +142,40 @@ function normalizeBidItem(item) {
     purchaser: item.purchaser || item.tenderer || '',
     regionName: item.regionName || item.location || '',
     sourceName: item.sourceName || item.zhuanzai || item.author || '',
-    deadlineLabel: formatListDate(item.expireTime || item.openTenderTime || item.enrollEnd || ''),
-    publishLabel: formatListDate(item.publishTime || item.webdate || item.noticeTime || ''),
+    deadlineLabel: formatDate(item.expireTime || item.openTenderTime || item.enrollEnd || ''),
+    publishLabel: formatDate(item.publishTime || item.webdate || item.noticeTime || ''),
   }
 }
 
+/** 常见占位符或无效摘要，不展示 */
+const PLACEHOLDER_SUMMARIES = [
+  '摘要 或者 作者需要说明的信息',
+  '摘要或者作者需要说明的信息',
+  '摘要',
+  '作者需要说明的信息',
+]
+
+/** 判断摘要是否值得展示，过滤占位符、重复标题、明显测试内容 */
+function isRelevantSummary(summary, title) {
+  if (!summary || !summary.trim()) return false
+  const s = summary.trim()
+  const t = (title || '').trim()
+  if (PLACEHOLDER_SUMMARIES.some((p) => s === p || s.includes(p))) return false
+  if (t && (s === t || s.startsWith(t) || t.startsWith(s))) return false
+  if (/测试.*vvv|vvv.*测试/.test(s)) return false
+  return true
+}
+
 function normalizeInfoItem(item) {
+  const publishTime =
+    item.publishTime ?? item.publish_time ?? item.webdate ?? item.noticeTime ?? ''
+  const rawSummary = item.summary || item.description || ''
+  const summary = isRelevantSummary(rawSummary, item.title) ? rawSummary : ''
   return {
     id: item.id,
     title: item.title || '',
-    summary: item.summary || item.description || '',
-    publishLabel: formatListDate(item.publishTime || item.publishTime || item.webdate || item.noticeTime || ''),
+    summary,
+    publishLabel: formatDate(publishTime),
     cover: item.coverImageUrl || item.cover || '',
     wechatArticleUrl: item.wechatArticleUrl || '',
   }
@@ -310,11 +329,21 @@ export default function Index() {
 
   const handleCardClick = (item) => {
     if (isInfoState) {
-      // 如果是文章，跳转到 webview 页面
       if (item.wechatArticleUrl) {
-        const encodedUrl = encodeURIComponent(item.wechatArticleUrl)
-        Taro.navigateTo({ url: `/pages/webview/index?url=${encodedUrl}` })
-        // 记录浏览
+        // 公众号文章用官方 API 打开，真机无需配置业务域名；web-view 在真机会报「无法打开该图文消息」
+        const wxApi = typeof wx !== 'undefined' ? wx : null
+        if (wxApi?.openOfficialAccountArticle) {
+          wxApi.openOfficialAccountArticle({
+            url: item.wechatArticleUrl,
+            fail: () => {
+              Taro.showToast({ title: '打开失败，请稍后重试', icon: 'none' })
+            },
+          })
+        } else {
+          Taro.navigateTo({
+            url: `/pages/webview/index?url=${encodeURIComponent(item.wechatArticleUrl)}`,
+          })
+        }
         api.recordArticleView(item.id).catch(() => {})
       } else {
         Taro.navigateTo({ url: `/pages/info-detail/index?id=${item.id}` })

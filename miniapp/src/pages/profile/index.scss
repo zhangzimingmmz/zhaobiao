@@ -1,14 +1,6 @@
 @import '../../styles/variables.scss';
 
 .profile-page {
-  &__guest-card {
-    margin: 24rpx 32rpx;
-    padding: 40rpx 32rpx;
-    background: $color-white;
-    border-radius: $radius-lg;
-    border: 1rpx solid $color-border;
-  }
-
   &__section-label {
     display: block;
     font-size: $font-xs;
@@ -32,36 +24,68 @@
     margin-bottom: 28rpx;
   }
 
-  &__secondary-btn {
-    margin-top: 16rpx;
-  }
-
   &__summary {
     margin: 24rpx 32rpx;
   }
 
-  &__summary-head {
+  &__header {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 16rpx;
+    gap: 24rpx;
     margin-bottom: 16rpx;
   }
 
-  &__company-name {
+  &__header-info {
     flex: 1;
-    font-size: 36rpx;
-    font-weight: 600;
+    min-width: 0;
+  }
+
+  &__header-name-row {
+    display: flex;
+    align-items: center;
+    gap: 16rpx;
+    margin-bottom: 8rpx;
+  }
+
+  &__legal-name {
+    flex: 1;
+    font-size: 40rpx;
+    font-weight: 700;
     color: $color-title;
-    line-height: 1.4;
+    line-height: 1.3;
+  }
+
+  &__mobile {
+    display: block;
+    font-size: $font-sm;
+    color: $color-caption;
   }
 
   &__badge {
     font-size: $font-xs;
     padding: 8rpx 16rpx;
+    border-radius: 999rpx;
+    flex-shrink: 0;
+  }
+
+  &__badge--approved {
+    background: $color-success-bg;
+    color: $color-success;
+  }
+
+  &__badge--pending {
+    background: $color-warning-bg;
+    color: $color-warning;
+  }
+
+  &__badge--rejected {
+    background: $color-error-bg;
+    color: $color-error;
+  }
+
+  &__badge:not(.profile-page__badge--approved):not(.profile-page__badge--pending):not(.profile-page__badge--rejected) {
     background: $color-primary-bg;
     color: $color-primary;
-    border-radius: 999rpx;
   }
 
   &__summary-desc {
@@ -91,6 +115,10 @@
     margin-bottom: 24rpx;
   }
 
+  &__register-btn {
+    margin-top: 8rpx;
+  }
+
   &__status-card--pending {
     background: $color-warning-bg;
   }
@@ -113,6 +141,30 @@
     border-radius: 16rpx;
     overflow: hidden;
   }
+
+  &__info {
+    margin: 0 32rpx 24rpx;
+  }
+
+  &__row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20rpx 0;
+    font-size: 28rpx;
+  }
+
+  &__row-label {
+    color: $color-caption;
+    flex-shrink: 0;
+  }
+
+  &__row-value {
+    color: $color-title;
+    text-align: right;
+    margin-left: 24rpx;
+  }
+
   &__item {
     display: flex;
     justify-content: space-between;
@@ -121,81 +173,69 @@
     font-size: 32rpx;
     color: $color-title;
     border-bottom: 1rpx solid $color-border;
+    gap: 16rpx;
     &:last-child { border-bottom: none; }
   }
 
-  &__info {
-    margin: 0 32rpx 24rpx;
+  &__item-text {
+    flex: 1;
+    text-align: left;
   }
 
-  &__row {
-    display: block;
-    padding: 16rpx 0;
-    font-size: 28rpx;
-    color: $color-body;
-  }
-  &__logout {
-    margin: 48rpx 32rpx;
-    padding: 24rpx;
+  &__logout-card {
+    margin: 0 32rpx 24rpx;
+    padding: 32rpx;
     text-align: center;
+    background: $color-white;
+  }
+
+  &__logout-text {
     font-size: 32rpx;
     color: $color-error;
   }
   &__version {
     display: block;
     text-align: center;
-    padding: 24rpx;
+    padding: 32rpx;
+    margin-top: 48rpx;
     font-size: 24rpx;
   }
 
   // 登录表单样式
   &__login-section {
-    margin: 24rpx 32rpx;
+    margin: 32rpx;
+    padding-bottom: 48rpx;
   }
 
   &__login-intro {
-    margin-bottom: 24rpx;
-  }
-
-  &__login-form {
-    padding: 32rpx;
-  }
-
-  &__input {
-    width: 100%;
-    padding: 24rpx 0;
-    font-size: $font-base;
-    color: $color-title;
-    border-bottom: 1rpx solid $color-border;
-    margin-bottom: 24rpx;
-    
-    &::placeholder {
-      color: $color-caption;
-    }
+    margin-bottom: 32rpx;
+    padding: 32rpx 0;
   }
 
   &__login-btn {
-    width: 100%;
-    margin: 32rpx 0 24rpx;
+    margin-bottom: 32rpx;
   }
 
   &__actions {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 24rpx;
+    margin-bottom: 32rpx;
+    padding-top: 24rpx;
+    border-top: 1rpx solid $color-border;
   }
 
   &__link {
     font-size: $font-sm;
     color: $color-primary;
-    text-decoration: none;
+    font-weight: 500;
   }
 
   &__agreement {
     text-align: center;
     font-size: $font-xs;
     color: $color-caption;
-    line-height: 1.6;
+    line-height: 1.8;
+    padding-top: 24rpx;
   }
 }

@@ -16,7 +16,8 @@
 | 认证与用户 | 验证码、登录、注册（企业认证）、审核状态查询 | 登录/注册后部分接口需 Bearer token |
 | 收藏 | 收藏/取消收藏、收藏列表 | 需登录 |
 | 字典 | 地区、采购方式、分类等 | 一般公开 |
-| 管理端 | 企业审核、企业目录、采集动作列表、采集运行记录、提交 run | 需管理员 token（如 Authorization: Bearer <ADMIN_TOKEN>） |
+| 管理端 | 企业审核、企业目录、采集动作列表、采集运行记录、提交 run、文章管理 | 需管理员 token（如 Authorization: Bearer <ADMIN_TOKEN>） |
+| 文章 | 小程序获取已发布文章列表、详情、记录浏览 | 公开 |
 
 ---
 
@@ -32,6 +33,9 @@
 - **GET /api/admin/crawl/actions**：可执行的采集动作列表。
 - **GET /api/admin/crawl/runs**：采集运行记录。
 - **POST /api/admin/crawl/runs**：提交采集 run（参数见接口）。
+- **GET /api/articles**：小程序获取已发布文章列表，支持分页、分类筛选。
+- **GET /api/articles/:id**：文章详情。
+- **POST /api/articles/:id/view**：记录文章浏览（可选）。
 
 ---
 

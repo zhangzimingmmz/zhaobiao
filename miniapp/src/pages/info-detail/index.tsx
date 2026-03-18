@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
 import { View, Text, ScrollView, RichText } from '@tarojs/components'
 import Taro from '@tarojs/taro'
+import { AtButton } from 'taro-ui'
 import TopBar from '../../components/TopBar'
 import { api } from '../../services/api'
+import { formatDate } from '../../utils/formatDate'
 import './index.scss'
 
 export default function InfoDetail() {
@@ -65,13 +67,13 @@ export default function InfoDetail() {
         <View className="secondary-card info-detail__head">
           <Text className="info-detail__title">{detail.title}</Text>
           {detail.publishTime && (
-            <Text className="info-detail__time">发布时间：{detail.publishTime}</Text>
+            <Text className="info-detail__time">发布时间：{formatDate(detail.publishTime)}</Text>
           )}
           <View className="info-detail__head-actions">
             {detail.originUrl && (
-              <View className="btn-wechat info-detail__head-action" onClick={handleViewOriginal}>
+              <AtButton type="primary" full onClick={handleViewOriginal} className="info-detail__head-action">
                 查看原文
-              </View>
+              </AtButton>
             )}
             {!detail.originUrl && detail.sourceSiteName && (
               <Text className="info-detail__head-source">来源：{detail.sourceSiteName}</Text>

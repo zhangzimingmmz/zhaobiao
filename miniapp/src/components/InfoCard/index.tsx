@@ -6,6 +6,9 @@ export default function InfoCard({ item, onClick }) {
   return (
     <View className="info-card" onClick={() => onClick && onClick(item)}>
       <View className="info-card__body">
+        {item.cover && (
+          <Image className="info-card__cover" src={item.cover} mode="aspectFill" />
+        )}
         <View className="info-card__content">
           <Text className="info-card__title" numberOfLines={2}>{item.title}</Text>
           {item.summary ? (
@@ -16,9 +19,6 @@ export default function InfoCard({ item, onClick }) {
             <Text>{item.publishLabel || ''}</Text>
           </View>
         </View>
-        {item.cover && (
-          <Image className="info-card__cover" src={item.cover} mode="aspectFill" />
-        )}
       </View>
     </View>
   )

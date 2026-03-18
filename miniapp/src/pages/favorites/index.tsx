@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { View, Text } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
+import { AtButton } from 'taro-ui'
 import SecondaryTabs from '../../components/SecondaryTabs'
 import TopBar from '../../components/TopBar'
 import BidCard from '../../components/BidCard'
@@ -52,12 +53,14 @@ export default function Favorites() {
     <View className="favorites-page__banner">
       <Text className="favorites-page__banner-title">登录后可同步收藏</Text>
       <Text className="favorites-page__banner-desc">当前收藏保存在本机，登录后可继续完善账号信息与后续同步能力。</Text>
-      <View
+      <AtButton
+        type="primary"
+        full
         className="favorites-page__banner-action"
         onClick={() => Taro.navigateTo({ url: '/pages/login/index' })}
       >
-        <Text>去登录</Text>
-      </View>
+        去登录
+      </AtButton>
     </View>
   )
 

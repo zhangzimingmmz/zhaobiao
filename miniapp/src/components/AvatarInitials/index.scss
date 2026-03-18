@@ -1,0 +1,14 @@
+@import '../../styles/variables.scss';
+
+.avatar-initials {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  &__text {
+    color: $color-title;
+    font-weight: 600;
+    line-height: 1;
+  }
+}

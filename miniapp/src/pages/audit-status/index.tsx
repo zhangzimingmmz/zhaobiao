@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react'
 import { View, Text } from '@tarojs/components'
 import Taro from '@tarojs/taro'
+import { AtSteps, AtButton } from 'taro-ui'
 import TopBar from '../../components/TopBar'
 import { api } from '../../services/api'
 import { getRegistrationContext } from '../../utils/registration'
+import { formatDateTime } from '../../utils/formatDate'
 import './index.scss'
 
 export default function AuditStatus() {
@@ -83,22 +85,15 @@ export default function AuditStatus() {
           {status === 'pending' && (
             <>
               <View className="audit-status__progress">
-                <View className="audit-status__progress-bar">
-                  <View className="audit-status__progress-step audit-status__progress-step--done">
-                    <View className="audit-status__progress-dot">✓</View>
-                    <Text className="audit-status__progress-label">提交资料</Text>
-                  </View>
-                  <View className="audit-status__progress-line audit-status__progress-line--active" />
-                  <View className="audit-status__progress-step audit-status__progress-step--active">
-                    <View className="audit-status__progress-dot">●</View>
-                    <Text className="audit-status__progress-label">审核中</Text>
-                  </View>
-                  <View className="audit-status__progress-line" />
-                  <View className="audit-status__progress-step">
-                    <View className="audit-status__progress-dot">○</View>
-                    <Text className="audit-status__progress-label">开通</Text>
-                  </View>
-                </View>
+                <AtSteps
+                  current={1}
+                  items={[
+                    { title: '提交资料', status: 'success' },
+                    { title: '审核中' },
+                    { title: '开通' },
+                  ]}
+                  onChange={() => {}}
+                />
               </View>
               
               <View className="audit-status__current">
@@ -116,8 +111,8 @@ export default function AuditStatus() {
               {data.creditCode && <Text className="audit-status__info-row">营业执照代码：{data.creditCode}</Text>}
               {data.legalPersonName && <Text className="audit-status__info-row">法人姓名：{data.legalPersonName}</Text>}
               {data.businessAddress && <Text className="audit-status__info-row">经营场所地址：{data.businessAddress}</Text>}
-              {data.createdAt && <Text className="audit-status__info-row">提交时间：{data.createdAt.replace('T', ' ').split('.')[0]}</Text>}
-              {data.auditTime && <Text className="audit-status__info-row">审核时间：{data.auditTime.replace('T', ' ').split('.')[0]}</Text>}
+              {data.createdAt && <Text className="audit-status__info-row">提交时间：{formatDateTime(data.createdAt)}</Text>}
+              {data.auditTime && <Text className="audit-status__info-row">审核时间：{formatDateTime(data.auditTime)}</Text>}
             </View>
           )}
 
@@ -129,13 +124,13 @@ export default function AuditStatus() {
           )}
 
           <View className="audit-status__actions">
-            <View className="btn-primary audit-status__primary" onClick={meta.action}>
+            <AtButton type="primary" full onClick={meta.action} className="audit-status__primary">
               {meta.actionLabel}
-            </View>
+            </AtButton>
             {status === 'approved' ? (
-              <View className="btn-secondary audit-status__secondary" onClick={handleEnterHome}>
+              <AtButton type="secondary" full onClick={handleEnterHome} className="audit-status__secondary">
                 进入首页
-              </View>
+              </AtButton>
             ) : null}
           </View>
         </View>

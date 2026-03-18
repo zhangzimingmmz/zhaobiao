@@ -1,27 +1,7 @@
 @import '../../styles/variables.scss';
 
 .secondary-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16rpx;
   padding: 20rpx 32rpx;
   background: $color-white;
   border-bottom: 1rpx solid #f0f1f5;
-
-  &__item {
-    padding: 14rpx 28rpx;
-    font-size: $font-sm;
-    color: $color-body;
-    border-radius: 20rpx;
-    background: $color-bg;
-    border: 1rpx solid transparent;
-    font-weight: 500;
-
-    &--active {
-      color: $color-primary;
-      background: $color-primary-bg;
-      border-color: $color-primary-border;
-      font-weight: 600;
-    }
-  }
 }

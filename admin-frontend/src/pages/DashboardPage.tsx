@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { Card, Table, Button } from "antd";
 import { apiRequest } from "../lib/api";
 import type { CrawlRun, ReviewsData } from "../lib/types";
 import { EmptyState, ErrorState, LoadingState } from "../components/States";
@@ -75,71 +76,72 @@ export function DashboardPage({ navigate }: DashboardProps) {
   if (loading) return <LoadingState />;
   if (error) return <ErrorState error={error} />;
 
+  const todayColumns = [
+    { title: "时间（北京）", dataIndex: "requestedAt", key: "time", render: (_: unknown, r: CrawlRun) => toBeijingTimeStr(r.requestedAt) },
+    { title: "任务", dataIndex: "actionKey", key: "action", render: (_: unknown, r: CrawlRun) => actionKeyLabel(r.actionKey) },
+    {
+      title: "状态",
+      key: "status",
+      render: (_: unknown, r: CrawlRun) => (
+        <span className={runStatusBadgeClass(r)}>{crawlRunDisplayStatus(r)}</span>
+      ),
+    },
+    { title: "结果", key: "result", render: (_: unknown, r: CrawlRun) => runResultLabel(r) },
+    {
+      title: "",
+      key: "actions",
+      render: (_: unknown, r: CrawlRun) => (
+        <Button type="link" size="small" onClick={() => navigate(`/runs/${r.id}`)}>
+          查看
+        </Button>
+      ),
+    },
+  ];
+
   return (
     <div className="stack">
       <div className="grid two-col">
-        <button className="card action-card" onClick={() => navigate("/reviews")}>
+        <Card hoverable onClick={() => navigate("/reviews")} style={{ cursor: "pointer" }}>
           <div className="card-label">待审核数量</div>
           <div className="metric">{pendingCount}</div>
           <div className="card-hint">点击进入企业审核列表</div>
-        </button>
-        <div className="card">
-          <div className="card-label">最近一次采集运行</div>
+        </Card>
+        <Card title="最近一次采集运行">
           {latestRun ? (
             <div className="stack">
               <div className="metric status-text">{crawlRunStatusLabel(latestRun.status)}</div>
               <div>{actionKeyLabel(latestRun.actionKey)}</div>
               <div className="muted">{latestRun.summary ?? "暂无摘要"}</div>
-              <button className="secondary-button" onClick={() => navigate(`/runs/${latestRun.id}`)}>
+              <Button type="link" onClick={() => navigate(`/runs/${latestRun.id}`)}>
                 查看详情
-              </button>
+              </Button>
             </div>
           ) : (
             <EmptyState label="暂无运行记录" />
           )}
-        </div>
+        </Card>
       </div>
 
-      <div className="card">
-        <div className="card-header-row">
-          <div className="card-label">今日定时任务概览</div>
-          <button className="secondary-button" onClick={() => navigate("/runs")}>
+      <Card
+        title={`今日定时任务概览（${todayStr}）`}
+        extra={
+          <Button type="link" onClick={() => navigate("/runs")}>
             查看全部运行记录
-          </button>
-        </div>
+          </Button>
+        }
+      >
         {todayRuns.length === 0 ? (
           <EmptyState label={`今日（${todayStr}）暂无运行记录`} />
         ) : (
-          <div className="table-wrapper">
-            <table className="runs-table">
-              <thead>
-                <tr>
-                  <th>时间（北京）</th>
-                  <th>任务</th>
-                  <th>状态</th>
-                  <th>结果</th>
-                  <th />
-                </tr>
-              </thead>
-              <tbody>
-                {todayRuns.map((item) => (
-                  <tr key={item.id}>
-                    <td>{toBeijingTimeStr(item.requestedAt)}</td>
-                    <td className="col-action">{actionKeyLabel(item.actionKey)}</td>
-                    <td><span className={runStatusBadgeClass(item)}>{crawlRunDisplayStatus(item)}</span></td>
-                    <td>{runResultLabel(item)}</td>
-                    <td>
-                      <button className="link-button" onClick={() => navigate(`/runs/${item.id}`)}>
-                        查看
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table
+            dataSource={todayRuns}
+            columns={todayColumns}
+            rowKey="id"
+            pagination={false}
+            size="small"
+          />
         )}
-      </div>
+      </Card>
     </div>
   );
 }

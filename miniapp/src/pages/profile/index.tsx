@@ -3,8 +3,11 @@ import { View, Text } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 import { AtInput, AtButton } from 'taro-ui'
 import TopBar from '../../components/TopBar'
+import AvatarInitials from '../../components/AvatarInitials'
+import AppIcon from '../../components/AppIcon'
 import { api } from '../../services/api'
 import { getRegistrationContext, saveRegistrationContext } from '../../utils/registration'
+import { formatDateTime } from '../../utils/formatDate'
 import './index.scss'
 
 export default function Profile() {
@@ -91,6 +94,9 @@ export default function Profile() {
           setIsLoggedIn(false)
           setUsername('')
           setPassword('')
+          setAuditData(null)
+          setAuditStatus('')
+          setNextAction('')
         }
       },
     })
@@ -195,12 +201,6 @@ export default function Profile() {
               >
                 还没有账号？去注册
               </Text>
-              <Text 
-                className="profile-page__link" 
-                onClick={() => Taro.navigateTo({ url: '/pages/audit-status/index' })}
-              >
-                查询审核状态
-              </Text>
             </View>
             
             <View className="profile-page__agreement">
@@ -222,12 +222,22 @@ export default function Profile() {
     <View className="page page--tab profile-page">
       <TopBar title="我的" variant="tab" />
       <View className="profile-page__summary card">
-        <Text className="profile-page__section-label">账号信息</Text>
-        <View className="profile-page__summary-head">
-          <Text className="profile-page__company-name">
-            {auditData?.username || (auditLoading ? '加载中...' : '—')}
-          </Text>
-          <Text className="profile-page__badge">{getStatusLabel()}</Text>
+        <View className="profile-page__header">
+          <AvatarInitials
+            name={auditData?.legalPersonName}
+            userId={auditData?.applicationId}
+            username={auditData?.username}
+            mobile={auditData?.mobile}
+          />
+          <View className="profile-page__header-info">
+            <View className="profile-page__header-name-row">
+              <Text className="profile-page__legal-name">
+                {auditData?.legalPersonName || auditData?.username || (auditLoading ? '加载中...' : '—')}
+              </Text>
+              <Text className={'profile-page__badge' + (auditStatus === 'approved' ? ' profile-page__badge--approved' : auditStatus === 'pending' ? ' profile-page__badge--pending' : auditStatus === 'rejected' ? ' profile-page__badge--rejected' : '')}>{getStatusLabel()}</Text>
+            </View>
+            <Text className="profile-page__mobile">{auditData?.mobile || '—'}</Text>
+          </View>
         </View>
         <Text className="profile-page__summary-desc">
           {auditStatus === 'approved'
@@ -240,22 +250,16 @@ export default function Profile() {
         </Text>
       </View>
 
-      {auditStatus ? (
+      {auditStatus && auditStatus !== 'approved' ? (
         <View className={'profile-page__status-card card profile-page__status-card--' + auditStatus}>
           <Text className="profile-page__section-label">审核状态</Text>
           <Text className="profile-page__status-title">
-            {auditStatus === 'approved'
-              ? '账号审核已通过'
-              : auditStatus === 'pending'
-                ? '账号审核中'
-                : '账号审核未通过'}
+            {auditStatus === 'pending' ? '账号审核中' : '账号审核未通过'}
           </Text>
           <Text className="profile-page__status-desc">
             {auditStatus === 'rejected'
               ? auditData?.rejectReason || '请根据驳回原因调整资料后重新提交。'
-              : auditStatus === 'pending'
-                ? '可进入审核状态页查看当前处理进度。'
-                : '已审核通过，可直接登录或进入首页。'}
+              : '可进入审核状态页查看当前处理进度。'}
           </Text>
           <AtButton type="primary" full onClick={handlePrimaryAction} className="profile-page__register-btn">
             {getActionLabel()}
@@ -266,11 +270,18 @@ export default function Profile() {
       {auditData ? (
         <View className="profile-page__info card">
           <Text className="profile-page__section-label">资料摘要</Text>
-          <Text className="profile-page__row">登录名：{auditData.username || '—'}</Text>
-          <Text className="profile-page__row">手机号：{auditData.mobile || '—'}</Text>
-          <Text className="profile-page__row">营业执照代码：{auditData.creditCode || '—'}</Text>
-          <Text className="profile-page__row">法人姓名：{auditData.legalPersonName || '—'}</Text>
-          {auditData.auditTime ? <Text className="profile-page__row">审核时间：{auditData.auditTime}</Text> : null}
+          <View className="profile-page__row">
+            <Text className="profile-page__row-label">登录名</Text>
+            <Text className="profile-page__row-value">{auditData.username || '—'}</Text>
+          </View>
+          <View className="profile-page__row">
+            <Text className="profile-page__row-label">营业执照代码</Text>
+            <Text className="profile-page__row-value">{auditData.creditCode || '—'}</Text>
+          </View>
+          <View className="profile-page__row">
+            <Text className="profile-page__row-label">审核时间</Text>
+            <Text className="profile-page__row-value">{auditData.auditTime ? formatDateTime(auditData.auditTime) : '—'}</Text>
+          </View>
         </View>
       ) : null}
 
@@ -278,14 +289,18 @@ export default function Profile() {
         <>
           <View className="profile-page__menu">
             <View className="profile-page__item" onClick={handleSettings}>
-              <Text>设置</Text>
+              <AppIcon name="settings" size={36} color="#4E5969" />
+              <Text className="profile-page__item-text">设置</Text>
+              <AppIcon name="chevronright" size={28} color="#86909C" />
             </View>
             <View className="profile-page__item" onClick={handleContact}>
-              <Text>联系客服</Text>
+              <AppIcon name="messagecircle" size={36} color="#4E5969" />
+              <Text className="profile-page__item-text">联系客服</Text>
+              <AppIcon name="chevronright" size={28} color="#86909C" />
             </View>
           </View>
-          <View className="profile-page__logout" onClick={handleLogout}>
-            <Text>退出登录</Text>
+          <View className="profile-page__logout-card card" onClick={handleLogout}>
+            <Text className="profile-page__logout-text">退出登录</Text>
           </View>
         </>
       ) : null}

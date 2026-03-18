@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
-import { View, Text, Input, Button } from '@tarojs/components'
+import { View, Text } from '@tarojs/components'
 import Taro from '@tarojs/taro'
+import { AtInput, AtButton, AtTextarea } from 'taro-ui'
 import TopBar from '../../components/TopBar'
 import { api } from '../../services/api'
 import { getRegistrationContext, saveRegistrationContext } from '../../utils/registration'
@@ -129,65 +130,25 @@ export default function Register() {
             {isResubmit ? '已自动带出上次提交的信息，请修正后重新提交。' : '带 * 的字段为必填。'}
           </Text>
         </View>
-        <View className="secondary-card register-page__form">
-          <Input
-            className="register-page__input"
-            placeholder="登录名 *"
-            value={username}
-            onInput={(e) => setUsername(e.detail.value)}
-          />
-          <Input
-            className="register-page__input"
-            password
-            placeholder="登录密码 *"
-            value={password}
-            onInput={(e) => setPassword(e.detail.value)}
-          />
-          <Input
-            className="register-page__input"
-            type="number"
-            maxlength={11}
-            placeholder="注册用户手机号码 *"
-            value={mobile}
-            onInput={(e) => setMobile(e.detail.value)}
-          />
-          <Input
-            className="register-page__input"
-            type="idcard"
-            maxlength={18}
-            placeholder="营业执照代码 / 统一社会信用代码 *"
-            value={creditCode}
-            onInput={(e) => setCreditCode(e.detail.value)}
-          />
-          <Input
-            className="register-page__input"
-            placeholder="法人姓名 *"
-            value={legalPersonName}
-            onInput={(e) => setLegalPersonName(e.detail.value)}
-          />
-          <Input
-            className="register-page__input"
-            type="number"
-            maxlength={11}
-            placeholder="法人电话号码（非必填）"
-            value={legalPersonPhone}
-            onInput={(e) => setLegalPersonPhone(e.detail.value)}
-          />
-          <Input
-            className="register-page__input"
-            placeholder="营业执照经营范围（非必填）"
-            value={businessScope}
-            onInput={(e) => setBusinessScope(e.detail.value)}
-          />
-          <Input
-            className="register-page__input register-page__input--multiline"
+        <View className="secondary-card form-card register-page__form">
+          <AtInput name="username" placeholder="登录名 *" value={username} onChange={(v) => setUsername(v)} />
+          <AtInput name="password" type="password" placeholder="登录密码 *" value={password} onChange={(v) => setPassword(v)} />
+          <AtInput name="mobile" type="phone" placeholder="注册用户手机号码 *" value={mobile} onChange={(v) => setMobile(v)} />
+          <AtInput name="creditCode" placeholder="营业执照代码 / 统一社会信用代码 *" value={creditCode} onChange={(v) => setCreditCode(v)} maxLength={18} />
+          <AtInput name="legalPersonName" placeholder="法人姓名 *" value={legalPersonName} onChange={(v) => setLegalPersonName(v)} />
+          <AtInput name="legalPersonPhone" type="phone" placeholder="法人电话号码（非必填）" value={legalPersonPhone} onChange={(v) => setLegalPersonPhone(v)} />
+          <AtInput name="businessScope" placeholder="营业执照经营范围（非必填）" value={businessScope} onChange={(v) => setBusinessScope(v)} />
+          <AtTextarea
             placeholder="经营场所地址 *"
             value={businessAddress}
-            onInput={(e) => setBusinessAddress(e.detail.value)}
+            onChange={(v) => setBusinessAddress(v)}
+            maxLength={200}
+            height={120}
+            className="register-page__textarea"
           />
-          <Button className="register-page__submit btn-primary" onClick={handleSubmit} loading={loading}>
+          <AtButton type="primary" full onClick={handleSubmit} loading={loading} className="register-page__submit">
             {isResubmit ? '重新提交审核' : '提交注册审核'}
-          </Button>
+          </AtButton>
         </View>
       </View>
     </View>

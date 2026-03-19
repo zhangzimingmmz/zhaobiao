@@ -382,25 +382,8 @@ export default function Index() {
 
   const handleCardClick = (item) => {
     if (isInfoState) {
-      if (item.wechatArticleUrl) {
-        // 公众号文章用官方 API 打开，真机无需配置业务域名；web-view 在真机会报「无法打开该图文消息」
-        const wxApi = typeof wx !== 'undefined' ? wx : null
-        if (wxApi?.openOfficialAccountArticle) {
-          wxApi.openOfficialAccountArticle({
-            url: item.wechatArticleUrl,
-            fail: () => {
-              Taro.showToast({ title: '打开失败，请稍后重试', icon: 'none' })
-            },
-          })
-        } else {
-          Taro.navigateTo({
-            url: `/pages/webview/index?url=${encodeURIComponent(item.wechatArticleUrl)}`,
-          })
-        }
-        api.recordArticleView(item.id).catch(() => {})
-      } else {
-        Taro.navigateTo({ url: `/pages/info-detail/index?id=${item.id}` })
-      }
+      // 统一进入详情页，在详情页再点击「查看原文」；避免直接打开失败时无兜底
+      Taro.navigateTo({ url: `/pages/info-detail/index?id=${item.id}` })
     } else {
       Taro.navigateTo({ url: `/pages/detail/index?id=${item.id}` })
     }

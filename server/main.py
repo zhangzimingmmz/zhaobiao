@@ -9,8 +9,11 @@ import re
 import sys
 import uuid
 from datetime import datetime, timezone
+from urllib.parse import urlparse
 from pathlib import Path
 from typing import Any, Optional
+
+import requests
 
 # 保证项目根在 path，以便 import crawler.storage
 _root = Path(__file__).resolve().parent.parent
@@ -21,6 +24,7 @@ import sqlite3
 
 from fastapi import FastAPI, Header, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, Response
 from pydantic import BaseModel, Field
 
 from server import crawl_control
@@ -45,6 +49,9 @@ ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin123456")
 # 站点 Base URL，拼装 originUrl 用
 SITE1_BASE = "https://ggzyjy.sc.gov.cn"
 SITE2_BASE = "https://www.ccgp-sichuan.gov.cn"
+
+# 微信业务域名校验文件目录（用于 web-view 加载代理页）
+WX_VERIFY_DIR = Path(os.environ.get("WX_VERIFY_DIR", str(_root / "wx_verify")))
 
 # S-code ↔ 行政区划代码映射（基于 site1 实际 source_name 对应关系）
 # tradingsourcevalue (site1) ↔ 市级行政区划代码 (前端/ site2 region_code 前缀)
@@ -565,6 +572,74 @@ def detail_info(notice_id: str):
         return {"code": 200, "data": _row_detail_info(row, row["site"])}
     finally:
         conn.close()
+
+
+# ────────────────────────────────────────────────────────────
+# WebView 代理（供小程序内打开原文，无需配置第三方业务域名）
+# ────────────────────────────────────────────────────────────
+
+_WEBVIEW_ALLOWED_HOSTS = frozenset([
+    "ggzyjy.sc.gov.cn",
+    "www.ccgp-sichuan.gov.cn",
+])
+
+
+@app.get("/api/webview-proxy", response_class=Response)
+def webview_proxy(url: str = Query(..., description="目标 URL")):
+    """代理获取目标页面 HTML，供小程序 web-view 加载。仅允许 ggzyjy、ccgp-sichuan 域名。"""
+    try:
+        parsed = urlparse(url)
+        if not parsed.scheme or not parsed.netloc:
+            raise HTTPException(status_code=400, detail="invalid_url")
+        host = parsed.netloc.lower()
+        if host not in _WEBVIEW_ALLOWED_HOSTS:
+            raise HTTPException(status_code=400, detail="domain_not_allowed")
+        if parsed.scheme not in ("http", "https"):
+            raise HTTPException(status_code=400, detail="invalid_scheme")
+    except Exception as e:
+        if isinstance(e, HTTPException):
+            raise
+        raise HTTPException(status_code=400, detail="invalid_url")
+
+    try:
+        resp = requests.get(url, timeout=15, headers={
+            "User-Agent": "Mozilla/5.0 (Linux; Android 10; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.120 Mobile Safari/537.36",
+        })
+        resp.raise_for_status()
+    except requests.RequestException as e:
+        raise HTTPException(status_code=502, detail="fetch_failed")
+
+    content_type = resp.headers.get("Content-Type", "text/html; charset=utf-8")
+    body = resp.content
+
+    if "text/html" in content_type and body:
+        try:
+            html = body.decode("utf-8", errors="replace")
+            origin = f"{parsed.scheme}://{parsed.netloc}"
+            base_tag = f'<base href="{origin}/">'
+            if "<head>" in html:
+                html = html.replace("<head>", f"<head>{base_tag}", 1)
+            elif "<html>" in html:
+                html = html.replace("<html>", f"<html><head>{base_tag}</head>", 1)
+            else:
+                html = base_tag + html
+            body = html.encode("utf-8")
+        except Exception:
+            pass
+
+    return Response(content=body, media_type=content_type)
+
+
+@app.get("/WxVerify_{suffix}.txt")
+def wx_verify_file(suffix: str):
+    """微信业务域名校验：仅当请求路径为 WxVerify_*.txt 且文件存在时返回。"""
+    if not re.match(r"^[A-Za-z0-9]+$", suffix):
+        raise HTTPException(status_code=404, detail="not_found")
+    verify_filename = f"WxVerify_{suffix}.txt"
+    path = WX_VERIFY_DIR / verify_filename
+    if not path.is_file():
+        raise HTTPException(status_code=404, detail="not_found")
+    return FileResponse(path, media_type="text/plain")
 
 
 # ────────────────────────────────────────────────────────────

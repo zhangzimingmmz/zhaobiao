@@ -84,6 +84,21 @@
 
 **解决**：已改用微信官方 API `wx.openOfficialAccountArticle` 打开公众号文章，无需配置业务域名。需微信基础库 3.4.8+，一般真机均满足。
 
+### 招投标/信息详情「查看原文」无法在 app 内打开
+
+招投标详情页、信息详情页的「查看原文」通过后端代理在 web-view 中加载，仅需配置**自有** API 域名为业务域名：
+
+1. 登录 [微信公众平台](https://mp.weixin.qq.com) → 小程序 → 开发管理 → 开发设置 → 服务器域名。
+2. 在「**业务域名**」中添加：`api-zhaobiao.zhangziming.cn`。
+3. 按提示下载校验文件，放置到 API 服务可访问的路径（如 `https://api-zhaobiao.zhangziming.cn/` 根目录），确保能返回该文件。
+4. 保存后重新编译/预览，或等待几分钟生效。
+
+无需配置 ggzyjy.sc.gov.cn、ccgp-sichuan.gov.cn 等第三方政府站点，后端代理会代为拉取并返回内容。
+
+**校验文件放置**：将微信提供的 `WxVerify_xxx.txt` 放到项目根目录的 `wx_verify/` 下，确保 `https://api-zhaobiao.zhangziming.cn/WxVerify_xxx.txt` 可访问。可通过环境变量 `WX_VERIFY_DIR` 指定其他目录。
+
+**WebView 显示 `{"detail":"Not Found"}`**：说明请求的 API 路径不存在。确认后端已部署最新代码（含 `GET /api/webview-proxy`），执行 `make deploy` 或 `make deploy-remote` 重新部署；并确认业务域名已配置 `api-zhaobiao.zhangziming.cn`。
+
 ### 列表/详情无数据
 
 - 确认数据库有数据：可跑 site1/site2 的 incremental 或 backfill；或检查 `NOTICES_DB` 路径是否正确。

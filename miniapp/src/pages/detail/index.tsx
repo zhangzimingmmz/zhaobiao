@@ -3,6 +3,7 @@ import { View, Text, ScrollView, RichText } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { AtButton } from 'taro-ui'
 import TopBar from '../../components/TopBar'
+import { config } from '../../config'
 import { api } from '../../services/api'
 import {
   inferFavoritesType,
@@ -37,8 +38,9 @@ export default function Detail() {
 
   const handleViewOriginal = () => {
     if (detail && detail.originUrl) {
+      const proxyUrl = `${config.baseUrl}/api/webview-proxy?url=${encodeURIComponent(detail.originUrl)}`
       Taro.navigateTo({
-        url: '/pages/webview/index?url=' + encodeURIComponent(detail.originUrl),
+        url: '/pages/webview/index?url=' + encodeURIComponent(proxyUrl),
       })
     }
   }

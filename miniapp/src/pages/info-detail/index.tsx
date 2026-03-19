@@ -3,6 +3,7 @@ import { View, Text, ScrollView, RichText } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { AtButton } from 'taro-ui'
 import TopBar from '../../components/TopBar'
+import { config } from '../../config'
 import { api } from '../../services/api'
 import {
   inferFavoritesType,
@@ -24,23 +25,65 @@ export default function InfoDetail() {
       setLoading(false)
       return
     }
-    api.detailInfo(id)
+    const applyDetail = (data) => {
+      setDetail(data)
+      setFavorited(isFavoriteRecord(data.id, 'info'))
+    }
+    api.getArticle(id)
       .then((res) => {
         if (res.data && res.data.code === 200 && res.data.data) {
-          setDetail(res.data.data)
-          setFavorited(isFavoriteRecord(res.data.data.id, 'info'))
+          const d = res.data.data
+          applyDetail({
+            id: d.id,
+            title: d.title,
+            description: d.summary,
+            content: null,
+            publishTime: d.publishTime,
+            originUrl: d.wechatArticleUrl || null,
+            sourceSiteName: null,
+          })
+          api.recordArticleView(d.id).catch(() => {})
+          return true
         }
+        return false
+      })
+      .catch(() => false)
+      .then((isArticle) => {
+        if (isArticle) return
+        return api.detailInfo(id).then((res) => {
+          if (res.data && res.data.code === 200 && res.data.data) {
+            applyDetail(res.data.data)
+          } else {
+            setDetail(null)
+          }
+        })
       })
       .catch(() => setDetail(null))
       .finally(() => setLoading(false))
   }, [id])
 
   const handleViewOriginal = () => {
-    if (detail && detail.originUrl) {
-      Taro.navigateTo({
-        url: '/pages/webview/index?url=' + encodeURIComponent(detail.originUrl),
-      })
+    if (!detail || !detail.originUrl) return
+    const url = detail.originUrl
+    if (/^https:\/\/mp\.weixin\.qq\.com\//.test(url)) {
+      const wxApi = typeof wx !== 'undefined' ? wx : null
+      if (wxApi?.openOfficialAccountArticle) {
+        wxApi.openOfficialAccountArticle({
+          url,
+          fail: () => Taro.showToast({ title: '打开失败，请稍后重试', icon: 'none' }),
+        })
+      } else {
+        Taro.setClipboardData({
+          data: url,
+          success: () => Taro.showToast({ title: '链接已复制，请在浏览器中打开', icon: 'none' }),
+        })
+      }
+      return
     }
+    const proxyUrl = `${config.baseUrl}/api/webview-proxy?url=${encodeURIComponent(url)}`
+    Taro.navigateTo({
+      url: '/pages/webview/index?url=' + encodeURIComponent(proxyUrl),
+    })
   }
 
   const handleShare = () => {

@@ -25,7 +25,7 @@ function getNavMetrics() {
 }
 
 export default function TopBar({
-  title = '招投标信息平台',
+  title = '金堂招讯通',
   showBack,
   right,
   onBack,
@@ -73,7 +73,11 @@ export default function TopBar({
           }
           onClick={onRight}
         >
-          <AppIcon name="heart" size={40} color={heartColor} />
+          <AppIcon
+            name={right === 'favorite-active' ? 'heartfill' : 'heart'}
+            size={52}
+            color={heartColor}
+          />
         </View>
       )
     }

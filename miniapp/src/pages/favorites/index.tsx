@@ -10,6 +10,7 @@ import EmptyState from '../../components/EmptyState'
 import {
   getFavoriteTypeSelection,
   readFavoriteRecords,
+  removeFavoriteRecord,
   setFavoriteTypeSelection,
 } from '../../utils/favorites'
 import './index.scss'
@@ -87,9 +88,21 @@ export default function Favorites() {
         ) : (
           visibleRecords.map((item) =>
             item.viewType === 'info' ? (
-              <InfoCard key={item.favoriteKey} item={item} onClick={handleCardClick} />
+              <InfoCard
+                key={item.favoriteKey}
+                item={item}
+                onClick={handleCardClick}
+                onFavoriteToggle={handleFavoriteToggle}
+                favorited
+              />
             ) : (
-              <BidCard key={item.favoriteKey} item={item} onClick={handleCardClick} />
+              <BidCard
+                key={item.favoriteKey}
+                item={item}
+                onClick={handleCardClick}
+                onFavoriteToggle={handleFavoriteToggle}
+                favorited
+              />
             ),
           )
         )}

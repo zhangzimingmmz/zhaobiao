@@ -18,12 +18,27 @@
     min-width: 0;
   }
 
+  &__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16rpx;
+  }
+
   &__title {
+    flex: 1;
+    min-width: 0;
     font-size: $font-body;
     color: $color-title;
     font-weight: 600;
     margin-bottom: 12rpx;
     line-height: 1.4;
+  }
+
+  &__favorite {
+    flex-shrink: 0;
+    padding: 8rpx;
+    margin: -8rpx -8rpx 0 0;
   }
 
   &__time {

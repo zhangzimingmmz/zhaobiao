@@ -41,9 +41,7 @@ const FILTER_MODES = {
   },
   information: {
     placeholder: '搜索标题、内容和描述关键词',
-    buttons: [
-      { key: 'category', label: '分类', icon: 'mappin' },
-    ],
+    buttons: [],
     layout: 'row',
   },
 }

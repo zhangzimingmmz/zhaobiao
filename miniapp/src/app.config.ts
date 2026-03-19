@@ -13,7 +13,7 @@ export default {
   window: {
     backgroundTextStyle: 'light',
     navigationBarBackgroundColor: '#1677FF',
-    navigationBarTitleText: '招投标信息平台',
+    navigationBarTitleText: '金堂招讯通',
     navigationBarTextStyle: 'white',
   },
   tabBar: {

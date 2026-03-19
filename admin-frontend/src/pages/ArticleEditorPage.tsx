@@ -18,9 +18,8 @@ type ArticleEditorPageProps = {
 
 const CATEGORY_OPTIONS = [
   { value: "", label: "请选择" },
-  { value: "company_news", label: "单位动态" },
+  { value: "company_news", label: "工作动态" },
   { value: "policy", label: "政策法规" },
-  { value: "announcement", label: "相关公告" },
   { value: "other", label: "其他" },
 ];
 
@@ -37,12 +36,13 @@ export function ArticleEditorPage({ id, navigate }: ArticleEditorPageProps) {
     if (id) {
       getArticle(id)
         .then((article) => {
+          const category = article.category === "announcement" ? "other" : (article.category || "");
           form.setFieldsValue({
             title: article.title,
             summary: article.summary || "",
             coverImageUrl: article.coverImageUrl || "",
             wechatArticleUrl: article.wechatArticleUrl,
-            category: article.category || "",
+            category,
             sortOrder: article.sortOrder,
           });
         })

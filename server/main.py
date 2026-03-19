@@ -1908,8 +1908,11 @@ def get_articles(
         params: list[Any] = []
         
         if category:
-            conditions.append("category = ?")
-            params.append(category)
+            if category == 'other':
+                conditions.append("category IN ('other', 'announcement')")
+            else:
+                conditions.append("category = ?")
+                params.append(category)
         
         where = " AND ".join(conditions)
         count_sql = f"SELECT COUNT(*) FROM articles WHERE {where}"

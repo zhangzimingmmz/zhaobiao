@@ -1,13 +1,30 @@
 import { View, Text } from '@tarojs/components'
+import AppIcon from '../AppIcon'
 import './index.scss'
 
-export default function BidCard({ item, onClick }) {
+export default function BidCard({ item, onClick, onFavoriteToggle, favorited }) {
   const showMeta =
     item.categoryLabel || item.natureLabel || item.methodLabel || item.budgetLabel
 
+  const handleFavoriteClick = (e) => {
+    e.stopPropagation()
+    onFavoriteToggle?.(item)
+  }
+
   return (
     <View className="bid-card" onClick={() => onClick && onClick(item)}>
-      <Text className="bid-card__title" numberOfLines={2}>{item.title}</Text>
+      <View className="bid-card__header">
+        <Text className="bid-card__title" numberOfLines={2}>{item.title}</Text>
+        {onFavoriteToggle && (
+          <View className="bid-card__favorite" onClick={handleFavoriteClick}>
+            <AppIcon
+              name={favorited ? 'heartfill' : 'heart'}
+              size={52}
+              color={favorited ? '#ff4d4f' : '#c9cdd4'}
+            />
+          </View>
+        )}
+      </View>
 
       {showMeta && (
         <View className="bid-card__meta">

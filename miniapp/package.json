@@ -2,7 +2,7 @@
   "name": "zhaobiao-miniapp",
   "version": "0.0.1",
   "private": true,
-  "description": "招投标信息平台微信小程序",
+  "description": "金堂招讯通微信小程序",
   "scripts": {
     "build:weapp": "taro build --type weapp",
     "dev:weapp": "taro build --type weapp --watch"

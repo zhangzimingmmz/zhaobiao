@@ -12,9 +12,9 @@ import {
 } from "../lib/api";
 
 const CATEGORY_LABELS: Record<string, string> = {
-  company_news: "单位动态",
+  company_news: "工作动态",
   policy: "政策法规",
-  announcement: "相关公告",
+  announcement: "其他",
   other: "其他",
 };
 
@@ -97,9 +97,9 @@ export function ArticlesPage({ navigate }: ArticlesPageProps) {
       valueType: "select",
       valueEnum: {
         "": { text: "全部分类" },
-        company_news: { text: "单位动态" },
+        company_news: { text: "工作动态" },
         policy: { text: "政策法规" },
-        announcement: { text: "相关公告" },
+        announcement: { text: "其他" },
         other: { text: "其他" },
       },
       render: (_, r) => categoryLabel(r.category),

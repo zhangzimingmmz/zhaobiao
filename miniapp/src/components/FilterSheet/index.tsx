@@ -57,9 +57,8 @@ const TIME_OPTIONS = [
 
 const ARTICLE_CATEGORY_OPTIONS = [
   { code: '', label: '全部分类' },
-  { code: 'company_news', label: '单位动态' },
+  { code: 'company_news', label: '工作动态' },
   { code: 'policy', label: '政策法规' },
-  { code: 'announcement', label: '相关公告' },
   { code: 'other', label: '其他' },
 ]
 

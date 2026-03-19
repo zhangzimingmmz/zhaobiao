@@ -11,6 +11,8 @@ const ICONS = {
     '<path d="M12 21s-6-5.33-6-11a6 6 0 1 1 12 0c0 5.67-6 11-6 11Z"/><circle cx="12" cy="10" r="2.5"/>',
   heart:
     '<path d="M12 20.5s-7-4.44-7-10.2C5 7.1 7.1 5 9.7 5c1.67 0 3.03.86 3.8 2.13C14.27 5.86 15.63 5 17.3 5 19.9 5 22 7.1 22 10.3c0 5.76-7 10.2-7 10.2H12Z"/>',
+  heartfill:
+    '<path fill="currentColor" d="M12 20.5s-7-4.44-7-10.2C5 7.1 7.1 5 9.7 5c1.67 0 3.03.86 3.8 2.13C14.27 5.86 15.63 5 17.3 5 19.9 5 22 7.1 22 10.3c0 5.76-7 10.2-7 10.2H12Z"/>',
   user:
     '<circle cx="12" cy="8" r="3.5"/><path d="M5 19a7 7 0 0 1 14 0"/>',
   chevrondown:
@@ -33,8 +35,14 @@ const ICONS = {
     '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
 }
 
-function toDataUri(markup, color) {
-  const svg = `
+function toDataUri(markup, color, useFill = false) {
+  const svg = useFill
+    ? `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+      ${markup.replace('fill="currentColor"', `fill="${color}"`)}
+    </svg>
+  `
+    : `
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
       ${markup}
     </svg>
@@ -49,9 +57,10 @@ export default function AppIcon(props) {
     color = '#86909C',
   } = props
 
+  const useFill = name === 'heartfill'
   return (
     <Image
-      src={toDataUri(ICONS[name] || ICONS.filetext, color)}
+      src={toDataUri(ICONS[name] || ICONS.filetext, color, useFill)}
       style={{ width: `${size}rpx`, height: `${size}rpx` }}
     />
   )

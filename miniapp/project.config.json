@@ -1,7 +1,7 @@
 {
   "miniprogramRoot": "dist/",
   "projectname": "zhaobiao-miniapp",
-  "description": "招投标信息平台微信小程序",
+  "description": "金堂招讯通微信小程序",
   "appid": "wx7d37a098960e712e",
   "setting": {
     "urlCheck": true,

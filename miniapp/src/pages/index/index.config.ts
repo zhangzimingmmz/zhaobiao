@@ -1,4 +1,4 @@
 export default {
-  navigationBarTitleText: '招投标信息平台',
+  navigationBarTitleText: '金堂招讯通',
   navigationStyle: 'custom',
 }

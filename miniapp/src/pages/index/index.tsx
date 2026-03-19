@@ -12,6 +12,12 @@ import EmptyState from '../../components/EmptyState'
 import BidCardSkeleton from '../../components/BidCardSkeleton'
 import { api } from '../../services/api'
 import { formatDate } from '../../utils/formatDate'
+import {
+  inferFavoritesType,
+  isFavoriteRecord,
+  saveFavoriteRecord,
+  removeFavoriteRecord,
+} from '../../utils/favorites'
 import './index.scss'
 
 const NATURE_LABELS = {
@@ -38,7 +44,11 @@ const SECONDARY_MAP = {
     { id: 'intention', label: '采购意向公开' },
     { id: 'announcement', label: '采购公告' },
   ],
-  info: [],
+  info: [
+    { id: 'work_dynamics', label: '工作动态' },
+    { id: 'policy', label: '政策法规' },
+    { id: 'other', label: '其他' },
+  ],
 }
 
 const HOME_STATES = {
@@ -66,16 +76,28 @@ const HOME_STATES = {
     emptyTitle: '暂无采购公告',
     emptyDescription: '可以调整采购性质、采购方式或区划后再试。',
   },
-  'info:default': {
+  'info:work_dynamics': {
     id: 'information',
     listKind: 'info',
-    emptyTitle: '暂无信息展示内容',
-    emptyDescription: '当前状态下还没有可展示的信息内容，请稍后再试。',
+    emptyTitle: '暂无工作动态',
+    emptyDescription: '当前分类下还没有可展示的内容，请稍后再试。',
+  },
+  'info:policy': {
+    id: 'information',
+    listKind: 'info',
+    emptyTitle: '暂无政策法规',
+    emptyDescription: '当前分类下还没有可展示的内容，请稍后再试。',
+  },
+  'info:other': {
+    id: 'information',
+    listKind: 'info',
+    emptyTitle: '暂无其他内容',
+    emptyDescription: '当前分类下还没有可展示的内容，请稍后再试。',
   },
 }
 
 function getHomeState(primary, secondary) {
-  if (primary === 'info') return HOME_STATES['info:default']
+  if (primary === 'info') return HOME_STATES[`info:${secondary}`] || HOME_STATES['info:work_dynamics']
   return HOME_STATES[`${primary}:${secondary}`] || HOME_STATES['construction:engineering']
 }
 
@@ -86,6 +108,10 @@ function getCategory(primary, secondary, announcementType) {
   if (primary === 'construction' && secondary === 'procurement') return '002002001'
   if (primary === 'government' && secondary === 'intention') return '59'
   if (primary === 'government' && secondary === 'announcement') return '00101'
+  if (primary === 'info') {
+    const infoCategoryMap = { work_dynamics: 'company_news', policy: 'policy', other: 'other' }
+    return infoCategoryMap[secondary] || 'company_news'
+  }
   return 'info'
 }
 
@@ -135,6 +161,7 @@ function normalizeBidItem(item) {
   return {
     id: item.id,
     title: item.title || '',
+    categoryNum: item.categoryNum || '',
     categoryLabel: item.categoryName || '',
     natureLabel: item.purchaseNature ? NATURE_LABELS[item.purchaseNature] || '' : '',
     methodLabel: item.purchaseManner ? METHOD_LABELS[item.purchaseManner] || '' : '',
@@ -178,6 +205,8 @@ function normalizeInfoItem(item) {
     publishLabel: formatDate(publishTime),
     cover: item.coverImageUrl || item.cover || '',
     wechatArticleUrl: item.wechatArticleUrl || '',
+    categoryNum: item.category || '',
+    viewType: 'info',
   }
 }
 
@@ -196,6 +225,7 @@ export default function Index() {
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
   const [error, setError] = useState(false)
+  const [favoritesVersion, setFavoritesVersion] = useState(0)
 
   const secondaryTabs = SECONDARY_MAP[primary] || []
   const homeState = useMemo(() => getHomeState(primary, secondary), [primary, secondary])
@@ -240,7 +270,7 @@ export default function Index() {
     
     // 信息展示 tab 使用文章接口
     if (primary === 'info') {
-      api.getArticles({ page: 1, pageSize: PAGE_SIZE, category: filterValues.category?.code })
+      api.getArticles({ page: 1, pageSize: PAGE_SIZE, category })
         .then((res) => {
           if (res.data && res.data.code === 200 && res.data.data) {
             setList(res.data.data.list || [])
@@ -264,7 +294,7 @@ export default function Index() {
         .catch(() => setError(true))
         .finally(() => setLoading(false))
     }
-  }, [category, keyword, filterValues, primary])
+  }, [category, keyword, filterValues, primary, secondary])
 
   /** 加载更多 */
   const handleLoadMore = () => {
@@ -274,7 +304,7 @@ export default function Index() {
     
     // 信息展示 tab 使用文章接口
     if (primary === 'info') {
-      api.getArticles({ page: nextPage, pageSize: PAGE_SIZE, category: filterValues.category?.code })
+      api.getArticles({ page: nextPage, pageSize: PAGE_SIZE, category })
         .then((res) => {
           if (res.data && res.data.code === 200 && res.data.data) {
             setList((prev) => [...prev, ...(res.data.data.list || [])])
@@ -325,6 +355,29 @@ export default function Index() {
       ...prev,
       [key]: { code, label: label || code },
     }))
+  }
+
+  const handleFavoriteToggle = (item) => {
+    const favorited = isFavoriteRecord(item, item.viewType || 'bid')
+    if (favorited) {
+      removeFavoriteRecord(item, item.viewType || 'bid')
+      Taro.showToast({ title: '已取消收藏', icon: 'none' })
+    } else {
+      const favoritesType =
+        item.viewType === 'info'
+          ? 'info'
+          : item.categoryNum
+            ? inferFavoritesType(item)
+            : item.planId || /采购/.test(item.categoryLabel || item.title || '')
+              ? 'government'
+              : 'construction'
+      saveFavoriteRecord(item, {
+        viewType: item.viewType || 'bid',
+        favoritesType,
+      })
+      Taro.showToast({ title: '已加入收藏', icon: 'none' })
+    }
+    setFavoritesVersion((v) => v + 1)
   }
 
   const handleCardClick = (item) => {
@@ -410,18 +463,30 @@ export default function Index() {
 
     if (isInfoState) {
       return normalizedList.map((item) => (
-        <InfoCard key={item.id} item={item} onClick={handleCardClick} />
+        <InfoCard
+          key={item.id}
+          item={item}
+          onClick={handleCardClick}
+          onFavoriteToggle={handleFavoriteToggle}
+          favorited={isFavoriteRecord(item, item.viewType || 'info')}
+        />
       ))
     }
 
     return normalizedList.map((item) => (
-      <BidCard key={item.id} item={item} onClick={handleCardClick} />
+      <BidCard
+        key={item.id}
+        item={item}
+        onClick={handleCardClick}
+        onFavoriteToggle={handleFavoriteToggle}
+        favorited={isFavoriteRecord(item, 'bid')}
+      />
     ))
   }
 
   return (
     <View className="page page--tab index-page">
-      <TopBar title="招投标信息平台" variant="tab" />
+      <TopBar title="金堂招讯通" variant="tab" />
       <PrimaryTabs value={primary} onChange={handlePrimaryChange} />
       {secondaryTabs.length > 0 && (
         <SecondaryTabs

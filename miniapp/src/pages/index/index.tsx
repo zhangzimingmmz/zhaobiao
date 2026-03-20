@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect, useCallback } from 'react'
 import { View, Text } from '@tarojs/components'
-import Taro from '@tarojs/taro'
+import Taro, { useDidShow } from '@tarojs/taro'
 import TopBar from '../../components/TopBar'
 import PrimaryTabs from '../../components/PrimaryTabs'
 import SecondaryTabs from '../../components/SecondaryTabs'
@@ -13,12 +13,6 @@ import BidCardSkeleton from '../../components/BidCardSkeleton'
 import { config } from '../../config'
 import { api } from '../../services/api'
 import { formatDate } from '../../utils/formatDate'
-import {
-  inferFavoritesType,
-  isFavoriteRecord,
-  saveFavoriteRecord,
-  removeFavoriteRecord,
-} from '../../utils/favorites'
 import './index.scss'
 
 const NATURE_LABELS = {
@@ -161,7 +155,9 @@ function formatBudget(value) {
 
 function normalizeBidItem(item) {
   return {
+    ...item,
     id: item.id,
+    site: item.site,
     title: item.title || '',
     categoryNum: item.categoryNum || '',
     categoryLabel: item.categoryName || '',
@@ -173,6 +169,7 @@ function normalizeBidItem(item) {
     sourceName: item.sourceName || item.zhuanzai || item.author || '',
     deadlineLabel: formatDate(item.expireTime || item.openTenderTime || item.enrollEnd || ''),
     publishLabel: formatDate(item.publishTime || item.webdate || item.noticeTime || ''),
+    favorited: !!item.favorited,
   }
 }
 
@@ -201,14 +198,18 @@ function normalizeInfoItem(item) {
   const rawSummary = item.summary || item.description || ''
   const summary = isRelevantSummary(rawSummary, item.title) ? rawSummary : ''
   return {
+    ...item,
     id: item.id,
+    site: item.site || undefined,
     title: item.title || '',
     summary,
     publishLabel: formatDate(publishTime),
     cover: item.coverImageUrl || item.cover || '',
     wechatArticleUrl: item.wechatArticleUrl || '',
+    originUrl: item.originUrl || item.wechatArticleUrl || '',
     categoryNum: item.category || '',
     viewType: 'info',
+    favorited: !!item.favorited,
   }
 }
 
@@ -242,7 +243,7 @@ export default function Index() {
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
   const [error, setError] = useState(false)
-  const [favoritesVersion, setFavoritesVersion] = useState(0)
+  const [reloadVersion, setReloadVersion] = useState(0)
 
   const secondaryTabs = SECONDARY_MAP[primary] || []
   const homeState = useMemo(() => getHomeState(primary, secondary), [primary, secondary])
@@ -315,7 +316,11 @@ export default function Index() {
         .catch(() => setError(true))
         .finally(() => setLoading(false))
     }
-  }, [category, keyword, filterValues, primary, secondary])
+  }, [category, keyword, filterValues, primary, secondary, reloadVersion])
+
+  useDidShow(() => {
+    setReloadVersion((value) => value + 1)
+  })
 
   /** 加载更多 */
   const handleLoadMore = () => {
@@ -379,26 +384,35 @@ export default function Index() {
   }
 
   const handleFavoriteToggle = (item) => {
-    const favorited = isFavoriteRecord(item, item.viewType || 'bid')
-    if (favorited) {
-      removeFavoriteRecord(item, item.viewType || 'bid')
-      Taro.showToast({ title: '已取消收藏', icon: 'none' })
-    } else {
-      const favoritesType =
-        item.viewType === 'info'
-          ? 'info'
-          : item.categoryNum
-            ? inferFavoritesType(item)
-            : item.planId || /采购/.test(item.categoryLabel || item.title || '')
-              ? 'government'
-              : 'construction'
-      saveFavoriteRecord(item, {
-        viewType: item.viewType || 'bid',
-        favoritesType,
-      })
-      Taro.showToast({ title: '已加入收藏', icon: 'none' })
+    if (item.isProbe) return
+
+    if (!Taro.getStorageSync('token')) {
+      Taro.showToast({ title: '请先登录后收藏', icon: 'none' })
+      Taro.navigateTo({ url: '/pages/login/index' })
+      return
     }
-    setFavoritesVersion((v) => v + 1)
+
+    api.toggleFavorite({
+      targetId: item.id,
+      targetType: item.viewType || 'bid',
+      targetSite: item.site || undefined,
+    })
+      .then((res) => {
+        if (res.data?.code === 200 && res.data?.data) {
+          const nextFavorited = !!res.data.data.favorited
+          setList((prev) =>
+            prev.map((record) =>
+              record.id === item.id && (record.site || '') === (item.site || '')
+                ? { ...record, favorited: nextFavorited }
+                : record,
+            ),
+          )
+          Taro.showToast({ title: nextFavorited ? '已加入收藏' : '已取消收藏', icon: 'none' })
+          return
+        }
+        Taro.showToast({ title: res.data?.message || '操作失败，请重试', icon: 'none' })
+      })
+      .catch(() => Taro.showToast({ title: '操作失败，请重试', icon: 'none' }))
   }
 
   const handleCardClick = (item) => {
@@ -481,21 +495,21 @@ export default function Index() {
           key={item.id}
           item={item}
           onClick={handleCardClick}
-          onFavoriteToggle={handleFavoriteToggle}
-          favorited={isFavoriteRecord(item, item.viewType || 'info')}
+          onFavoriteToggle={item.isProbe ? undefined : handleFavoriteToggle}
+          favorited={!!item.favorited}
         />
       ))
     }
 
     return normalizedList.map((item) => (
-      <BidCard
-        key={item.id}
-        item={item}
-        onClick={handleCardClick}
-        onFavoriteToggle={handleFavoriteToggle}
-        favorited={isFavoriteRecord(item, 'bid')}
-      />
-    ))
+        <BidCard
+          key={item.id}
+          item={item}
+          onClick={handleCardClick}
+          onFavoriteToggle={handleFavoriteToggle}
+          favorited={!!item.favorited}
+        />
+      ))
   }
 
   return (

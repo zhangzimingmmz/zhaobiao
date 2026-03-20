@@ -9,15 +9,28 @@ import './index.scss'
 
 export default function Register() {
   const [username, setUsername] = useState('')
+  const [usernameCursor, setUsernameCursor] = useState(0)
   const [password, setPassword] = useState('')
+  const [passwordCursor, setPasswordCursor] = useState(0)
   const [mobile, setMobile] = useState('')
+  const [mobileCursor, setMobileCursor] = useState(0)
   const [creditCode, setCreditCode] = useState('')
+  const [creditCodeCursor, setCreditCodeCursor] = useState(0)
   const [legalPersonName, setLegalPersonName] = useState('')
+  const [legalPersonNameCursor, setLegalPersonNameCursor] = useState(0)
   const [legalPersonPhone, setLegalPersonPhone] = useState('')
+  const [legalPersonPhoneCursor, setLegalPersonPhoneCursor] = useState(0)
   const [businessScope, setBusinessScope] = useState('')
+  const [businessScopeCursor, setBusinessScopeCursor] = useState(0)
   const [businessAddress, setBusinessAddress] = useState('')
   const [loading, setLoading] = useState(false)
   const [isResubmit, setIsResubmit] = useState(false)
+
+  const syncInput = (setValue, setCursor) => (value, event) => {
+    const nextValue = String(value ?? '')
+    setValue(nextValue)
+    setCursor(event?.detail?.cursor ?? nextValue.length)
+  }
 
   useEffect(() => {
     const context = getRegistrationContext()
@@ -131,13 +144,59 @@ export default function Register() {
           </Text>
         </View>
         <View className="secondary-card form-card register-page__form">
-          <AtInput name="username" placeholder="登录名 *" value={username} onChange={(v) => setUsername(v)} />
-          <AtInput name="password" type="password" placeholder="登录密码 *" value={password} onChange={(v) => setPassword(v)} />
-          <AtInput name="mobile" type="phone" placeholder="注册用户手机号码 *" value={mobile} onChange={(v) => setMobile(v)} />
-          <AtInput name="creditCode" placeholder="营业执照代码 / 统一社会信用代码 *" value={creditCode} onChange={(v) => setCreditCode(v)} maxLength={18} />
-          <AtInput name="legalPersonName" placeholder="法人姓名 *" value={legalPersonName} onChange={(v) => setLegalPersonName(v)} />
-          <AtInput name="legalPersonPhone" type="phone" placeholder="法人电话号码（非必填）" value={legalPersonPhone} onChange={(v) => setLegalPersonPhone(v)} />
-          <AtInput name="businessScope" placeholder="营业执照经营范围（非必填）" value={businessScope} onChange={(v) => setBusinessScope(v)} />
+          <AtInput
+            name="username"
+            placeholder="登录名 *"
+            value={username}
+            cursor={usernameCursor}
+            onChange={syncInput(setUsername, setUsernameCursor)}
+          />
+          <AtInput
+            name="password"
+            type="password"
+            placeholder="登录密码 *"
+            value={password}
+            cursor={passwordCursor}
+            onChange={syncInput(setPassword, setPasswordCursor)}
+          />
+          <AtInput
+            name="mobile"
+            type="phone"
+            placeholder="注册用户手机号码 *"
+            value={mobile}
+            cursor={mobileCursor}
+            onChange={syncInput(setMobile, setMobileCursor)}
+          />
+          <AtInput
+            name="creditCode"
+            placeholder="营业执照代码 / 统一社会信用代码 *"
+            value={creditCode}
+            cursor={creditCodeCursor}
+            onChange={syncInput(setCreditCode, setCreditCodeCursor)}
+            maxLength={18}
+          />
+          <AtInput
+            name="legalPersonName"
+            placeholder="法人姓名 *"
+            value={legalPersonName}
+            cursor={legalPersonNameCursor}
+            onChange={syncInput(setLegalPersonName, setLegalPersonNameCursor)}
+          />
+          <AtInput
+            name="legalPersonPhone"
+            type="phone"
+            placeholder="法人电话号码（非必填）"
+            value={legalPersonPhone}
+            cursor={legalPersonPhoneCursor}
+            onChange={syncInput(setLegalPersonPhone, setLegalPersonPhoneCursor)}
+          />
+          <AtInput
+            name="businessScope"
+            placeholder="营业执照经营范围（非必填）"
+            value={businessScope}
+            cursor={businessScopeCursor}
+            onChange={syncInput(setBusinessScope, setBusinessScopeCursor)}
+          />
           <AtTextarea
             placeholder="经营场所地址 *"
             value={businessAddress}

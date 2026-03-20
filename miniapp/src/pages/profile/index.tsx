@@ -19,8 +19,16 @@ export default function Profile() {
   
   // 登录表单状态
   const [username, setUsername] = useState('')
+  const [usernameCursor, setUsernameCursor] = useState(0)
   const [password, setPassword] = useState('')
+  const [passwordCursor, setPasswordCursor] = useState(0)
   const [loginLoading, setLoginLoading] = useState(false)
+
+  const syncInput = (setValue, setCursor) => (value, event) => {
+    const nextValue = String(value ?? '')
+    setValue(nextValue)
+    setCursor(event?.detail?.cursor ?? nextValue.length)
+  }
 
   useDidShow(() => {
     setIsLoggedIn(!!Taro.getStorageSync('token'))
@@ -188,8 +196,21 @@ export default function Profile() {
           </View>
           
           <View className="profile-page__login-form card form-card">
-            <AtInput name="username" placeholder="请输入登录名" value={username} onChange={(v) => setUsername(v)} />
-            <AtInput name="password" type="password" placeholder="请输入登录密码" value={password} onChange={(v) => setPassword(v)} />
+            <AtInput
+              name="username"
+              placeholder="请输入登录名"
+              value={username}
+              cursor={usernameCursor}
+              onChange={syncInput(setUsername, setUsernameCursor)}
+            />
+            <AtInput
+              name="password"
+              type="password"
+              placeholder="请输入登录密码"
+              value={password}
+              cursor={passwordCursor}
+              onChange={syncInput(setPassword, setPasswordCursor)}
+            />
             <AtButton type="primary" full onClick={handleLogin} loading={loginLoading} className="profile-page__login-btn">
               登录
             </AtButton>

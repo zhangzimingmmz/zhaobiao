@@ -168,6 +168,16 @@ CREATE TABLE IF NOT EXISTS article_operation_logs (
     created_at      TEXT NOT NULL,
     FOREIGN KEY (article_id) REFERENCES articles(id) ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS user_favorites (
+    id              TEXT PRIMARY KEY,
+    user_id         TEXT NOT NULL,
+    target_type     TEXT NOT NULL,
+    target_id       TEXT NOT NULL,
+    target_site     TEXT,
+    created_at      TEXT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
 """
 
 
@@ -208,6 +218,15 @@ def _init_db() -> None:
         )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_article_logs_operator ON article_operation_logs(operator_id, created_at DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_user_favorites_user_created_at ON user_favorites(user_id, created_at DESC)"
+        )
+        conn.execute(
+            "CREATE UNIQUE INDEX IF NOT EXISTS idx_user_favorites_bid_unique ON user_favorites(user_id, target_type, target_site, target_id) WHERE target_type = 'bid'"
+        )
+        conn.execute(
+            "CREATE UNIQUE INDEX IF NOT EXISTS idx_user_favorites_info_unique ON user_favorites(user_id, target_type, target_id) WHERE target_type = 'info'"
         )
         conn.commit()
     finally:
@@ -269,6 +288,14 @@ def get_current_user(authorization: Optional[str] = Header(None)) -> dict:
             detail={"code": 401, "message": "token 无效或已过期，请重新登录"},
         )
     return payload
+
+
+def get_optional_user(authorization: Optional[str]) -> Optional[dict]:
+    """尝试解析 Bearer token；无 token 或无效 token 时返回 None。"""
+    if not authorization or not authorization.startswith("Bearer "):
+        return None
+    token = authorization.removeprefix("Bearer ").strip()
+    return decode_access_token(token)
 
 
 def get_admin_user(authorization: Optional[str] = Header(None)) -> dict:
@@ -367,11 +394,41 @@ def _application_snapshot(row: sqlite3.Row) -> dict[str, Any]:
     return data
 
 
+def _infer_favorites_type(category_num: Optional[str]) -> str:
+    if category_num in {"002001009", "002001001", "002002001"}:
+        return "construction"
+    if category_num in {"59", "00101"}:
+        return "government"
+    return "info"
+
+
+def _favorite_bid_key(site: str, notice_id: str) -> tuple[str, str]:
+    return (site or "", notice_id)
+
+
+def _load_user_favorite_sets(conn: sqlite3.Connection, user_id: Optional[str]) -> dict[str, set[Any]]:
+    if not user_id:
+        return {"bid": set(), "info": set()}
+
+    rows = conn.execute(
+        "SELECT target_type, target_id, target_site FROM user_favorites WHERE user_id = ?",
+        (user_id,),
+    ).fetchall()
+    bid_keys: set[tuple[str, str]] = set()
+    info_ids: set[str] = set()
+    for row in rows:
+        if row["target_type"] == "bid":
+            bid_keys.add(_favorite_bid_key(row["target_site"], row["target_id"]))
+        elif row["target_type"] == "info":
+            info_ids.add(row["target_id"])
+    return {"bid": bid_keys, "info": info_ids}
+
+
 # ────────────────────────────────────────────────────────────
 # 列表与详情行映射
 # ────────────────────────────────────────────────────────────
 
-def _row_list_item(row: sqlite3.Row, site: str) -> dict[str, Any]:
+def _row_list_item(row: sqlite3.Row, site: str, *, favorited: bool = False) -> dict[str, Any]:
     """存储行 → 列表单条（《接口文档-前端与小程序》1.4）"""
     linkurl = row["linkurl"] or ""
     origin_url = row["origin_url"]
@@ -382,6 +439,7 @@ def _row_list_item(row: sqlite3.Row, site: str) -> dict[str, Any]:
         origin_url = f"{SITE2_BASE}/maincms-web/article?type=notice&id={row['id']}&planId={plan_id}"
     return {
         "id": row["id"],
+        "site": site,
         "title": row["title"] or "",
         "publishTime": row["publish_time"],
         "sourceName": row["source_name"],
@@ -393,10 +451,11 @@ def _row_list_item(row: sqlite3.Row, site: str) -> dict[str, Any]:
         "summary": row["description"] or row["content"],
         "planId": row["plan_id"],
         "purchaseNature": row["purchase_nature"] if "purchase_nature" in row.keys() else None,
+        "favorited": favorited,
     }
 
 
-def _row_detail_bid(row: sqlite3.Row, site: str) -> dict[str, Any]:
+def _row_detail_bid(row: sqlite3.Row, site: str, *, favorited: bool = False) -> dict[str, Any]:
     """存储行 → 招投标详情（《接口文档-前端与小程序》2.4）"""
     linkurl = row["linkurl"] or ""
     origin_url = row["origin_url"]
@@ -408,6 +467,7 @@ def _row_detail_bid(row: sqlite3.Row, site: str) -> dict[str, Any]:
     source_site_name = "四川省公共资源交易平台" if "site1" in (site or "") else "四川省政府采购网" if "site2" in (site or "") else None
     return {
         "id": row["id"],
+        "site": site,
         "title": row["title"] or "",
         "categoryNum": row["category_num"],
         "categoryName": CATEGORY_NAMES.get(row["category_num"] or "", ""),
@@ -423,10 +483,11 @@ def _row_detail_bid(row: sqlite3.Row, site: str) -> dict[str, Any]:
         "content": row["content"],
         "originUrl": origin_url,
         "sourceSiteName": source_site_name,
+        "favorited": favorited,
     }
 
 
-def _row_detail_info(row: sqlite3.Row, site: str) -> dict[str, Any]:
+def _row_detail_info(row: sqlite3.Row, site: str, *, favorited: bool = False) -> dict[str, Any]:
     """存储行 → 信息展示详情（《接口文档-前端与小程序》3.4）"""
     origin_url = row["origin_url"]
     linkurl = row["linkurl"] or ""
@@ -438,12 +499,14 @@ def _row_detail_info(row: sqlite3.Row, site: str) -> dict[str, Any]:
     source_site_name = "四川省公共资源交易平台" if "site1" in (site or "") else "四川省政府采购网" if "site2" in (site or "") else None
     return {
         "id": row["id"],
+        "site": site,
         "title": row["title"] or "",
         "publishTime": row["publish_time"],
         "description": row["description"],
         "content": row["content"],
         "originUrl": origin_url,
         "sourceSiteName": source_site_name,
+        "favorited": favorited,
     }
 
 
@@ -464,6 +527,7 @@ def list_notices(
     purchaseManner: Optional[str] = Query(None),
     purchaseNature: Optional[str] = Query(None),
     purchaser: Optional[str] = Query(None),
+    authorization: Optional[str] = Header(None),
 ):
     """列表接口，字段与《接口文档-前端与小程序》1.3、1.4 一致。
     说明：category=002002001 时 tradingsourcevalue 多为空，source 筛选可能无结果。"""
@@ -472,6 +536,8 @@ def list_notices(
 
     conn = _get_conn()
     try:
+        payload = get_optional_user(authorization)
+        favorite_sets = _load_user_favorite_sets(conn, payload.get("userId") if payload else None)
         conditions = ["1=1"]
         params: list[Any] = []
         conditions.append("category_num = ?")
@@ -536,40 +602,65 @@ def list_notices(
             params,
         ).fetchall()
 
-        list_data = [_row_list_item(row, row["site"]) for row in rows]
+        list_data = [
+            _row_list_item(
+                row,
+                row["site"],
+                favorited=_favorite_bid_key(row["site"], row["id"]) in favorite_sets["bid"],
+            )
+            for row in rows
+        ]
         return {"code": 200, "data": {"total": total, "list": list_data}}
     finally:
         conn.close()
 
 
 @app.get("/api/detail/bid/{notice_id}")
-def detail_bid(notice_id: str):
+def detail_bid(notice_id: str, authorization: Optional[str] = Header(None)):
     """招投标详情，与《接口文档-前端与小程序》2 一致。"""
     conn = _get_conn()
     try:
+        payload = get_optional_user(authorization)
         row = conn.execute(
             "SELECT * FROM notices WHERE id = ? LIMIT 1",
             (notice_id,),
         ).fetchone()
         if not row:
             raise HTTPException(status_code=404, detail="not_found")
-        return {"code": 200, "data": _row_detail_bid(row, row["site"])}
+        favorite_sets = _load_user_favorite_sets(conn, payload.get("userId") if payload else None)
+        return {
+            "code": 200,
+            "data": _row_detail_bid(
+                row,
+                row["site"],
+                favorited=_favorite_bid_key(row["site"], row["id"]) in favorite_sets["bid"],
+            ),
+        }
     finally:
         conn.close()
 
 
 @app.get("/api/detail/info/{notice_id}")
-def detail_info(notice_id: str):
+def detail_info(notice_id: str, authorization: Optional[str] = Header(None)):
     """信息展示详情，与《接口文档-前端与小程序》3 一致。"""
     conn = _get_conn()
     try:
+        payload = get_optional_user(authorization)
         row = conn.execute(
             "SELECT * FROM notices WHERE id = ? LIMIT 1",
             (notice_id,),
         ).fetchone()
         if not row:
             raise HTTPException(status_code=404, detail="not_found")
-        return {"code": 200, "data": _row_detail_info(row, row["site"])}
+        favorite_sets = _load_user_favorite_sets(conn, payload.get("userId") if payload else None)
+        return {
+            "code": 200,
+            "data": _row_detail_info(
+                row,
+                row["site"],
+                favorited=row["id"] in favorite_sets["info"],
+            ),
+        }
     finally:
         conn.close()
 
@@ -924,6 +1015,12 @@ class RegisterRequest(BaseModel):
     businessScope: Optional[str] = None
     businessAddress: str
     companyName: Optional[str] = None
+
+
+class FavoriteToggleRequest(BaseModel):
+    targetId: str
+    targetType: str
+    targetSite: Optional[str] = None
 
 
 @app.post("/api/auth/register")
@@ -2060,10 +2157,13 @@ def get_articles(
     category: Optional[str] = Query(None),
     page: int = Query(1, ge=1),
     pageSize: int = Query(10, ge=1, le=100),
+    authorization: Optional[str] = Header(None),
 ):
     """小程序获取已发布文章列表，支持分页、分类筛选。"""
     conn = _get_conn()
     try:
+        payload = get_optional_user(authorization)
+        favorite_sets = _load_user_favorite_sets(conn, payload.get("userId") if payload else None)
         conditions = ["status = 'published'"]
         params: list[Any] = []
         
@@ -2097,6 +2197,7 @@ def get_articles(
                 "category": row["category"],
                 "publishTime": row["publish_time"],
                 "viewCount": row["view_count"],
+                "favorited": row["id"] in favorite_sets["info"],
             }
             for row in rows
         ]
@@ -2107,10 +2208,11 @@ def get_articles(
 
 
 @app.get("/api/articles/{article_id}")
-def get_article(article_id: str):
+def get_article(article_id: str, authorization: Optional[str] = Header(None)):
     """小程序获取文章详情，只返回已发布文章。"""
     conn = _get_conn()
     try:
+        payload = get_optional_user(authorization)
         row = conn.execute(
             "SELECT * FROM articles WHERE id = ? AND status = 'published' LIMIT 1",
             (article_id,),
@@ -2119,6 +2221,7 @@ def get_article(article_id: str):
         if not row:
             return {"code": 404, "message": "文章不存在或未发布"}
         
+        favorite_sets = _load_user_favorite_sets(conn, payload.get("userId") if payload else None)
         return {
             "code": 200,
             "data": {
@@ -2130,6 +2233,7 @@ def get_article(article_id: str):
                 "category": row["category"],
                 "publishTime": row["publish_time"],
                 "viewCount": row["view_count"],
+                "favorited": row["id"] in favorite_sets["info"],
             }
         }
     finally:
@@ -2156,5 +2260,185 @@ def record_article_view(article_id: str):
         conn.commit()
         
         return {"code": 200, "message": "记录成功"}
+    finally:
+        conn.close()
+
+
+def _favorite_bid_payload(row: sqlite3.Row) -> dict[str, Any]:
+    payload = _row_list_item(row, row["site"], favorited=True)
+    payload["viewType"] = "bid"
+    payload["favoritesType"] = _infer_favorites_type(row["category_num"])
+    return payload
+
+
+def _favorite_info_payload(row: sqlite3.Row, *, source: str, site: Optional[str] = None) -> dict[str, Any]:
+    if source == "article":
+        return {
+            "id": row["id"],
+            "site": None,
+            "title": row["title"],
+            "summary": row["summary"],
+            "coverImageUrl": row["cover_image_url"],
+            "originUrl": row["wechat_article_url"],
+            "publishTime": row["publish_time"],
+            "category": row["category"],
+            "viewType": "info",
+            "favoritesType": "info",
+            "favorited": True,
+        }
+
+    payload = _row_detail_info(row, site or row["site"], favorited=True)
+    payload["viewType"] = "info"
+    payload["favoritesType"] = "info"
+    payload["coverImageUrl"] = None
+    return payload
+
+
+@app.get("/api/favorites")
+def get_favorites(
+    page: int = Query(1, ge=1),
+    pageSize: int = Query(100, ge=1, le=200),
+    authorization: Optional[str] = Header(None),
+):
+    """获取当前登录用户收藏列表，仅返回仍可解析的源数据。"""
+    payload = get_current_user(authorization)
+    user_id = payload.get("userId")
+    if not user_id:
+        return {"code": 401, "message": "请先登录"}
+
+    conn = _get_conn()
+    try:
+        rows = conn.execute(
+            """SELECT target_type, target_id, target_site, created_at
+               FROM user_favorites
+               WHERE user_id = ?
+               ORDER BY created_at DESC""",
+            (user_id,),
+        ).fetchall()
+
+        items: list[dict[str, Any]] = []
+        for row in rows:
+            target_type = row["target_type"]
+            if target_type == "bid":
+                notice = conn.execute(
+                    "SELECT * FROM notices WHERE site = ? AND id = ? LIMIT 1",
+                    (row["target_site"], row["target_id"]),
+                ).fetchone()
+                if not notice:
+                    continue
+                item = _favorite_bid_payload(notice)
+            elif target_type == "info":
+                article = conn.execute(
+                    "SELECT * FROM articles WHERE id = ? AND status = 'published' LIMIT 1",
+                    (row["target_id"],),
+                ).fetchone()
+                if article:
+                    item = _favorite_info_payload(article, source="article")
+                else:
+                    if row["target_site"]:
+                        notice = conn.execute(
+                            "SELECT * FROM notices WHERE site = ? AND id = ? LIMIT 1",
+                            (row["target_site"], row["target_id"]),
+                        ).fetchone()
+                    else:
+                        notice = conn.execute(
+                            "SELECT * FROM notices WHERE id = ? LIMIT 1",
+                            (row["target_id"],),
+                        ).fetchone()
+                    if not notice:
+                        continue
+                    item = _favorite_info_payload(notice, source="notice", site=row["target_site"])
+            else:
+                continue
+
+            item["savedAt"] = row["created_at"]
+            items.append(item)
+
+        total = len(items)
+        start = (page - 1) * pageSize
+        end = start + pageSize
+        return {"code": 200, "data": {"total": total, "list": items[start:end]}}
+    finally:
+        conn.close()
+
+
+@app.post("/api/favorites/toggle")
+def toggle_favorite(req: FavoriteToggleRequest, authorization: Optional[str] = Header(None)):
+    """切换当前登录用户的收藏状态。"""
+    payload = get_current_user(authorization)
+    user_id = payload.get("userId")
+    if not user_id:
+        return {"code": 401, "message": "请先登录"}
+
+    target_type = (req.targetType or "").strip()
+    target_id = (req.targetId or "").strip()
+    target_site = (req.targetSite or "").strip() or None
+
+    if target_type not in {"bid", "info"}:
+        return {"code": 400, "message": "targetType 仅支持 bid 或 info"}
+    if not target_id:
+        return {"code": 400, "message": "targetId 不能为空"}
+    if target_type == "bid" and not target_site:
+        return {"code": 400, "message": "bid 收藏需要 targetSite"}
+
+    conn = _get_conn()
+    try:
+        if target_type == "bid":
+            source_row = conn.execute(
+                "SELECT site, id FROM notices WHERE site = ? AND id = ? LIMIT 1",
+                (target_site, target_id),
+            ).fetchone()
+            if not source_row:
+                return {"code": 404, "message": "公告不存在"}
+        else:
+            source_row = conn.execute(
+                "SELECT id FROM articles WHERE id = ? AND status = 'published' LIMIT 1",
+                (target_id,),
+            ).fetchone()
+            if source_row:
+                target_site = None
+            else:
+                if target_site:
+                    source_row = conn.execute(
+                        "SELECT site, id FROM notices WHERE site = ? AND id = ? LIMIT 1",
+                        (target_site, target_id),
+                    ).fetchone()
+                else:
+                    source_row = conn.execute(
+                        "SELECT site, id FROM notices WHERE id = ? LIMIT 1",
+                        (target_id,),
+                    ).fetchone()
+                    if source_row:
+                        target_site = source_row["site"]
+                if not source_row:
+                    return {"code": 404, "message": "内容不存在"}
+
+        if target_type == "bid":
+            existing = conn.execute(
+                """SELECT id FROM user_favorites
+                   WHERE user_id = ? AND target_type = 'bid' AND target_site = ? AND target_id = ?
+                   LIMIT 1""",
+                (user_id, target_site, target_id),
+            ).fetchone()
+        else:
+            existing = conn.execute(
+                """SELECT id FROM user_favorites
+                   WHERE user_id = ? AND target_type = 'info' AND target_id = ?
+                   LIMIT 1""",
+                (user_id, target_id),
+            ).fetchone()
+
+        if existing:
+            conn.execute("DELETE FROM user_favorites WHERE id = ?", (existing["id"],))
+            conn.commit()
+            return {"code": 200, "data": {"favorited": False}}
+
+        conn.execute(
+            """INSERT INTO user_favorites(id, user_id, target_type, target_id, target_site, created_at)
+               VALUES(?, ?, ?, ?, ?, ?)""",
+            (str(uuid.uuid4()), user_id, target_type, target_id, target_site, _now_iso()),
+        )
+        conn.commit()
+        return {"code": 200, "data": {"favorited": True}}
     finally:
         conn.close()

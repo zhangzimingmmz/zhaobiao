@@ -9,8 +9,16 @@ import './index.scss'
 
 export default function Login() {
   const [username, setUsername] = useState('')
+  const [usernameCursor, setUsernameCursor] = useState(0)
   const [password, setPassword] = useState('')
+  const [passwordCursor, setPasswordCursor] = useState(0)
   const [loading, setLoading] = useState(false)
+
+  const syncInput = (setValue, setCursor) => (value, event) => {
+    const nextValue = String(value ?? '')
+    setValue(nextValue)
+    setCursor(event?.detail?.cursor ?? nextValue.length)
+  }
 
   const handleLogin = () => {
     if (!username || !password) {
@@ -64,14 +72,16 @@ export default function Login() {
             type="text"
             placeholder="请输入登录名"
             value={username}
-            onChange={(v) => setUsername(v)}
+            cursor={usernameCursor}
+            onChange={syncInput(setUsername, setUsernameCursor)}
           />
           <AtInput
             name="password"
             type="password"
             placeholder="请输入登录密码"
             value={password}
-            onChange={(v) => setPassword(v)}
+            cursor={passwordCursor}
+            onChange={syncInput(setPassword, setPasswordCursor)}
           />
           <AtButton type="primary" full onClick={handleLogin} loading={loading} className="login-page__submit">
             登录

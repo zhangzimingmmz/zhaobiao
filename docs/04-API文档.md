@@ -30,6 +30,8 @@
 - **POST /api/auth/login**：手机号+验证码登录，返回 JWT。
 - **POST /api/auth/register**：企业认证提交。
 - **GET /api/auth/audit-status**：当前用户审核状态。
+- **GET /api/favorites**：当前登录用户收藏列表，只返回仍可解析的源数据。
+- **POST /api/favorites/toggle**：切换登录用户的收藏状态；`bid` 需传 `targetSite`。
 - **GET /api/admin/crawl/actions**：可执行的采集动作列表。
 - **GET /api/admin/crawl/runs**：采集运行记录。
 - **POST /api/admin/crawl/runs**：提交采集 run（参数见接口）。
@@ -42,6 +44,7 @@
 ## 3. 鉴权方式
 
 - **用户端**：登录后响应中带 JWT；请求时头 `Authorization: Bearer <token>`。
+- **收藏真值**：列表、详情、文章接口在带有效 token 时返回 `favorited`，收藏页通过 `GET /api/favorites` 读取账号级收藏。
 - **管理端**：使用固定管理员 token，头 `Authorization: Bearer <ADMIN_TOKEN>`。
 - **业务码**：HTTP 200 时，业务成功与否看 body 中 `code`（如 200 成功、401 未登录、403 无权限）或 `success`；错误信息在 `message` / `msg`。
 

@@ -36,4 +36,10 @@ export const api = {
   recordArticleView(id) {
     return post(`/api/articles/${id}/view`, {})
   },
+  getFavorites(params) {
+    return get('/api/favorites', params)
+  },
+  toggleFavorite(data) {
+    return post('/api/favorites/toggle', data)
+  },
 }

@@ -5,12 +5,6 @@ import { AtButton } from 'taro-ui'
 import TopBar from '../../components/TopBar'
 import { config } from '../../config'
 import { api } from '../../services/api'
-import {
-  inferFavoritesType,
-  isFavoriteRecord,
-  removeFavoriteRecord,
-  saveFavoriteRecord,
-} from '../../utils/favorites'
 import { formatDate } from '../../utils/formatDate'
 import './index.scss'
 
@@ -34,6 +28,7 @@ export default function InfoDetail() {
         publishTime: new Date().toISOString(),
         originUrl: probeUrl || `${config.baseUrl}/h5-probe.html`,
         sourceSiteName: 'Probe',
+        isProbe: true,
       })
       setFavorited(false)
       setLoading(false)
@@ -45,7 +40,7 @@ export default function InfoDetail() {
     }
     const applyDetail = (data) => {
       setDetail(data)
-      setFavorited(isFavoriteRecord(data.id, 'info'))
+      setFavorited(!!data.favorited)
     }
     api.getArticle(id)
       .then((res) => {
@@ -120,18 +115,27 @@ export default function InfoDetail() {
 
   const handleFavoriteToggle = () => {
     if (!detail) return
-
-    if (favorited) {
-      removeFavoriteRecord(detail.id, 'info')
-      setFavorited(false)
-      Taro.showToast({ title: '已取消收藏', icon: 'none' })
+    if (detail.isProbe) return
+    if (!Taro.getStorageSync('token')) {
+      Taro.showToast({ title: '请先登录后收藏', icon: 'none' })
+      Taro.navigateTo({ url: '/pages/login/index' })
       return
     }
-
-    const favoritesType = inferFavoritesType({ ...detail, viewType: 'info' })
-    saveFavoriteRecord(detail, { viewType: 'info', favoritesType })
-    setFavorited(true)
-    Taro.showToast({ title: '已加入收藏', icon: 'none' })
+    api.toggleFavorite({
+      targetId: detail.id,
+      targetType: 'info',
+      targetSite: detail.site || undefined,
+    })
+      .then((res) => {
+        if (res.data?.code === 200 && res.data?.data) {
+          const nextFavorited = !!res.data.data.favorited
+          setFavorited(nextFavorited)
+          Taro.showToast({ title: nextFavorited ? '已加入收藏' : '已取消收藏', icon: 'none' })
+          return
+        }
+        Taro.showToast({ title: res.data?.message || '操作失败，请重试', icon: 'none' })
+      })
+      .catch(() => Taro.showToast({ title: '操作失败，请重试', icon: 'none' }))
   }
 
   if (loading) {
@@ -156,7 +160,7 @@ export default function InfoDetail() {
       <TopBar
         title="信息详情"
         showBack
-        right={favorited ? 'favorite-active' : 'favorite'}
+        right={detail.isProbe ? undefined : favorited ? 'favorite-active' : 'favorite'}
         variant="secondary"
         onRight={handleFavoriteToggle}
         actions={['分享']}

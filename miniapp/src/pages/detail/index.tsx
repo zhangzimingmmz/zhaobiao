@@ -5,12 +5,6 @@ import { AtButton } from 'taro-ui'
 import TopBar from '../../components/TopBar'
 import { config } from '../../config'
 import { api } from '../../services/api'
-import {
-  inferFavoritesType,
-  isFavoriteRecord,
-  removeFavoriteRecord,
-  saveFavoriteRecord,
-} from '../../utils/favorites'
 import { formatDate, formatDateTime } from '../../utils/formatDate'
 import './index.scss'
 
@@ -29,7 +23,7 @@ export default function Detail() {
       .then((res) => {
         if (res.data && res.data.code === 200 && res.data.data) {
           setDetail(res.data.data)
-          setFavorited(isFavoriteRecord(res.data.data.id, 'bid'))
+          setFavorited(!!res.data.data.favorited)
         }
       })
       .catch(() => setDetail(null))
@@ -47,24 +41,26 @@ export default function Detail() {
 
   const handleFavoriteToggle = () => {
     if (!detail) return
-
-    if (favorited) {
-      removeFavoriteRecord(detail.id, 'bid')
-      setFavorited(false)
-      Taro.showToast({ title: '已取消收藏', icon: 'none' })
+    if (!Taro.getStorageSync('token')) {
+      Taro.showToast({ title: '请先登录后收藏', icon: 'none' })
+      Taro.navigateTo({ url: '/pages/login/index' })
       return
     }
-
-    const favoritesType =
-      detail.categoryNum
-        ? inferFavoritesType(detail)
-        : detail.planId || /采购/.test(detail.categoryName || detail.title || '')
-          ? 'government'
-          : 'construction'
-
-    saveFavoriteRecord(detail, { viewType: 'bid', favoritesType })
-    setFavorited(true)
-    Taro.showToast({ title: '已加入收藏', icon: 'none' })
+    api.toggleFavorite({
+      targetId: detail.id,
+      targetType: 'bid',
+      targetSite: detail.site,
+    })
+      .then((res) => {
+        if (res.data?.code === 200 && res.data?.data) {
+          const nextFavorited = !!res.data.data.favorited
+          setFavorited(nextFavorited)
+          Taro.showToast({ title: nextFavorited ? '已加入收藏' : '已取消收藏', icon: 'none' })
+          return
+        }
+        Taro.showToast({ title: res.data?.message || '操作失败，请重试', icon: 'none' })
+      })
+      .catch(() => Taro.showToast({ title: '操作失败，请重试', icon: 'none' }))
   }
 
   const dateTimeFields = ['报名开始', '报名截止', '开标时间']

@@ -9,7 +9,7 @@ export function CompaniesPage({ navigate }: { navigate: (path: string) => void }
     showActions: true,
     showCreatedAt: false,
     showAuditAt: true,
-    onView: (r) => navigate(`/reviews/${r.id}`),
+    onView: (r) => navigate(`/companies/${r.id}`),
   });
 
   return (

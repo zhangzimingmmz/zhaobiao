@@ -133,7 +133,7 @@ export function ArticlesPage({ navigate }: ArticlesPageProps) {
       key: "actions",
       width: 220,
       render: (_, record) => (
-        <>
+        <div className="article-actions">
           <Button type="link" size="small" onClick={() => navigate(`/articles/edit/${record.id}`)}>
             编辑
           </Button>
@@ -150,7 +150,7 @@ export function ArticlesPage({ navigate }: ArticlesPageProps) {
           <Button type="link" size="small" danger onClick={() => handleDelete(record)}>
             删除
           </Button>
-        </>
+        </div>
       ),
     },
   ];
@@ -178,6 +178,7 @@ export function ArticlesPage({ navigate }: ArticlesPageProps) {
         initialValues: { status: "", category: "", keyword: "" },
       }}
       pagination={{ defaultPageSize: 10, showSizeChanger: true }}
+      scroll={{ x: 920 }}
       toolBarRender={() => [
         <Button key="new" type="primary" onClick={() => navigate("/articles/new")}>
           新增文章

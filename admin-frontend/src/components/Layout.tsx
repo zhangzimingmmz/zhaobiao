@@ -64,6 +64,28 @@ function OperatorChip() {
   );
 }
 
+function EnvironmentChip() {
+  const env = import.meta.env.VITE_APP_ENV || import.meta.env.MODE || "development";
+  const normalized = String(env).toLowerCase();
+  const isProd = normalized === "production" || normalized === "prod";
+  const label = isProd ? "生产环境" : normalized === "test" ? "测试环境" : "内部环境";
+
+  return (
+    <div
+      style={{
+        padding: "8px 14px",
+        borderRadius: 8,
+        background: isProd ? "#fff7e6" : "#e6f4ff",
+        color: isProd ? "#ad6800" : "#0958d9",
+        fontSize: 14,
+        fontWeight: 600,
+      }}
+    >
+      {label}
+    </div>
+  );
+}
+
 export function Layout({ path, title, subtitle, navigate, children }: LayoutProps) {
   const menuItemRender = (item: { path?: string }, defaultDom: React.ReactNode) => (
     <a
@@ -87,7 +109,12 @@ export function Layout({ path, title, subtitle, navigate, children }: LayoutProp
       pageTitleRender={false}
       headerTitleRender={false}
       menuHeaderRender={false}
-      rightContentRender={() => <OperatorChip />}
+      rightContentRender={() => (
+        <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+          <EnvironmentChip />
+          <OperatorChip />
+        </div>
+      )}
       layout="mix"
       fixSiderbar
       contentStyle={{ padding: 24 }}

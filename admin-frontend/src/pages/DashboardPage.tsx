@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Card, Table, Button } from "antd";
 import { apiRequest } from "../lib/api";
 import type { CrawlRun, ReviewsData } from "../lib/types";
-import { EmptyState, ErrorState, LoadingState } from "../components/States";
+import { ApiUnavailableState, EmptyState, ErrorState, LoadingState } from "../components/States";
 import {
   actionKeyLabel,
   crawlRunDisplayStatus,
@@ -121,6 +121,21 @@ export function DashboardPage({ navigate }: DashboardProps) {
           )}
         </Card>
       </div>
+
+      <Card title="快捷入口">
+        <div className="button-row">
+          <Button type="primary" onClick={() => navigate("/reviews")}>
+            进入企业审核
+          </Button>
+          <Button onClick={() => navigate("/crawl")}>进入采集控制</Button>
+          <Button onClick={() => navigate("/companies")}>进入企业目录</Button>
+          <Button onClick={() => navigate("/runs")}>查看运行记录</Button>
+        </div>
+      </Card>
+
+      <Card title="待补健康指标">
+        <ApiUnavailableState label="失败告警聚合、数据新鲜度细分卡片、跨模块异常提醒仍待独立接口支持，当前先保留总览结构位。" />
+      </Card>
 
       <Card
         title={`今日定时任务概览（${todayStr}）`}

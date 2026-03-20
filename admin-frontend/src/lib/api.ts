@@ -4,7 +4,7 @@ import type { ApiResponse } from "./types";
 const API_BASE = import.meta.env.VITE_API_BASE ?? "http://127.0.0.1:8000";
 
 type RequestOptions = {
-  method?: "GET" | "POST";
+  method?: "GET" | "POST" | "PUT" | "DELETE";
   body?: unknown;
   auth?: boolean;
 };
@@ -146,7 +146,7 @@ export async function getArticle(id: string): Promise<Article> {
 
 export async function updateArticle(id: string, data: ArticleUpdateInput): Promise<Article> {
   return apiRequest<Article>(`/api/admin/articles/${id}`, {
-    method: "POST",
+    method: "PUT",
     body: data,
   });
 }
@@ -181,8 +181,8 @@ export async function deleteArticle(id: string): Promise<{ message: string }> {
   });
 
   const payload = (await response.json()) as ApiResponse<{ message: string }>;
-  if (payload.code !== 200 || payload.data === undefined) {
+  if (payload.code !== 200) {
     throw new Error(payload.message ?? "删除失败");
   }
-  return payload.data;
+  return payload.data ?? { message: payload.message ?? "删除成功" };
 }

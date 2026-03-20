@@ -19,8 +19,26 @@ export default function InfoDetail() {
   const [loading, setLoading] = useState(true)
   const [favorited, setFavorited] = useState(false)
   const id = Taro.getCurrentInstance().router?.params?.id || ''
+  const probe = Taro.getCurrentInstance().router?.params?.probe || ''
+  const probeTitle = decodeURIComponent(Taro.getCurrentInstance().router?.params?.title || '')
+  const probeSummary = decodeURIComponent(Taro.getCurrentInstance().router?.params?.summary || '')
+  const probeUrl = decodeURIComponent(Taro.getCurrentInstance().router?.params?.url || '')
 
   useEffect(() => {
+    if (probe === '1') {
+      setDetail({
+        id: '__h5_probe__',
+        title: probeTitle || 'H5 探针测试消息',
+        description: probeSummary || '用于验证个人主体小程序是否能通过 WebView 打开自有 H5 页面。',
+        content: '<p>这是一条测试消息。请点击上方“查看原文”，验证小程序是否能够打开自有 H5 探针页。</p>',
+        publishTime: new Date().toISOString(),
+        originUrl: probeUrl || `${config.baseUrl}/h5-probe.html`,
+        sourceSiteName: 'Probe',
+      })
+      setFavorited(false)
+      setLoading(false)
+      return
+    }
     if (!id) {
       setLoading(false)
       return
@@ -78,6 +96,12 @@ export default function InfoDetail() {
           success: () => Taro.showToast({ title: '链接已复制，请在浏览器中打开', icon: 'none' }),
         })
       }
+      return
+    }
+    if (url.indexOf(`${config.baseUrl}/h5-probe.html`) === 0) {
+      Taro.navigateTo({
+        url: '/pages/webview/index?url=' + encodeURIComponent(url),
+      })
       return
     }
     const proxyUrl = `${config.baseUrl}/api/webview-proxy?url=${encodeURIComponent(url)}`

@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Form, Select, Input, Button, Card, message } from "antd";
 import { apiRequest } from "../lib/api";
 import type { CrawlAction, CrawlRun } from "../lib/types";
-import { EmptyState, ErrorState, LoadingState } from "../components/States";
+import { ApiUnavailableState, EmptyState, ErrorState, LoadingState } from "../components/States";
 import { actionKeyLabel, crawlRunStatusLabel } from "../lib/statusLabels";
 
 type ActionsResponse = { actions: CrawlAction[] };
@@ -124,6 +124,9 @@ export function CrawlPage({ navigate }: { navigate: (path: string) => void }) {
         ) : (
           <EmptyState label="提交一次采集动作后，这里会显示结果" />
         )}
+      </Card>
+      <Card title="扩展能力状态">
+        <ApiUnavailableState label="运行健康中心、批量限制说明、跨任务冲突分析等扩展能力尚未接入独立后端支持，当前页先提供受控动作提交与最近结果。" />
       </Card>
     </div>
   );

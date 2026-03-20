@@ -5,6 +5,7 @@ import { DashboardPage } from "./pages/DashboardPage";
 import { ReviewsPage } from "./pages/ReviewsPage";
 import { ReviewDetailPage } from "./pages/ReviewDetailPage";
 import { CompaniesPage } from "./pages/CompaniesPage";
+import { CompanyDetailPage } from "./pages/CompanyDetailPage";
 import { CrawlPage } from "./pages/CrawlPage";
 import { RunsPage } from "./pages/RunsPage";
 import { RunDetailPage } from "./pages/RunDetailPage";
@@ -77,6 +78,13 @@ export function App() {
         title: "企业目录",
         subtitle: "查看企业清单和认证状态。",
         content: <CompaniesPage navigate={navigate} />,
+      };
+    }
+    if (path.startsWith("/companies/")) {
+      return {
+        title: "公司详情",
+        subtitle: "查看企业当前档案与预留信息位。",
+        content: <CompanyDetailPage id={path.replace("/companies/", "")} navigate={navigate} />,
       };
     }
     if (path === "/articles") {

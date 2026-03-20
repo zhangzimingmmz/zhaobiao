@@ -149,11 +149,11 @@ export function ArticleEditorPage({ id, navigate }: ArticleEditorPageProps) {
     }
   };
 
-  if (loading) return <Card loading />;
-  if (error) return <Card><p style={{ color: "#ff4d4f" }}>{error}</p></Card>;
+  if (loading) return <Card className="article-editor-card" loading />;
+  if (error) return <Card className="article-editor-card"><p style={{ color: "#ff4d4f" }}>{error}</p></Card>;
 
   return (
-    <Card style={{ maxWidth: 800 }}>
+    <Card className="article-editor-card">
       <Form form={form} layout="vertical">
         <Form.Item
           name="wechatArticleUrl"
@@ -187,7 +187,7 @@ export function ArticleEditorPage({ id, navigate }: ArticleEditorPageProps) {
               <img
                 src={getFieldValue("coverImageUrl")}
                 alt="封面预览"
-                style={{ marginTop: 8, maxWidth: 200, maxHeight: 200, display: "block" }}
+                className="article-editor-preview"
                 onError={(e) => {
                   (e.target as HTMLImageElement).style.display = "none";
                 }}
@@ -206,7 +206,7 @@ export function ArticleEditorPage({ id, navigate }: ArticleEditorPageProps) {
         <p style={{ color: "#8c8c8c", fontSize: 14, marginTop: -16 }}>数值越大越靠前</p>
 
         <Form.Item>
-          <div style={{ display: "flex", gap: 12 }}>
+          <div className="article-editor-actions">
             <Button type="primary" onClick={handleSaveDraft} loading={submitting}>
               {submitting ? "保存中..." : "保存草稿"}
             </Button>

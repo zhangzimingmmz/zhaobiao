@@ -17,6 +17,10 @@ body {
   background: #f0f0f0;
 }
 
+#root {
+  min-height: 100vh;
+}
+
 button,
 input,
 select,
@@ -293,6 +297,33 @@ textarea {
   overflow-x: auto;
 }
 
+.article-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+}
+
+.article-editor-card {
+  width: 100%;
+  max-width: 800px;
+}
+
+.article-editor-preview {
+  margin-top: 8px;
+  display: block;
+  width: min(200px, 100%);
+  max-height: 200px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.article-editor-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
@@ -309,6 +340,24 @@ td {
 th {
   font-weight: 600;
   color: #182028;
+}
+
+@media (max-width: 768px) {
+  .article-editor-actions {
+    flex-direction: column;
+  }
+
+  .article-editor-actions .ant-btn {
+    width: 100%;
+  }
+
+  .article-actions {
+    gap: 0;
+  }
+
+  .article-actions .ant-btn {
+    padding-inline: 0;
+  }
 }
 
 /* 状态标签 */

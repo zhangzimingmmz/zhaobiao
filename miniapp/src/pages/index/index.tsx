@@ -10,6 +10,7 @@ import BidCard from '../../components/BidCard'
 import InfoCard from '../../components/InfoCard'
 import EmptyState from '../../components/EmptyState'
 import BidCardSkeleton from '../../components/BidCardSkeleton'
+import { config } from '../../config'
 import { api } from '../../services/api'
 import { formatDate } from '../../utils/formatDate'
 import {
@@ -149,6 +150,7 @@ function parseTimeFilter(value) {
 }
 
 const PAGE_SIZE = 10
+const H5_PROBE_URL = `${config.baseUrl}/h5-probe.html`
 
 function formatBudget(value) {
   if (!value) return ''
@@ -210,6 +212,21 @@ function normalizeInfoItem(item) {
   }
 }
 
+function buildProbeInfoItem() {
+  return {
+    id: '__h5_probe__',
+    title: 'H5 探针测试消息',
+    summary: '用于验证个人主体小程序是否能通过 WebView 打开自有 H5 页面。',
+    publishLabel: formatDate(new Date().toISOString()),
+    cover: '',
+    wechatArticleUrl: H5_PROBE_URL,
+    originUrl: H5_PROBE_URL,
+    categoryNum: 'probe',
+    viewType: 'info',
+    isProbe: true,
+  }
+}
+
 export default function Index() {
   const [primary, setPrimary] = useState('construction')
   const [secondary, setSecondary] = useState('engineering')
@@ -233,7 +250,11 @@ export default function Index() {
   const isEnd = list.length >= total && total > 0
   const isInfoState = homeState.listKind === 'info'
   const normalizedList = useMemo(
-    () => list.map((item) => (isInfoState ? normalizeInfoItem(item) : normalizeBidItem(item))),
+    () => {
+      const items = list.map((item) => (isInfoState ? normalizeInfoItem(item) : normalizeBidItem(item)))
+      if (!isInfoState) return items
+      return [buildProbeInfoItem(), ...items]
+    },
     [list, isInfoState],
   )
   const hasActiveFilters = useMemo(() => {
@@ -382,6 +403,16 @@ export default function Index() {
 
   const handleCardClick = (item) => {
     if (isInfoState) {
+      if (item.isProbe) {
+        Taro.navigateTo({
+          url:
+            '/pages/info-detail/index?probe=1' +
+            `&title=${encodeURIComponent(item.title)}` +
+            `&summary=${encodeURIComponent(item.summary || '')}` +
+            `&url=${encodeURIComponent(item.originUrl || H5_PROBE_URL)}`,
+        })
+        return
+      }
       // 统一进入详情页，在详情页再点击「查看原文」；避免直接打开失败时无兜底
       Taro.navigateTo({ url: `/pages/info-detail/index?id=${item.id}` })
     } else {

@@ -575,6 +575,91 @@ def detail_info(notice_id: str):
 
 
 # ────────────────────────────────────────────────────────────
+# H5 探针页（用于验证小程序 WebView 是否可打开自有域名页面）
+# ────────────────────────────────────────────────────────────
+
+
+@app.get("/h5-probe.html", response_class=Response)
+def h5_probe():
+    html = """<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>H5 Probe</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", sans-serif;
+      background: #f4f8ff;
+      color: #14213d;
+    }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background:
+        radial-gradient(circle at top, rgba(37, 99, 235, 0.16), transparent 36%),
+        linear-gradient(180deg, #f8fbff 0%, #eef4ff 100%);
+    }
+    .card {
+      width: min(560px, calc(100vw - 32px));
+      padding: 28px 24px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid rgba(20, 33, 61, 0.08);
+      box-shadow: 0 20px 60px rgba(37, 99, 235, 0.12);
+    }
+    .eyebrow {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      color: #2563eb;
+      text-transform: uppercase;
+    }
+    h1 {
+      margin: 10px 0 12px;
+      font-size: 28px;
+      line-height: 1.2;
+    }
+    p {
+      margin: 8px 0;
+      line-height: 1.7;
+      color: #334155;
+    }
+    code {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 6px 10px;
+      border-radius: 10px;
+      background: #eff6ff;
+      color: #1d4ed8;
+      word-break: break-all;
+    }
+    .ok {
+      margin-top: 18px;
+      font-weight: 700;
+      color: #15803d;
+    }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <div class="eyebrow">WebView Probe</div>
+    <h1>如果你能看到这个页面，说明小程序已经能打开自有 H5。</h1>
+    <p>当前页面由招标项目后端直接返回，目的只是验证小程序 WebView 对自有域名页面的放行情况。</p>
+    <p>如果这个页面能打开，但“查看原文”仍失败，那么问题就不在 WebView 基础能力，而更可能在原文代理链路本身。</p>
+    <code>https://api-zhaobiao.zhangziming.cn/h5-probe.html</code>
+    <p class="ok">Probe OK</p>
+  </main>
+</body>
+</html>
+"""
+    return Response(content=html, media_type="text/html; charset=utf-8")
+
+
+# ────────────────────────────────────────────────────────────
 # WebView 代理（供小程序内打开原文，无需配置第三方业务域名）
 # ────────────────────────────────────────────────────────────
 

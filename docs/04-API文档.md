@@ -24,8 +24,8 @@
 ## 2. 关键接口清单
 
 - **GET /api/list**：公告列表，必填 page、pageSize、category；可选 keyword、timeStart、timeEnd、regionCode、source、purchaseManner 等。
-- **GET /api/detail/bid/:id**：招投标详情。
-- **GET /api/detail/info/:id**：信息展示详情。
+- **GET /api/detail/bid/:id**：招投标详情；`content` 为后端按来源站点格式化后的可渲染正文。
+- **GET /api/detail/info/:id**：信息展示详情；`content` 为后端按来源站点格式化后的可渲染正文。
 - **GET /api/auth/captcha**：获取验证码。
 - **POST /api/auth/login**：手机号+验证码登录，返回 JWT。
 - **POST /api/auth/register**：企业认证提交。

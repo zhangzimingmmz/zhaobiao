@@ -33,7 +33,7 @@ def parse_detail_page(html: str, detail_url: str) -> Site1DetailResult:
     source_name = _text_of(soup.select_one("#source"))
 
     news_text = soup.select_one("#newsText")
-    content = news_text.decode_contents().strip() if news_text else None
+    content = _extract_news_text_content(news_text) if news_text else None
     if content == "":
         content = None
 
@@ -106,3 +106,22 @@ def _text_of(node: Any) -> Optional[str]:
         return None
     text = node.get_text(" ", strip=True)
     return text or None
+
+
+def _extract_news_text_content(node: Any) -> Optional[str]:
+    raw_html = node.decode_contents().strip()
+    if not raw_html:
+        return None
+
+    fragment = BeautifulSoup(raw_html, "html.parser")
+    body = fragment.body
+    if body is not None:
+        body_html = body.decode_contents().strip()
+        return body_html or None
+
+    html_node = fragment.html
+    if html_node is not None:
+        html_content = html_node.decode_contents().strip()
+        return html_content or None
+
+    return raw_html

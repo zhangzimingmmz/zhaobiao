@@ -25,6 +25,14 @@ SITE1_PLAN_HTML = """
 """
 
 
+SITE1_NESTED_DOCUMENT_HTML = """
+<html><body>
+  <h2 id="title">测试嵌套正文公告</h2>
+  <div id="newsText"><!DOCTYPE html><html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8" /><style>.x{color:red;}</style></head><body><div class="wmain"><p>正文第一段</p><table><tr><td>字段</td><td>值</td></tr></table></div></body></html></div>
+</body></html>
+"""
+
+
 class Site1DetailIngestionTests(unittest.TestCase):
     def test_normalize_categories_defaults_to_three_category_order(self):
         self.assertEqual(
@@ -61,6 +69,17 @@ class Site1DetailIngestionTests(unittest.TestCase):
         self.assertEqual(merged["origin_url"], "https://ggzy.yibin.gov.cn/detail?id=1")
         self.assertIn("_list", merged["raw_json"])
         self.assertIn("_detail", merged["raw_json"])
+
+    def test_parse_detail_page_unwraps_nested_html_document_from_news_text(self):
+        detail = parse_detail_page(
+            SITE1_NESTED_DOCUMENT_HTML,
+            "https://ggzyjy.sc.gov.cn/detail-nested.html",
+        )
+        self.assertNotIn("<html", detail.content or "")
+        self.assertNotIn("<body", detail.content or "")
+        self.assertIn("<div class=\"wmain\">", detail.content or "")
+        self.assertIn("<table>", detail.content or "")
+        self.assertIn("正文第一段", detail.content or "")
 
     @mock.patch("crawler.site1.client.requests.get")
     def test_fetch_detail_page_requests_absolute_detail_url(self, mock_get):

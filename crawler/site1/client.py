@@ -122,7 +122,10 @@ def fetch_detail_page(record: dict[str, Any]) -> Site1DetailResult:
                 timeout=config.REQUEST_TIMEOUT,
             )
             resp.raise_for_status()
-            resp.encoding = resp.encoding or "utf-8"
+            # site1 detail pages embed `<meta charset="utf-8">`, but the HTTP response
+            # may omit charset and requests often falls back to ISO-8859-1, which
+            # produces mojibake for Chinese content. Force UTF-8 before reading `.text`.
+            resp.encoding = "utf-8"
             return parse_detail_page(resp.text, detail_url)
         except Exception as exc:
             last_exc = exc

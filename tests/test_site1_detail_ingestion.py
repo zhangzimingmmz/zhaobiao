@@ -85,6 +85,25 @@ class Site1DetailIngestionTests(unittest.TestCase):
         )
 
     @mock.patch("crawler.site1.client.requests.get")
+    def test_fetch_detail_page_forces_utf8_to_avoid_mojibake(self, mock_get):
+        html_bytes = SITE1_PLAN_HTML.encode("utf-8")
+        mock_response = mock.Mock()
+        mock_response.raise_for_status.return_value = None
+        mock_response.encoding = "ISO-8859-1"
+        type(mock_response).text = property(lambda self: html_bytes.decode(self.encoding, errors="replace"))
+        mock_get.return_value = mock_response
+
+        detail = fetch_detail_page(
+            {
+                "id": "notice-utf8",
+                "linkurl": "/jyxx/002001/002001009/20260320/A7C61921-3E52-4F6B-BFC8-172E23699D7D.html",
+            }
+        )
+
+        self.assertEqual(detail.title, "测试招标计划公告")
+        self.assertIn("测试项目", detail.content or "")
+
+    @mock.patch("crawler.site1.client.requests.get")
     def test_detail_backfill_merges_existing_site1_record(self, mock_get):
         mock_response = mock.Mock()
         mock_response.raise_for_status.return_value = None

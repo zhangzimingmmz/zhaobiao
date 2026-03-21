@@ -273,6 +273,8 @@ def render_notice_body(raw: Optional[str], site: Optional[str], category_num: Op
         return None
 
     if site == "site1_sc_ggzyjy":
+        if _has_meaningful_html(source):
+            return _render_site2_html(source)
         return _render_site1_text(source, category_num)
     if site == "site2_ccgp_sichuan":
         return _render_site2_html(source)

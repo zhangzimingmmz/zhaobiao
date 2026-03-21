@@ -10,7 +10,6 @@ SITE1 增量采集任务（incremental）
 from __future__ import annotations
 
 import argparse
-import json
 import logging
 import sys
 from datetime import datetime
@@ -19,6 +18,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 from crawler.site1 import client, config, windowing
+from crawler.site1.tasks.core import enrich_records_with_detail, upsert_enriched_records
 from crawler import storage
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
@@ -50,8 +50,8 @@ def run(db_path: str = "notices.db", now: datetime | None = None) -> None:
                     records = page["records"]
                     if not records:
                         break
-                    enriched = [{**r, "raw_json": json.dumps(r, ensure_ascii=False)} for r in records]
-                    n = storage.upsert_records(conn, enriched, config.SITE)
+                    enriched = enrich_records_with_detail(records)
+                    n = upsert_enriched_records(conn, enriched)
                     logger.info("  [%s] pn=%d saved=%d", category_id, pn, n)
                     pn += len(records)
                     if pn >= page["totalcount"]:

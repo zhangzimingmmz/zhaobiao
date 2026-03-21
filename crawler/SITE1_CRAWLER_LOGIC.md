@@ -394,17 +394,21 @@ for category in [002001009, 002001001, 002002001]:
 
 - `https://ggzyjy.sc.gov.cn` + `linkurl`
 
-建议将详情抓取设计为第二阶段任务：
+正式方案采用“列表 + 详情页”两阶段：
 
-1. 列表接口先落库
-2. 再按 `linkurl` 异步抓详情页 HTML
-3. 详情正文如已在 `content` 中满足展示，可延后处理 HTML 解析
+1. 列表接口先获取索引记录
+2. 对每条记录再请求详情页 HTML
+3. 从详情页中解析：
+   - `#newsText`：正文 HTML
+   - `#originurl a[data-value]`：原文链接
+   - `#relateinfoid` / `#souceinfoid`：关联编号
+4. 合并后落库，`content` 优先保存详情页正文，`origin_url` 优先保存详情页原文链接
 
 当前阶段不要求：
 
-- 从 `content` 中解析金额
-- 从详情 HTML 中强拆采购人、代理机构等字段
-- 对详情做结构化抽取
+- 从详情 HTML 强拆采购人、代理机构等字段
+- 对详情做复杂结构化抽取
+- 依赖 `staticJson` path 反推作为主链路
 
 ## 12. 与前端展示的边界
 

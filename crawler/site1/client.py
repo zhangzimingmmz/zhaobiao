@@ -13,6 +13,7 @@ from typing import Any
 import requests
 
 from . import config
+from .detail import Site1DetailResult, build_detail_url, parse_detail_page
 
 logger = logging.getLogger(__name__)
 
@@ -101,3 +102,39 @@ def fetch_page(
         "totalcount": int(result.get("totalcount", 0)),
         "records": result.get("records", []),
     }
+
+
+def fetch_detail_page(record: dict[str, Any]) -> Site1DetailResult:
+    linkurl = (record.get("linkurl") or "").strip()
+    if not linkurl:
+        raise ValueError("site1 record missing linkurl")
+
+    detail_url = build_detail_url(linkurl)
+    headers = dict(config.HEADERS)
+    headers["Referer"] = detail_url
+
+    last_exc: Exception | None = None
+    for attempt in range(1, config.RETRY_TIMES + 1):
+        try:
+            resp = requests.get(
+                detail_url,
+                headers=headers,
+                timeout=config.REQUEST_TIMEOUT,
+            )
+            resp.raise_for_status()
+            resp.encoding = resp.encoding or "utf-8"
+            return parse_detail_page(resp.text, detail_url)
+        except Exception as exc:
+            last_exc = exc
+            wait = config.RETRY_BACKOFF ** attempt
+            logger.warning(
+                "site1 detail request failed for %s (attempt %d/%d): %s, retry in %.1fs",
+                record.get("id"),
+                attempt,
+                config.RETRY_TIMES,
+                exc,
+                wait,
+            )
+            if attempt < config.RETRY_TIMES:
+                time.sleep(wait)
+    raise RuntimeError(f"site1 detail request failed after {config.RETRY_TIMES} retries for {record.get('id')}") from last_exc

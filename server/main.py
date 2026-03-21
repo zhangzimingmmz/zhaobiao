@@ -8,6 +8,7 @@ import os
 import re
 import sys
 import uuid
+from bs4 import BeautifulSoup
 from datetime import datetime, timezone
 from urllib.parse import urlparse
 from pathlib import Path
@@ -438,6 +439,10 @@ def _row_list_item(row: sqlite3.Row, site: str, *, favorited: bool = False) -> d
     if not origin_url and "site2" in (site or ""):
         plan_id = row["plan_id"] or ""
         origin_url = f"{SITE2_BASE}/maincms-web/article?type=notice&id={row['id']}&planId={plan_id}"
+    summary = row["description"] or row["content"] or ""
+    if summary and re.search(r"<[a-zA-Z][^>]*>", summary):
+        summary = BeautifulSoup(summary, "html.parser").get_text(" ", strip=True)
+    summary = re.sub(r"\s+", " ", summary).strip()
     return {
         "id": row["id"],
         "site": site,
@@ -449,7 +454,7 @@ def _row_list_item(row: sqlite3.Row, site: str, *, favorited: bool = False) -> d
         "categoryNum": row["category_num"],
         "categoryName": CATEGORY_NAMES.get(row["category_num"] or "", ""),
         "originUrl": origin_url,
-        "summary": row["description"] or row["content"],
+        "summary": summary,
         "planId": row["plan_id"],
         "purchaseNature": row["purchase_nature"] if "purchase_nature" in row.keys() else None,
         "favorited": favorited,

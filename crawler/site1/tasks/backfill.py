@@ -9,7 +9,6 @@ SITE1 初始化采集任务（backfill）
 from __future__ import annotations
 
 import argparse
-import json
 import logging
 import sys
 from pathlib import Path
@@ -18,6 +17,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 from crawler.site1 import client, config, windowing
+from crawler.site1.tasks.core import enrich_records_with_detail, upsert_enriched_records
 from crawler import storage
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
@@ -58,13 +58,8 @@ def crawl_window(
         records = page["records"]
         if not records:
             break
-        # 将原始 JSON 写入 raw_json 字段
-        enriched = []
-        for r in records:
-            row = dict(r)
-            row["raw_json"] = json.dumps(r, ensure_ascii=False)
-            enriched.append(row)
-        n = storage.upsert_records(conn, enriched, config.SITE)
+        enriched = enrich_records_with_detail(records)
+        n = upsert_enriched_records(conn, enriched)
         saved += n
         logger.info("%s  pn=%d  records=%d  saved=%d", indent, pn, len(records), n)
         pn += len(records)

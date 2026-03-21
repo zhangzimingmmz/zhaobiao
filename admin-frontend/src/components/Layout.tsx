@@ -41,8 +41,8 @@ function Logo() {
         ZB
       </div>
       <div>
-        <div style={{ fontSize: 18, fontWeight: 700 }}>运营后台</div>
-        <div style={{ fontSize: 12, color: "#8c8c8c" }}>单运营最简版</div>
+        <div style={{ fontSize: 18, fontWeight: 700 }}>金堂招讯通小程序运营管理后台</div>
+        <div style={{ fontSize: 12, color: "#8c8c8c" }}>公众号内容发布与运营管理</div>
       </div>
     </div>
   );

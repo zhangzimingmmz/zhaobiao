@@ -42,6 +42,10 @@ export function App() {
   const [authed, setAuthed] = useState(Boolean(getAdminToken()));
 
   useEffect(() => {
+    document.title = "金堂招讯通小程序运营管理后台";
+  }, []);
+
+  useEffect(() => {
     if (!authed && path !== "/login") {
       navigate("/login");
     }

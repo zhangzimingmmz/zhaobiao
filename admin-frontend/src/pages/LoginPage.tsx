@@ -36,7 +36,7 @@ export function LoginPage({ onSuccess }: LoginPageProps) {
       <div className="login-card">
         <div>
           <div className="eyebrow">招标平台</div>
-          <h1>运营后台登录</h1>
+          <h1>金堂招讯通小程序运营管理后台</h1>
           <p>固定账号密码，登录后会长期保存在本地浏览器中。</p>
         </div>
         <Form

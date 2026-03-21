@@ -219,6 +219,25 @@ textarea {
   gap: 16px;
 }
 
+.article-editor-shortcut {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding: 16px 18px;
+  border-radius: 12px;
+  border: 1px solid rgba(22, 119, 255, 0.18);
+  background: linear-gradient(90deg, rgba(230, 244, 255, 0.85) 0%, rgba(246, 250, 255, 0.9) 100%);
+}
+
+.article-editor-shortcut__title {
+  margin-bottom: 4px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #0958d9;
+}
+
 .runs-page {
   display: grid;
   gap: 20px;

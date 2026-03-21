@@ -11,6 +11,8 @@ import {
   type Article,
 } from "../lib/api";
 
+const OFFICIAL_ACCOUNT_PUBLISH_URL = "https://mp.weixin.qq.com/";
+
 const CATEGORY_LABELS: Record<string, string> = {
   company_news: "工作动态",
   policy: "政策法规",
@@ -180,6 +182,12 @@ export function ArticlesPage({ navigate }: ArticlesPageProps) {
       pagination={{ defaultPageSize: 10, showSizeChanger: true }}
       scroll={{ x: 920 }}
       toolBarRender={() => [
+        <Button
+          key="wechat-publish"
+          onClick={() => window.open(OFFICIAL_ACCOUNT_PUBLISH_URL, "_blank", "noopener,noreferrer")}
+        >
+          公众号信息发布
+        </Button>,
         <Button key="new" type="primary" onClick={() => navigate("/articles/new")}>
           新增文章
         </Button>,

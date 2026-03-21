@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Card, Form, Input, Select, Button, message } from "antd";
+import { Card, Form, Input, Select, Button, message, Space, Typography } from "antd";
 import {
   createArticle,
   updateArticle,
@@ -22,6 +22,8 @@ const CATEGORY_OPTIONS = [
   { value: "policy", label: "政策法规" },
   { value: "other", label: "其他" },
 ];
+
+const OFFICIAL_ACCOUNT_PUBLISH_URL = "https://mp.weixin.qq.com/";
 
 export function ArticleEditorPage({ id, navigate }: ArticleEditorPageProps) {
   const [form] = Form.useForm();
@@ -154,6 +156,22 @@ export function ArticleEditorPage({ id, navigate }: ArticleEditorPageProps) {
 
   return (
     <Card className="article-editor-card">
+      <div className="article-editor-shortcut">
+        <div>
+          <div className="article-editor-shortcut__title">公众号信息发布快捷入口</div>
+          <Typography.Text type="secondary">
+            先进入企业微信公众号后台新建或编辑图文，再将文章链接粘贴到下方表单中创建发布对象。
+          </Typography.Text>
+        </div>
+        <Space wrap>
+          <Button
+            type="primary"
+            onClick={() => window.open(OFFICIAL_ACCOUNT_PUBLISH_URL, "_blank", "noopener,noreferrer")}
+          >
+            打开公众号后台
+          </Button>
+        </Space>
+      </div>
       <Form form={form} layout="vertical">
         <Form.Item
           name="wechatArticleUrl"

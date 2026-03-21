@@ -279,6 +279,63 @@ crawl_window(category, start_time, end_time):
         pn += 12
 ```
 
+## 11. 历史详情批量回填
+
+当 `site1` 记录已经落库，但 `raw_json` 尚未包含 `_detail` 时，可用 `detail_backfill` 补抓详情页并 merge 写回。
+
+### 11.1 默认执行顺序
+
+若未显式传分类，任务默认按以下顺序执行：
+
+1. `002001009` 招标计划
+2. `002001001` 招标公告
+3. `002002001` 政府采购采购公告
+
+这样可以优先修复工程建设正文最乱的历史数据。
+
+### 11.2 推荐命令
+
+先做只读验证：
+
+```bash
+python3 -m crawler.site1.tasks.detail_backfill \
+  --db data/notices.db \
+  --dry-run \
+  --batch-size 50 \
+  --sleep-seconds 0.3 \
+  --max-failures 20
+```
+
+正式回填工程建设两类：
+
+```bash
+python3 -m crawler.site1.tasks.detail_backfill \
+  --db data/notices.db \
+  --category 002001009 \
+  --category 002001001 \
+  --batch-size 50 \
+  --sleep-seconds 0.3 \
+  --max-failures 20
+```
+
+正式回填 `site1` 全部三类：
+
+```bash
+python3 -m crawler.site1.tasks.detail_backfill \
+  --db data/notices.db \
+  --batch-size 50 \
+  --sleep-seconds 0.3 \
+  --max-failures 20
+```
+
+### 11.3 行为约束
+
+- 仅处理 `site1_sc_ggzyjy`
+- 仅处理 `linkurl` 非空、且 `raw_json` 未带 `_detail` 的记录
+- 默认以 merge 方式写库，可重复执行
+- 单条抓取失败只记日志，不中断整批；达到 `--max-failures` 后停止当前分类
+- `--limit` 表示每个分类的最大处理条数，适合小批量验证
+
 ## 8. 增量采集方案
 
 ### 8.1 调度方式

@@ -103,6 +103,51 @@
 
 - 确认数据库有数据：可跑 site1/site2 的 incremental 或 backfill；或检查 `NOTICES_DB` 路径是否正确。
 
+### site1 工程建设正文仍然很乱
+
+如果 `site1_sc_ggzyjy` 的历史公告仍显示为一整段压平文本，通常不是线上代码未生效，而是**历史记录还没有补抓详情页**。
+
+排查思路：
+
+1. 新采集记录应优先带 `_detail`；
+2. 历史记录若只存了列表层 `content`，需要额外跑 `detail_backfill`；
+3. 优先回填 `002001009`、`002001001`，最后再补 `002002001`。
+
+推荐先做 dry-run：
+
+```bash
+python3 -m crawler.site1.tasks.detail_backfill \
+  --db data/notices.db \
+  --dry-run \
+  --batch-size 50 \
+  --sleep-seconds 0.3 \
+  --max-failures 20
+```
+
+正式回填工程建设两类：
+
+```bash
+python3 -m crawler.site1.tasks.detail_backfill \
+  --db data/notices.db \
+  --category 002001009 \
+  --category 002001001 \
+  --batch-size 50 \
+  --sleep-seconds 0.3 \
+  --max-failures 20
+```
+
+若要补齐 `site1` 三类：
+
+```bash
+python3 -m crawler.site1.tasks.detail_backfill \
+  --db data/notices.db \
+  --batch-size 50 \
+  --sleep-seconds 0.3 \
+  --max-failures 20
+```
+
+执行前建议先备份生产 `notices.db`。
+
 ### 采集任务一直 queued 或失败
 
 - API 单实例：同一时间只处理一个 run；查看 API 日志与 `logs/admin-crawl/` 对应 run 日志。

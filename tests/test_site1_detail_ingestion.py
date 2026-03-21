@@ -6,7 +6,11 @@ from unittest import mock
 
 from crawler.site1.client import fetch_detail_page
 from crawler.site1.detail import merge_list_and_detail_record, parse_detail_page
-from crawler.site1.tasks.detail_backfill import run as run_detail_backfill
+from crawler.site1.tasks.detail_backfill import (
+    _normalize_categories,
+    run as run_detail_backfill,
+    run_with_stats,
+)
 from crawler.storage import get_connection, upsert_one
 
 
@@ -22,6 +26,12 @@ SITE1_PLAN_HTML = """
 
 
 class Site1DetailIngestionTests(unittest.TestCase):
+    def test_normalize_categories_defaults_to_three_category_order(self):
+        self.assertEqual(
+            _normalize_categories(None),
+            ["002001009", "002001001", "002002001"],
+        )
+
     def test_parse_detail_page_extracts_embedded_fields(self):
         detail = parse_detail_page(
             SITE1_PLAN_HTML,
@@ -130,6 +140,98 @@ class Site1DetailIngestionTests(unittest.TestCase):
             raw_json = json.loads(row["raw_json"])
             self.assertIn("_list", raw_json)
             self.assertIn("_detail", raw_json)
+
+    @mock.patch("crawler.site1.tasks.detail_backfill.time.sleep")
+    @mock.patch("crawler.site1.client.requests.get")
+    def test_detail_backfill_dry_run_collects_stats_without_writing(self, mock_get, mock_sleep):
+        mock_response = mock.Mock()
+        mock_response.raise_for_status.return_value = None
+        mock_response.encoding = "utf-8"
+        mock_response.text = SITE1_PLAN_HTML
+        mock_get.return_value = mock_response
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            db_path = Path(tempdir) / "notices.db"
+            conn = get_connection(db_path)
+            try:
+                upsert_one(
+                    conn,
+                    {
+                        "id": "002001009A7C61921-3E52-4F6B-BFC8-172E23699D7D_001",
+                        "title": "列表标题",
+                        "webdate": "2026-03-20 20:25:14",
+                        "categorynum": "002001009",
+                        "linkurl": "/jyxx/002001/002001009/20260320/A7C61921-3E52-4F6B-BFC8-172E23699D7D.html",
+                        "content": "列表层压平文本",
+                    },
+                    "site1_sc_ggzyjy",
+                )
+            finally:
+                conn.close()
+
+            stats = run_with_stats(
+                db_path=str(db_path),
+                categories=["002001009"],
+                batch_size=10,
+                sleep_seconds=0.0,
+                dry_run=True,
+            )
+            self.assertEqual(stats.saved, 0)
+            self.assertEqual(stats.categories[0].succeeded, 1)
+            self.assertEqual(stats.categories[0].candidates, 1)
+
+            conn = get_connection(db_path)
+            try:
+                row = conn.execute(
+                    "SELECT content, origin_url, raw_json FROM notices WHERE site = ? AND id = ?",
+                    ("site1_sc_ggzyjy", "002001009A7C61921-3E52-4F6B-BFC8-172E23699D7D_001"),
+                ).fetchone()
+            finally:
+                conn.close()
+
+            self.assertEqual(row["content"], "列表层压平文本")
+            self.assertIsNone(row["origin_url"])
+            self.assertNotIn("_detail", row["raw_json"] or "")
+
+    @mock.patch("crawler.site1.tasks.detail_backfill.time.sleep")
+    @mock.patch("crawler.site1.client.fetch_detail_page")
+    def test_detail_backfill_runs_categories_in_expected_order(self, mock_fetch_detail_page, mock_sleep):
+        mock_fetch_detail_page.side_effect = lambda record: parse_detail_page(
+            SITE1_PLAN_HTML.replace("测试招标计划公告", record["title"]),
+            f"https://ggzyjy.sc.gov.cn{record['linkurl']}",
+        )
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            db_path = Path(tempdir) / "notices.db"
+            conn = get_connection(db_path)
+            try:
+                for category in ("002001009", "002001001", "002002001"):
+                    upsert_one(
+                        conn,
+                        {
+                            "id": f"{category}_1",
+                            "title": f"{category} 标题",
+                            "webdate": "2026-03-20 20:25:14",
+                            "categorynum": category,
+                            "linkurl": f"/jyxx/002001/{category}/20260320/{category}.html",
+                            "content": "列表层压平文本",
+                        },
+                        "site1_sc_ggzyjy",
+                    )
+            finally:
+                conn.close()
+
+            stats = run_with_stats(
+                db_path=str(db_path),
+                batch_size=1,
+                sleep_seconds=0.0,
+            )
+            self.assertEqual(
+                [item.category for item in stats.categories],
+                ["002001009", "002001001", "002002001"],
+            )
+            self.assertEqual(stats.saved, 3)
+            self.assertEqual(mock_fetch_detail_page.call_count, 3)
 
 
 if __name__ == "__main__":

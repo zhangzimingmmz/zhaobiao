@@ -1,21 +1,27 @@
 @import '../../styles/variables.scss';
 
 .index-page {
+  background: linear-gradient(180deg, $color-shell 0%, $color-bg 18%, $color-bg-soft 100%);
+
   &__content {
     min-height: calc(100vh - 124rpx - env(safe-area-inset-bottom));
   }
 
   &__list {
-    padding: 24rpx 32rpx 32rpx;
+    padding: 24rpx 24rpx 40rpx;
   }
 
   &__end {
-    padding: 32rpx;
+    padding: 40rpx 32rpx;
     text-align: center;
   }
 
   &__load-more {
-    padding: 32rpx;
+    margin-top: 8rpx;
+    padding: 30rpx;
     text-align: center;
+    border-radius: $radius-xl;
+    background: rgba(255, 255, 255, 0.78);
+    border: 1rpx solid rgba(18, 51, 107, 0.08);
   }
 }

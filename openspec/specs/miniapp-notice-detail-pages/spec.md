@@ -4,14 +4,14 @@
 定义招投标详情页与信息详情页的页面结构、页面内动作和原文跳转行为，确保详情体验在小程序内一致且可追溯到来源站点。
 ## Requirements
 ### Requirement: Notice detail pages SHALL use the secondary-page content family
-Bid detail and information detail pages SHALL use a shared secondary-page content family with back navigation, local page actions, and scrollable notice content.
+Bid detail pages SHALL continue to use the shared secondary-page content family as their normal detail destination. Information detail pages SHALL use the same secondary-page content family only when a record lacks a direct original-link path or otherwise needs a fallback in-app detail presentation.
 
 #### Scenario: Bid detail page is rendered
 - **WHEN** the user opens a bid detail page
 - **THEN** the page SHALL use the secondary-page content family instead of the retired hero-style shell or a generic unstructured page
 
-#### Scenario: Information detail page is rendered
-- **WHEN** the user opens an information detail page
+#### Scenario: Information detail page is rendered as fallback
+- **WHEN** the user opens an information detail page for a record without a direct original-link path or for a special non-standard record
 - **THEN** the page SHALL use the same secondary-page content family while supporting the lighter information-detail structure appropriate to that content
 
 ### Requirement: Structured detail sections SHALL use only supported fields
@@ -26,11 +26,15 @@ Notice detail pages SHALL only promote stable supported fields into structured s
 - **THEN** the page SHALL leave that information inside the notice body instead of fabricating a structured row
 
 ### Requirement: Detail-page actions SHALL stay page-local
-Favorite, share, and original-link behaviors SHALL remain local to detail pages and SHALL integrate with the shared favorites model where applicable.
+Favorite, share, and original-link behaviors SHALL remain local to detail pages and SHALL integrate with the authenticated server-side favorites model where applicable.
 
-#### Scenario: Bid detail favorite is toggled
-- **WHEN** the user toggles favorite on a bid detail page
-- **THEN** the page SHALL update the shared favorites model using the normalized notice record shape
+#### Scenario: Bid detail favorite is toggled by logged-in user
+- **WHEN** the user is logged in and toggles favorite on a bid detail page
+- **THEN** the page SHALL update favorite state through the server-side favorites API instead of a local shared record cache
+
+#### Scenario: Guest toggles favorite on detail page
+- **WHEN** the user is not logged in and triggers a favorite action on a detail page
+- **THEN** the page SHALL show a login-oriented gate instead of persisting a local favorite record
 
 #### Scenario: Information detail exposes external action
 - **WHEN** an information detail page offers share or original-link behavior
@@ -72,4 +76,3 @@ Favorite, share, and original-link behaviors SHALL remain local to detail pages 
 
 - **WHEN** detail.originUrl 为空
 - **THEN** 页面 SHALL 不显示「查看原文」按钮
-

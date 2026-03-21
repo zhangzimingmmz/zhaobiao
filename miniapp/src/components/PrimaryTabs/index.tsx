@@ -1,5 +1,4 @@
-import { View } from '@tarojs/components'
-import { AtSegmentedControl } from 'taro-ui'
+import { View, Text } from '@tarojs/components'
 import './index.scss'
 
 const TABS = [
@@ -9,14 +8,23 @@ const TABS = [
 ]
 
 export default function PrimaryTabs({ value, onChange }) {
-  const current = TABS.findIndex((t) => t.id === value)
   return (
     <View className="primary-tabs">
-      <AtSegmentedControl
-        values={TABS.map((t) => t.label)}
-        current={current >= 0 ? current : 0}
-        onClick={(index) => onChange(TABS[index].id)}
-      />
+      <Text className="primary-tabs__eyebrow">主频道</Text>
+      <View className="primary-tabs__rail">
+        {TABS.map((tab) => {
+          const active = tab.id === value
+          return (
+            <View
+              key={tab.id}
+              className={'primary-tabs__item' + (active ? ' primary-tabs__item--active' : '')}
+              onClick={() => onChange(tab.id)}
+            >
+              <Text className="primary-tabs__label">{tab.label}</Text>
+            </View>
+          )
+        })}
+      </View>
     </View>
   )
 }

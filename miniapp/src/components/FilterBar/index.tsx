@@ -1,5 +1,4 @@
-import { View, Text } from '@tarojs/components'
-import { AtSearchBar, AtSegmentedControl } from 'taro-ui'
+import { View, Text, Input } from '@tarojs/components'
 import AppIcon from '../AppIcon'
 import './index.scss'
 
@@ -49,9 +48,15 @@ const FILTER_MODES = {
 function FilterButton({ icon, label, value, onClick }) {
   return (
     <View className="filter-bar__button" onClick={onClick}>
-      {icon ? <AppIcon name={icon} size={28} color="#4E5969" /> : null}
-      <Text className="filter-bar__button-text">{value || label}</Text>
-      <AppIcon name="chevrondown" size={24} color="#86909C" />
+      <View className="filter-bar__button-main">
+        {icon ? (
+          <View className="filter-bar__button-icon">
+            <AppIcon name={icon} size={26} color="#0B57D0" />
+          </View>
+        ) : null}
+        <Text className="filter-bar__button-text">{value || label}</Text>
+      </View>
+      <AppIcon name="chevrondown" size={22} color="#86909C" />
     </View>
   )
 }
@@ -70,11 +75,19 @@ export default function FilterBar({
   if (!mode) return null
 
   const renderSearch = () => (
-    <AtSearchBar
-      value={keyword}
-      placeholder={mode.placeholder}
-      onChange={(v) => onKeywordChange && onKeywordChange(v)}
-    />
+    <View className="filter-bar__search">
+      <View className="filter-bar__search-icon">
+        <AppIcon name="search" size={28} color="#0B57D0" />
+      </View>
+      <Input
+        className="filter-bar__search-input"
+        value={keyword}
+        placeholder={mode.placeholder}
+        placeholderClass="filter-bar__search-placeholder"
+        confirmType="search"
+        onInput={(event) => onKeywordChange && onKeywordChange(event.detail.value)}
+      />
+    </View>
   )
 
   const renderButtons = (buttons) => (
@@ -99,11 +112,23 @@ export default function FilterBar({
   return (
     <View className={'filter-bar' + (mode.buttons.length === 0 ? ' filter-bar--minimal' : '')}>
       {mode.segment && (
-        <AtSegmentedControl
-          values={['招标计划', '招标公告']}
-          current={announcementType === 'plan' ? 0 : 1}
-          onClick={(index) => onAnnouncementTypeChange && onAnnouncementTypeChange(index === 0 ? 'plan' : 'announcement')}
-        />
+        <View className="filter-bar__segment">
+          {[
+            { key: 'plan', label: '招标计划' },
+            { key: 'announcement', label: '招标公告' },
+          ].map((option) => {
+            const active = announcementType === option.key
+            return (
+              <View
+                key={option.key}
+                className={'filter-bar__segment-item' + (active ? ' filter-bar__segment-item--active' : '')}
+                onClick={() => onAnnouncementTypeChange && onAnnouncementTypeChange(option.key)}
+              >
+                <Text className="filter-bar__segment-text">{option.label}</Text>
+              </View>
+            )
+          })}
+        </View>
       )}
 
       {renderSearch()}

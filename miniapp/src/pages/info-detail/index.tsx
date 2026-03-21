@@ -5,6 +5,7 @@ import { AtButton } from 'taro-ui'
 import TopBar from '../../components/TopBar'
 import { config } from '../../config'
 import { api } from '../../services/api'
+import { openArticleOriginal } from '../../utils/articlePresentation'
 import { formatDate } from '../../utils/formatDate'
 import './index.scss'
 
@@ -77,32 +78,7 @@ export default function InfoDetail() {
 
   const handleViewOriginal = () => {
     if (!detail || !detail.originUrl) return
-    const url = detail.originUrl
-    if (/^https:\/\/mp\.weixin\.qq\.com\//.test(url)) {
-      const wxApi = typeof wx !== 'undefined' ? wx : null
-      if (wxApi?.openOfficialAccountArticle) {
-        wxApi.openOfficialAccountArticle({
-          url,
-          fail: () => Taro.showToast({ title: '打开失败，请稍后重试', icon: 'none' }),
-        })
-      } else {
-        Taro.setClipboardData({
-          data: url,
-          success: () => Taro.showToast({ title: '链接已复制，请在浏览器中打开', icon: 'none' }),
-        })
-      }
-      return
-    }
-    if (url.indexOf(`${config.baseUrl}/h5-probe.html`) === 0) {
-      Taro.navigateTo({
-        url: '/pages/webview/index?url=' + encodeURIComponent(url),
-      })
-      return
-    }
-    const proxyUrl = `${config.baseUrl}/api/webview-proxy?url=${encodeURIComponent(url)}`
-    Taro.navigateTo({
-      url: '/pages/webview/index?url=' + encodeURIComponent(proxyUrl),
-    })
+    openArticleOriginal(detail.originUrl)
   }
 
   const handleShare = () => {

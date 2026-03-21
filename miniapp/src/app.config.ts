@@ -17,10 +17,10 @@ export default {
     navigationBarTextStyle: 'white',
   },
   tabBar: {
-    color: '#4E5969',
-    selectedColor: '#1677FF',
-    backgroundColor: '#fff',
-    borderStyle: 'black',
+    color: '#6B778C',
+    selectedColor: '#0B57D0',
+    backgroundColor: '#FDFEFF',
+    borderStyle: 'white',
     list: [
       { 
         pagePath: 'pages/index/index', 

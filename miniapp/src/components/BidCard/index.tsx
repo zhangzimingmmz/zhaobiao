@@ -35,16 +35,24 @@ export default function BidCard({ item, onClick, onFavoriteToggle, favorited }) 
         </View>
       )}
 
-      {item.purchaser && (
-        <Text className="bid-card__line" numberOfLines={1}>{item.purchaser}</Text>
-      )}
+      <View className="bid-card__facts">
+        {item.purchaser && (
+          <View className="bid-card__fact">
+            <Text className="bid-card__fact-label">主体</Text>
+            <Text className="bid-card__fact-value" numberOfLines={1}>{item.purchaser}</Text>
+          </View>
+        )}
 
-      {!item.purchaser && item.sourceName && (
-        <Text className="bid-card__line" numberOfLines={1}>来源：{item.sourceName}</Text>
-      )}
+        {item.sourceName && (
+          <View className="bid-card__fact">
+            <Text className="bid-card__fact-label">来源</Text>
+            <Text className="bid-card__fact-value" numberOfLines={1}>{item.sourceName}</Text>
+          </View>
+        )}
+      </View>
 
       <View className="bid-card__meta-list">
-        {item.regionName && <Text className="bid-card__meta-line">{item.regionName}</Text>}
+        {item.regionName && <Text className="bid-card__meta-line">地区：{item.regionName}</Text>}
         {item.deadlineLabel && <Text className="bid-card__meta-line">截止：{item.deadlineLabel}</Text>}
       </View>
 

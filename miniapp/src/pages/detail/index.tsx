@@ -32,9 +32,9 @@ export default function Detail() {
 
   const handleViewOriginal = () => {
     if (detail && detail.originUrl) {
-      const proxyUrl = `${config.baseUrl}/api/webview-proxy?url=${encodeURIComponent(detail.originUrl)}`
-      Taro.navigateTo({
-        url: '/pages/webview/index?url=' + encodeURIComponent(proxyUrl),
+      Taro.setClipboardData({
+        data: detail.originUrl,
+        success: () => Taro.showToast({ title: '原文链接已复制，请在浏览器中打开', icon: 'none' }),
       })
     }
   }

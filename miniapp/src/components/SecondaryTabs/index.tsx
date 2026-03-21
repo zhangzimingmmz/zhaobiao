@@ -1,17 +1,24 @@
-import { View } from '@tarojs/components'
-import { AtSegmentedControl } from 'taro-ui'
+import { View, Text } from '@tarojs/components'
 import './index.scss'
 
 export default function SecondaryTabs({ tabs, value, onChange }) {
   if (!tabs || tabs.length === 0) return null
-  const current = tabs.findIndex((t) => t.id === value)
   return (
     <View className="secondary-tabs">
-      <AtSegmentedControl
-        values={tabs.map((t) => t.label)}
-        current={current >= 0 ? current : 0}
-        onClick={(index) => onChange(tabs[index].id)}
-      />
+      <View className="secondary-tabs__list">
+        {tabs.map((tab) => {
+          const active = tab.id === value
+          return (
+            <View
+              key={tab.id}
+              className={'secondary-tabs__item' + (active ? ' secondary-tabs__item--active' : '')}
+              onClick={() => onChange(tab.id)}
+            >
+              <Text className="secondary-tabs__label">{tab.label}</Text>
+            </View>
+          )
+        })}
+      </View>
     </View>
   )
 }

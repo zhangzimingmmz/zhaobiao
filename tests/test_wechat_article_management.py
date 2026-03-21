@@ -204,6 +204,49 @@ class WechatArticleManagementTests(unittest.TestCase):
         self.assertEqual(first_ids[0], created_top["id"])
         self.assertEqual(first_ids[1], created_other["id"])
 
+    def test_miniapp_articles_support_keyword_filter(self):
+        created_news = self._create_article(
+            title="金堂工作动态",
+            summary="聚焦本地项目推进情况",
+            wechatArticleUrl="https://mp.weixin.qq.com/s/jintang-news",
+            category="company_news",
+        )
+        created_policy = self._create_article(
+            title="政策法规解读",
+            summary="面向金堂企业的政策辅导",
+            wechatArticleUrl="https://mp.weixin.qq.com/s/jintang-policy",
+            category="policy",
+        )
+        created_other = self._create_article(
+            title="普通文章",
+            summary="与搜索词无关",
+            wechatArticleUrl="https://mp.weixin.qq.com/s/other-keyword",
+            category="other",
+        )
+
+        for article_id in (created_news["id"], created_policy["id"], created_other["id"]):
+            self._publish_article(article_id)
+
+        keyword_response = self.client.get("/api/articles?page=1&pageSize=10&keyword=金堂")
+        self.assertEqual(keyword_response.status_code, 200)
+        self.assertEqual(keyword_response.json()["code"], 200)
+        self.assertEqual(keyword_response.json()["data"]["total"], 2)
+        keyword_ids = [item["id"] for item in keyword_response.json()["data"]["list"]]
+        self.assertIn(created_news["id"], keyword_ids)
+        self.assertIn(created_policy["id"], keyword_ids)
+        self.assertNotIn(created_other["id"], keyword_ids)
+
+        category_keyword_response = self.client.get(
+            "/api/articles?page=1&pageSize=10&category=policy&keyword=金堂"
+        )
+        self.assertEqual(category_keyword_response.status_code, 200)
+        self.assertEqual(category_keyword_response.json()["code"], 200)
+        self.assertEqual(category_keyword_response.json()["data"]["total"], 1)
+        self.assertEqual(
+            category_keyword_response.json()["data"]["list"][0]["id"],
+            created_policy["id"],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

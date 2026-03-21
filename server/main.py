@@ -26,6 +26,7 @@ from fastapi import FastAPI, Header, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, Response
 from pydantic import BaseModel, Field
+from bs4 import BeautifulSoup, Comment, NavigableString, Tag
 
 from server import crawl_control
 from server.auth_utils import (
@@ -103,6 +104,165 @@ CATEGORY_NAMES = {
     "59": "采购意向公开",
     "00101": "采购公告",
 }
+
+_RICH_TEXT_DROP_TAGS = {
+    "script", "style", "meta", "link", "iframe", "object", "embed", "form",
+    "input", "button", "textarea", "select", "option", "svg", "canvas", "noscript",
+}
+_RICH_TEXT_UNWRAP_TAGS = {
+    "html", "body", "section", "article", "main", "header", "footer", "font", "span",
+    "o:p",
+}
+_RICH_TEXT_BLOCK_TAGS = {
+    "p", "div", "table", "ul", "ol", "li", "blockquote", "h1", "h2", "h3", "h4", "h5", "h6",
+}
+
+
+def _normalize_whitespace(value: str) -> str:
+    return re.sub(r"[ \t\r\f\v]+", " ", value).strip()
+
+
+def _format_plain_text_content(raw: str) -> str:
+    text = raw.replace("\xa0", " ")
+    text = text.replace("\r\n", "\n").replace("\r", "\n")
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    parts = [_normalize_whitespace(part) for part in re.split(r"\n\s*\n", text) if _normalize_whitespace(part)]
+    if len(parts) <= 1:
+        compact = _normalize_whitespace(text)
+        if not compact:
+            return ""
+        parts = [
+            _normalize_whitespace(part)
+            for part in re.split(
+                r"(?<=[。；])(?=(?:\d+(?:\.\d+)?[、.]|第[一二三四五六七八九十百千]+[章节条]))",
+                compact,
+            )
+            if _normalize_whitespace(part)
+        ] or [compact]
+    rendered = []
+    for part in parts:
+        safe = (
+            part.replace("&", "&amp;")
+            .replace("<", "&lt;")
+            .replace(">", "&gt;")
+        )
+        rendered.append(
+            '<p style="margin:0 0 20px;line-height:1.9;word-break:break-word;">'
+            f"{safe}"
+            "</p>"
+        )
+    return "".join(rendered)
+
+
+def _has_meaningful_html(raw: str) -> bool:
+    return bool(re.search(r"<[a-zA-Z][^>]*>", raw))
+
+
+def _sanitize_rich_text_content(raw: Optional[str]) -> Optional[str]:
+    if not raw:
+        return None
+
+    source = raw.strip()
+    if not source:
+        return None
+
+    if not _has_meaningful_html(source):
+        rendered = _format_plain_text_content(source)
+        return rendered or None
+
+    soup = BeautifulSoup(source, "html.parser")
+
+    for comment in soup.find_all(string=lambda node: isinstance(node, Comment)):
+        comment.extract()
+
+    for tag in soup.find_all(_RICH_TEXT_DROP_TAGS):
+        tag.decompose()
+
+    for tag in list(soup.find_all(True)):
+        if tag.name in _RICH_TEXT_UNWRAP_TAGS:
+            tag.unwrap()
+
+    for tag in list(soup.find_all(True)):
+        if tag.name == "div":
+            has_block_child = any(
+                isinstance(child, Tag) and child.name in (_RICH_TEXT_BLOCK_TAGS | {"img", "tr", "td", "th", "thead", "tbody"})
+                for child in tag.children
+            )
+            if not has_block_child:
+                tag.name = "p"
+
+    for text_node in soup.find_all(string=True):
+        if isinstance(text_node, NavigableString):
+            parent = text_node.parent
+            if parent and parent.name not in {"pre", "code"}:
+                normalized = re.sub(r"\s+", " ", str(text_node))
+                text_node.replace_with(normalized)
+
+    for tag in soup.find_all(True):
+        allowed_attrs: dict[str, str] = {}
+        if tag.name == "img":
+            src = (tag.get("src") or "").strip()
+            if not src:
+                tag.decompose()
+                continue
+            allowed_attrs["src"] = src
+            alt = _normalize_whitespace(tag.get("alt") or "")
+            if alt:
+                allowed_attrs["alt"] = alt
+            allowed_attrs["style"] = "max-width:100%;height:auto;display:block;margin:16px 0;border-radius:12px;"
+        elif tag.name == "a":
+            href = (tag.get("href") or "").strip()
+            if href:
+                allowed_attrs["href"] = href
+            allowed_attrs["style"] = "color:#1677ff;text-decoration:underline;word-break:break-all;"
+        elif tag.name in {"p", "li"}:
+            allowed_attrs["style"] = "margin:0 0 20px;line-height:1.9;word-break:break-word;"
+        elif tag.name in {"h1", "h2", "h3", "h4", "h5", "h6"}:
+            allowed_attrs["style"] = "margin:24px 0 16px;font-weight:700;line-height:1.6;color:#1f2937;"
+        elif tag.name in {"ul", "ol"}:
+            allowed_attrs["style"] = "margin:0 0 20px;padding-left:1.4em;"
+        elif tag.name == "table":
+            allowed_attrs["style"] = "width:100%;border-collapse:collapse;table-layout:fixed;margin:16px 0;"
+        elif tag.name in {"thead", "tbody", "tr"}:
+            allowed_attrs["style"] = ""
+        elif tag.name in {"td", "th"}:
+            allowed_attrs["style"] = "border:1px solid #d9dee7;padding:12px 10px;line-height:1.7;vertical-align:top;word-break:break-word;"
+            rowspan = tag.get("rowspan")
+            colspan = tag.get("colspan")
+            if rowspan:
+                allowed_attrs["rowspan"] = str(rowspan)
+            if colspan:
+                allowed_attrs["colspan"] = str(colspan)
+        elif tag.name == "blockquote":
+            allowed_attrs["style"] = "margin:0 0 20px;padding:16px;border-left:4px solid #1677ff;background:#f5f9ff;color:#475569;line-height:1.8;"
+        elif tag.name == "br":
+            allowed_attrs = {}
+        else:
+            allowed_attrs["style"] = "line-height:1.9;word-break:break-word;"
+
+        tag.attrs = {key: value for key, value in allowed_attrs.items() if value}
+
+    rendered_nodes = []
+    root = soup.body or soup
+    for child in root.contents:
+        if isinstance(child, NavigableString):
+            text = _normalize_whitespace(str(child))
+            if text:
+                rendered_nodes.append(
+                    '<p style="margin:0 0 20px;line-height:1.9;word-break:break-word;">'
+                    f"{text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')}"
+                    "</p>"
+                )
+        else:
+            html = str(child).strip()
+            if html:
+                rendered_nodes.append(html)
+
+    rendered = "".join(rendered_nodes).strip()
+    if not rendered:
+        fallback = _format_plain_text_content(soup.get_text("\n", strip=True))
+        return fallback or None
+    return rendered
 
 # ────────────────────────────────────────────────────────────
 # 数据库初始化：建表 DDL（幂等）
@@ -480,7 +640,7 @@ def _row_detail_bid(row: sqlite3.Row, site: str, *, favorited: bool = False) -> 
         "enrollStart": None,
         "enrollEnd": None,
         "openTime": row["open_tender_time"],
-        "content": row["content"],
+        "content": _sanitize_rich_text_content(row["content"]),
         "originUrl": origin_url,
         "sourceSiteName": source_site_name,
         "favorited": favorited,
@@ -503,7 +663,7 @@ def _row_detail_info(row: sqlite3.Row, site: str, *, favorited: bool = False) ->
         "title": row["title"] or "",
         "publishTime": row["publish_time"],
         "description": row["description"],
-        "content": row["content"],
+        "content": _sanitize_rich_text_content(row["content"]),
         "originUrl": origin_url,
         "sourceSiteName": source_site_name,
         "favorited": favorited,
@@ -2155,11 +2315,12 @@ def get_article_logs(article_id: str, authorization: Optional[str] = Header(None
 @app.get("/api/articles")
 def get_articles(
     category: Optional[str] = Query(None),
+    keyword: Optional[str] = Query(None),
     page: int = Query(1, ge=1),
     pageSize: int = Query(10, ge=1, le=100),
     authorization: Optional[str] = Header(None),
 ):
-    """小程序获取已发布文章列表，支持分页、分类筛选。"""
+    """小程序获取已发布文章列表，支持分页、分类筛选、关键词搜索。"""
     conn = _get_conn()
     try:
         payload = get_optional_user(authorization)
@@ -2173,6 +2334,12 @@ def get_articles(
             else:
                 conditions.append("category = ?")
                 params.append(category)
+
+        if keyword:
+            escaped = _escape_like(keyword)
+            q = f"%{escaped}%"
+            conditions.append("(title LIKE ? ESCAPE '\\' OR summary LIKE ? ESCAPE '\\')")
+            params.extend([q, q])
         
         where = " AND ".join(conditions)
         count_sql = f"SELECT COUNT(*) FROM articles WHERE {where}"

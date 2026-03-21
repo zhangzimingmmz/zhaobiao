@@ -9,6 +9,7 @@ import InfoCard from '../../components/InfoCard'
 import EmptyState from '../../components/EmptyState'
 import { api } from '../../services/api'
 import { formatDate } from '../../utils/formatDate'
+import { normalizeArticleCoverUrl, openArticleOriginal } from '../../utils/articlePresentation'
 import { getFavoriteTypeSelection, setFavoriteTypeSelection } from '../../utils/favorites'
 import './index.scss'
 
@@ -22,7 +23,8 @@ function normalizeFavoriteItem(item) {
   if (item.viewType === 'info') {
     return {
       ...item,
-      cover: item.coverImageUrl || '',
+      cover: normalizeArticleCoverUrl(item.coverImageUrl || item.cover || ''),
+      originUrl: item.originUrl || item.wechatArticleUrl || '',
       publishLabel: formatDate(item.publishTime),
     }
   }
@@ -86,6 +88,11 @@ export default function Favorites() {
 
   const handleCardClick = (item) => {
     if (item.viewType === 'info') {
+      if (item.originUrl) {
+        api.recordArticleView(item.id).catch(() => {})
+        openArticleOriginal(item.originUrl)
+        return
+      }
       Taro.navigateTo({ url: `/pages/info-detail/index?id=${item.id}` })
       return
     }

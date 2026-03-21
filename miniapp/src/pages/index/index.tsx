@@ -10,9 +10,9 @@ import BidCard from '../../components/BidCard'
 import InfoCard from '../../components/InfoCard'
 import EmptyState from '../../components/EmptyState'
 import BidCardSkeleton from '../../components/BidCardSkeleton'
-import { config } from '../../config'
 import { api } from '../../services/api'
 import { formatDate } from '../../utils/formatDate'
+import { normalizeArticleCoverUrl, openArticleOriginal } from '../../utils/articlePresentation'
 import './index.scss'
 
 const NATURE_LABELS = {
@@ -144,7 +144,6 @@ function parseTimeFilter(value) {
 }
 
 const PAGE_SIZE = 10
-const H5_PROBE_URL = `${config.baseUrl}/h5-probe.html`
 
 function formatBudget(value) {
   if (!value) return ''
@@ -204,7 +203,7 @@ function normalizeInfoItem(item) {
     title: item.title || '',
     summary,
     publishLabel: formatDate(publishTime),
-    cover: item.coverImageUrl || item.cover || '',
+    cover: normalizeArticleCoverUrl(item.coverImageUrl || item.cover || ''),
     wechatArticleUrl: item.wechatArticleUrl || '',
     originUrl: item.originUrl || item.wechatArticleUrl || '',
     categoryNum: item.category || '',
@@ -213,25 +212,10 @@ function normalizeInfoItem(item) {
   }
 }
 
-function buildProbeInfoItem() {
-  return {
-    id: '__h5_probe__',
-    title: 'H5 探针测试消息',
-    summary: '用于验证个人主体小程序是否能通过 WebView 打开自有 H5 页面。',
-    publishLabel: formatDate(new Date().toISOString()),
-    cover: '',
-    wechatArticleUrl: H5_PROBE_URL,
-    originUrl: H5_PROBE_URL,
-    categoryNum: 'probe',
-    viewType: 'info',
-    isProbe: true,
-  }
-}
-
 export default function Index() {
   const [primary, setPrimary] = useState('construction')
   const [secondary, setSecondary] = useState('engineering')
-  const [announcementType, setAnnouncementType] = useState('announcement')
+  const [announcementType, setAnnouncementType] = useState('plan')
   const [filterSheetVisible, setFilterSheetVisible] = useState(false)
   const [filterKey, setFilterKey] = useState('')
   const [keyword, setKeyword] = useState('')
@@ -251,11 +235,7 @@ export default function Index() {
   const isEnd = list.length >= total && total > 0
   const isInfoState = homeState.listKind === 'info'
   const normalizedList = useMemo(
-    () => {
-      const items = list.map((item) => (isInfoState ? normalizeInfoItem(item) : normalizeBidItem(item)))
-      if (!isInfoState) return items
-      return [buildProbeInfoItem(), ...items]
-    },
+    () => list.map((item) => (isInfoState ? normalizeInfoItem(item) : normalizeBidItem(item))),
     [list, isInfoState],
   )
   const hasActiveFilters = useMemo(() => {
@@ -292,7 +272,7 @@ export default function Index() {
     
     // 信息展示 tab 使用文章接口
     if (primary === 'info') {
-      api.getArticles({ page: 1, pageSize: PAGE_SIZE, category })
+      api.getArticles({ page: 1, pageSize: PAGE_SIZE, category, keyword: keyword || undefined })
         .then((res) => {
           if (res.data && res.data.code === 200 && res.data.data) {
             setList(res.data.data.list || [])
@@ -330,7 +310,7 @@ export default function Index() {
     
     // 信息展示 tab 使用文章接口
     if (primary === 'info') {
-      api.getArticles({ page: nextPage, pageSize: PAGE_SIZE, category })
+      api.getArticles({ page: nextPage, pageSize: PAGE_SIZE, category, keyword: keyword || undefined })
         .then((res) => {
           if (res.data && res.data.code === 200 && res.data.data) {
             setList((prev) => [...prev, ...(res.data.data.list || [])])
@@ -362,7 +342,7 @@ export default function Index() {
     setPrimary(id)
     const sec = SECONDARY_MAP[id]
     setSecondary(sec && sec[0] ? sec[0].id : '')
-    if (id === 'construction') setAnnouncementType('announcement')
+    if (id === 'construction') setAnnouncementType('plan')
     setFilterValues({})
   }
 
@@ -384,8 +364,6 @@ export default function Index() {
   }
 
   const handleFavoriteToggle = (item) => {
-    if (item.isProbe) return
-
     if (!Taro.getStorageSync('token')) {
       Taro.showToast({ title: '请先登录后收藏', icon: 'none' })
       Taro.navigateTo({ url: '/pages/login/index' })
@@ -417,17 +395,11 @@ export default function Index() {
 
   const handleCardClick = (item) => {
     if (isInfoState) {
-      if (item.isProbe) {
-        Taro.navigateTo({
-          url:
-            '/pages/info-detail/index?probe=1' +
-            `&title=${encodeURIComponent(item.title)}` +
-            `&summary=${encodeURIComponent(item.summary || '')}` +
-            `&url=${encodeURIComponent(item.originUrl || H5_PROBE_URL)}`,
-        })
+      if (item.wechatArticleUrl || item.originUrl) {
+        api.recordArticleView(item.id).catch(() => {})
+        openArticleOriginal(item.wechatArticleUrl || item.originUrl)
         return
       }
-      // 统一进入详情页，在详情页再点击「查看原文」；避免直接打开失败时无兜底
       Taro.navigateTo({ url: `/pages/info-detail/index?id=${item.id}` })
     } else {
       Taro.navigateTo({ url: `/pages/detail/index?id=${item.id}` })
@@ -495,7 +467,7 @@ export default function Index() {
           key={item.id}
           item={item}
           onClick={handleCardClick}
-          onFavoriteToggle={item.isProbe ? undefined : handleFavoriteToggle}
+          onFavoriteToggle={handleFavoriteToggle}
           favorited={!!item.favorited}
         />
       ))

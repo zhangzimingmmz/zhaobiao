@@ -2,16 +2,27 @@
 
 /* 主色（政务蓝） */
 $color-primary: #1677FF;
-$color-primary-bg: #E6F4FF;
-$color-primary-border: #91CAFF;
-$color-primary-deep: #0958d9;
+$color-primary-bg: #E8F1FF;
+$color-primary-border: #9CC4FF;
+$color-primary-deep: #0B57D0;
+$color-primary-soft: #F2F7FF;
+$color-primary-ink: #12336B;
+$color-accent: #FF7A59;
+$color-accent-soft: #FFF1EB;
 
 /* 中性色 */
 $color-title: #1D2129;
 $color-body: #4E5969;
 $color-caption: #86909C;
+$color-muted: #A9B1BE;
 $color-border: #E5E7EB;
-$color-bg: #F7F8FA;
+$color-border-strong: #D6DCE5;
+$color-bg: #F4F7FB;
+$color-bg-soft: #FAFBFD;
+$color-surface: #FFFFFF;
+$color-surface-alt: #F8FAFD;
+$color-shell: #EDF3FF;
+$color-shell-deep: #DDE9FF;
 $color-white: #FFFFFF;
 
 /* 功能色 */
@@ -35,8 +46,25 @@ $font-base: 32rpx;  /* 16px */
 $font-body: 30rpx;  /* 15px */
 $font-sm: 28rpx;    /* 14px */
 $font-xs: 24rpx;    /* 12px */
+$font-2xs: 22rpx;   /* 11px */
 
 /* 圆角 */
 $radius-md: 12rpx;
 $radius-lg: 16rpx;
 $radius-xl: 24rpx;
+$radius-2xl: 32rpx;
+$radius-pill: 999rpx;
+
+/* 间距 */
+$space-2xs: 8rpx;
+$space-xs: 12rpx;
+$space-sm: 16rpx;
+$space-md: 24rpx;
+$space-lg: 32rpx;
+$space-xl: 40rpx;
+$space-2xl: 48rpx;
+
+/* 阴影 */
+$shadow-soft: 0 16rpx 36rpx rgba(18, 51, 107, 0.08);
+$shadow-card: 0 20rpx 48rpx rgba(18, 51, 107, 0.1);
+$shadow-float: 0 24rpx 60rpx rgba(11, 87, 208, 0.14);

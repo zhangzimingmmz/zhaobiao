@@ -15,17 +15,34 @@
   }
 
   &--tab {
-    background: $color-white;
-    border-bottom: 1rpx solid $color-border;
+    background: linear-gradient(180deg, $color-shell 0%, $color-bg 100%);
     color: $color-title;
   }
 
   &__inner--tab {
-    padding-left: 32rpx;
+    padding: 0 32rpx;
+    align-items: flex-end;
+  }
+
+  &__tab-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 8rpx;
+  }
+
+  &__subtitle {
+    display: block;
+  }
+
+  &__subtitle--tab {
+    font-size: $font-2xs;
+    letter-spacing: 1rpx;
+    color: $color-primary-ink;
+    opacity: 0.72;
   }
 
   &__title--tab {
-    font-size: $font-xl;
+    font-size: 56rpx;
     font-weight: 700;
     color: $color-title;
   }
@@ -82,12 +99,12 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 18rpx;
-    background: transparent;
+    border-radius: 20rpx;
+    background: rgba(255, 255, 255, 0.7);
   }
 
   &__right--active {
-    background: $color-primary-bg;
+    background: $color-primary-soft;
   }
 
   &__right-text {

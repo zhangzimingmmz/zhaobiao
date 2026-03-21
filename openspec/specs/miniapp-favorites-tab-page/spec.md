@@ -16,8 +16,19 @@ The favorites tab SHALL define explicit behavior for guests and for users with n
 
 #### Scenario: Guest enters favorites
 - **WHEN** the user is not logged in and enters the favorites tab
-- **THEN** the tab SHALL render a guest-aware state with clear context and a login CTA instead of silently failing
+- **THEN** the tab SHALL render a guest-aware state with clear context and a login CTA instead of displaying device-local favorite content
 
 #### Scenario: Logged-in user has no saved items
 - **WHEN** the user is logged in but has no items for the selected favorites type
 - **THEN** the tab SHALL render an empty state that keeps the favorites context and current type selection visible
+
+### Requirement: Favorites tab SHALL read list data from the authenticated server API
+The favorites tab SHALL load its item list from the authenticated server-side favorites API instead of from locally persisted favorite records.
+
+#### Scenario: Logged-in favorites list loads successfully
+- **WHEN** a logged-in user opens the favorites tab
+- **THEN** the miniapp SHALL request the favorites list from the server and render the returned items
+
+#### Scenario: Favorited source record has disappeared
+- **WHEN** the server no longer resolves a previously favorited notice or article
+- **THEN** that item SHALL not appear in the favorites tab list

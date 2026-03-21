@@ -1,7 +1,38 @@
 @import '../../styles/variables.scss';
 
 .secondary-tabs {
-  padding: 20rpx 32rpx;
-  background: $color-white;
-  border-bottom: 1rpx solid #f0f1f5;
+  padding: 18rpx 32rpx 10rpx;
+  background: linear-gradient(180deg, $color-bg 0%, $color-bg-soft 100%);
+
+  &__list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14rpx;
+  }
+
+  &__item {
+    min-width: 0;
+    padding: 16rpx 24rpx;
+    border-radius: $radius-pill;
+    background: rgba(255, 255, 255, 0.78);
+    border: 1rpx solid rgba(11, 87, 208, 0.1);
+  }
+
+  &__item--active {
+    background: $color-primary-soft;
+    border-color: $color-primary-border;
+    box-shadow: 0 10rpx 24rpx rgba(11, 87, 208, 0.1);
+
+    .secondary-tabs__label {
+      color: $color-primary-deep;
+    }
+  }
+
+  &__label {
+    display: block;
+    font-size: $font-xs;
+    font-weight: 600;
+    color: $color-body;
+    white-space: nowrap;
+  }
 }

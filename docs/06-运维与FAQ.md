@@ -148,6 +148,29 @@ python3 -m crawler.site1.tasks.detail_backfill \
 
 执行前建议先备份生产 `notices.db`。
 
+### notices 只保留最近 30 天
+
+当前 notices 采用 30 天保留策略：`publish_time` 早于当前时间 30 天的公告，会被视为 retention 候选。正式删除时会同步清理关联的 `bid` favorites；`articles`、`users`、`enterprise_applications`、`crawl_runs` 不受影响。
+
+先做 dry-run：
+
+```bash
+python3 -m crawler.notice_retention --db data/notices.db --days 30
+```
+
+正式执行：
+
+```bash
+python3 -m crawler.notice_retention --db data/notices.db --days 30 --apply
+```
+
+注意事项：
+
+- 第一次生产执行前务必先备份 `notices.db`
+- 日常 retention 只做 `DELETE`，不会立刻让 SQLite 文件变小
+- 如需真正回收磁盘空间，可在低峰期按周或按月单独执行 `VACUUM`
+- 该任务不对运营后台开放直接触发，默认由 scheduler 在低峰期自动执行
+
 ### 采集任务一直 queued 或失败
 
 - API 单实例：同一时间只处理一个 run；查看 API 日志与 `logs/admin-crawl/` 对应 run 日志。

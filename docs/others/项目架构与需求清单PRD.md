@@ -131,7 +131,7 @@
 | 微信小程序 | 一级频道切换（工程建设/政府采购/信息展示） | `pages/index/index` | P0 |
 | 微信小程序 | 二级分类切换 | `pages/index/index` | P0 |
 | 微信小程序 | 招标计划/招标公告/采购公告/采购意向公开切换 | `pages/index/index` | P0 |
-| 微信小程序 | 多维筛选（时间、地区、来源、采购方式、采购性质、采购人） | `pages/index/index` + `GET /api/list` | P0 |
+| 微信小程序 | 多维筛选（时间、地区、来源、采购方式、项目分类、采购人） | `pages/index/index` + `GET /api/list` | P0 |
 | 微信小程序 | 关键词搜索 | `pages/index/index` + `GET /api/list` | P0 |
 | 微信小程序 | 列表分页加载更多 | `pages/index/index` + `GET /api/list` | P0 |
 | 微信小程序 | 招投标详情页 | `pages/detail/index` + `GET /api/detail/bid/{id}` | P0 |

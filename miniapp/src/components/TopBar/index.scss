@@ -21,30 +21,19 @@
 
   &__inner--tab {
     padding: 0 32rpx;
-    align-items: flex-end;
+    align-items: center;
   }
 
   &__tab-copy {
     display: flex;
     flex-direction: column;
-    gap: 8rpx;
-  }
-
-  &__subtitle {
-    display: block;
-  }
-
-  &__subtitle--tab {
-    font-size: $font-2xs;
-    letter-spacing: 1rpx;
-    color: $color-primary-ink;
-    opacity: 0.72;
   }
 
   &__title--tab {
     font-size: 56rpx;
     font-weight: 700;
     color: $color-title;
+    line-height: 1.12;
   }
 
   &--secondary {

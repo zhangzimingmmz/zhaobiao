@@ -1,17 +1,8 @@
 @import '../../styles/variables.scss';
 
 .primary-tabs {
-  padding: 8rpx 32rpx 0;
+  padding: 12rpx 32rpx 0;
   background: linear-gradient(180deg, $color-shell 0%, $color-bg 100%);
-
-  &__eyebrow {
-    display: block;
-    margin-bottom: 16rpx;
-    font-size: $font-2xs;
-    letter-spacing: 3rpx;
-    color: $color-primary-ink;
-    opacity: 0.74;
-  }
 
   &__rail {
     display: flex;

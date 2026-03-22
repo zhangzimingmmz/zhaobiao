@@ -3,16 +3,16 @@
 .filter-bar {
   display: flex;
   flex-direction: column;
-  gap: 18rpx;
+  gap: 14rpx;
   margin: 0 24rpx;
-  padding: 24rpx;
+  padding: 18rpx;
   background: rgba(255, 255, 255, 0.88);
   border: 1rpx solid rgba(11, 87, 208, 0.08);
   border-radius: $radius-2xl;
   box-shadow: $shadow-soft;
 
   &--minimal {
-    padding-bottom: 24rpx;
+    padding-bottom: 18rpx;
   }
 
   &__segment {
@@ -51,9 +51,9 @@
   &__search {
     display: flex;
     align-items: center;
-    gap: 18rpx;
-    padding: 0 24rpx;
-    min-height: 96rpx;
+    gap: 14rpx;
+    padding: 0 20rpx;
+    min-height: 84rpx;
     border-radius: $radius-xl;
     background: $color-bg-soft;
     border: 1rpx solid rgba(11, 87, 208, 0.08);
@@ -72,8 +72,8 @@
   &__search-input {
     flex: 1;
     min-width: 0;
-    height: 96rpx;
-    line-height: 96rpx;
+    height: 84rpx;
+    line-height: 84rpx;
     font-size: $font-sm;
     color: $color-title;
   }
@@ -91,7 +91,8 @@
 
   &__button-row--grid {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(2, max-content);
+    justify-content: start;
   }
 
   &__button {
@@ -106,10 +107,6 @@
     border-radius: 18rpx;
     border: 1rpx solid rgba(11, 87, 208, 0.08);
     min-width: 0;
-
-    .filter-bar__button-row--grid & {
-      min-height: 96rpx;
-    }
   }
 
   &__button-main {
@@ -128,10 +125,6 @@
     border-radius: 14rpx;
     background: $color-primary-soft;
     flex-shrink: 0;
-  }
-
-  &__button-row--grid &__button-main {
-    justify-content: center;
   }
 
   &__button-text {

@@ -7,6 +7,9 @@ import { api } from '../../services/api'
 import { getRegistrationContext, saveRegistrationContext } from '../../utils/registration'
 import './index.scss'
 
+const BUSINESS_ADDRESS_MAX_LENGTH = 64
+const REQUIRED_MARK = '＊'
+
 export default function Register() {
   const [username, setUsername] = useState('')
   const [usernameCursor, setUsernameCursor] = useState(0)
@@ -130,81 +133,122 @@ export default function Register() {
       <TopBar title="企业注册" showBack variant="secondary" />
       <View className="secondary-page__body register-page__body">
         <View className="secondary-page__intro register-page__intro">
-          <Text className="secondary-page__eyebrow">ENTERPRISE REGISTRATION</Text>
           <Text className="secondary-page__title">
             {isResubmit ? '重新提交注册审核资料' : '先注册，再等待后台审核'}
           </Text>
           <Text className="secondary-page__desc">
-            注册时请填写账号和企业资料。审核通过后，才能使用登录名和密码进入平台。
+            请填写账号和企业资料，审核通过后即可登录使用。
           </Text>
         </View>
-        <View className="register-page__tip">
-          <Text>
-            {isResubmit ? '已自动带出上次提交的信息，请修正后重新提交。' : '带 * 的字段为必填。'}
-          </Text>
-        </View>
+        {isResubmit ? (
+          <View className="register-page__tip">
+            <Text>已自动带出上次提交的信息，请修正后重新提交。</Text>
+          </View>
+        ) : null}
         <View className="secondary-card form-card register-page__form">
-          <AtInput
-            name="username"
-            placeholder="登录名 *"
-            value={username}
-            cursor={usernameCursor}
-            onChange={syncInput(setUsername, setUsernameCursor)}
-          />
-          <AtInput
-            name="password"
-            type="password"
-            placeholder="登录密码 *"
-            value={password}
-            cursor={passwordCursor}
-            onChange={syncInput(setPassword, setPasswordCursor)}
-          />
-          <AtInput
-            name="mobile"
-            type="phone"
-            placeholder="注册用户手机号码 *"
-            value={mobile}
-            cursor={mobileCursor}
-            onChange={syncInput(setMobile, setMobileCursor)}
-          />
-          <AtInput
-            name="creditCode"
-            placeholder="营业执照代码 / 统一社会信用代码 *"
-            value={creditCode}
-            cursor={creditCodeCursor}
-            onChange={syncInput(setCreditCode, setCreditCodeCursor)}
-            maxLength={18}
-          />
-          <AtInput
-            name="legalPersonName"
-            placeholder="法人姓名 *"
-            value={legalPersonName}
-            cursor={legalPersonNameCursor}
-            onChange={syncInput(setLegalPersonName, setLegalPersonNameCursor)}
-          />
-          <AtInput
-            name="legalPersonPhone"
-            type="phone"
-            placeholder="法人电话号码（非必填）"
-            value={legalPersonPhone}
-            cursor={legalPersonPhoneCursor}
-            onChange={syncInput(setLegalPersonPhone, setLegalPersonPhoneCursor)}
-          />
-          <AtInput
-            name="businessScope"
-            placeholder="营业执照经营范围（非必填）"
-            value={businessScope}
-            cursor={businessScopeCursor}
-            onChange={syncInput(setBusinessScope, setBusinessScopeCursor)}
-          />
-          <AtTextarea
-            placeholder="经营场所地址 *"
-            value={businessAddress}
-            onChange={(v) => setBusinessAddress(v)}
-            maxLength={200}
-            height={120}
-            className="register-page__textarea"
-          />
+          <View className="register-page__field">
+            <Text className="register-page__label">
+              <Text className="register-page__required">{REQUIRED_MARK}</Text>
+              登录名
+            </Text>
+            <AtInput
+              name="username"
+              placeholder="请输入登录名"
+              value={username}
+              cursor={usernameCursor}
+              onChange={syncInput(setUsername, setUsernameCursor)}
+            />
+          </View>
+          <View className="register-page__field">
+            <Text className="register-page__label">
+              <Text className="register-page__required">{REQUIRED_MARK}</Text>
+              登录密码
+            </Text>
+            <AtInput
+              name="password"
+              type="password"
+              placeholder="请输入登录密码"
+              value={password}
+              cursor={passwordCursor}
+              onChange={syncInput(setPassword, setPasswordCursor)}
+            />
+          </View>
+          <View className="register-page__field">
+            <Text className="register-page__label">
+              <Text className="register-page__required">{REQUIRED_MARK}</Text>
+              手机号
+            </Text>
+            <AtInput
+              name="mobile"
+              type="phone"
+              placeholder="请输入手机号"
+              value={mobile}
+              cursor={mobileCursor}
+              onChange={syncInput(setMobile, setMobileCursor)}
+            />
+          </View>
+          <View className="register-page__field">
+            <Text className="register-page__label">
+              <Text className="register-page__required">{REQUIRED_MARK}</Text>
+              统一社会信用代码
+            </Text>
+            <AtInput
+              name="creditCode"
+              placeholder="请输入18位统一社会信用代码"
+              value={creditCode}
+              cursor={creditCodeCursor}
+              onChange={syncInput(setCreditCode, setCreditCodeCursor)}
+              maxLength={18}
+            />
+          </View>
+          <View className="register-page__field">
+            <Text className="register-page__label">
+              <Text className="register-page__required">{REQUIRED_MARK}</Text>
+              法人姓名
+            </Text>
+            <AtInput
+              name="legalPersonName"
+              placeholder="请输入法人姓名"
+              value={legalPersonName}
+              cursor={legalPersonNameCursor}
+              onChange={syncInput(setLegalPersonName, setLegalPersonNameCursor)}
+            />
+          </View>
+          <View className="register-page__field">
+            <Text className="register-page__label">法人手机号</Text>
+            <AtInput
+              name="legalPersonPhone"
+              type="phone"
+              placeholder="请输入法人手机号"
+              value={legalPersonPhone}
+              cursor={legalPersonPhoneCursor}
+              onChange={syncInput(setLegalPersonPhone, setLegalPersonPhoneCursor)}
+            />
+          </View>
+          <View className="register-page__field">
+            <Text className="register-page__label">经营范围</Text>
+            <AtInput
+              name="businessScope"
+              placeholder="请输入经营范围"
+              value={businessScope}
+              cursor={businessScopeCursor}
+              onChange={syncInput(setBusinessScope, setBusinessScopeCursor)}
+            />
+          </View>
+          <View className="register-page__field">
+            <Text className="register-page__label">
+              <Text className="register-page__required">{REQUIRED_MARK}</Text>
+              经营场所地址
+            </Text>
+            <AtTextarea
+              placeholder="请输入经营场所地址"
+              value={businessAddress}
+              onChange={(v) => setBusinessAddress(v)}
+              maxLength={BUSINESS_ADDRESS_MAX_LENGTH}
+              height={88}
+              className="register-page__textarea"
+            />
+          </View>
           <AtButton type="primary" full onClick={handleSubmit} loading={loading} className="register-page__submit">
             {isResubmit ? '重新提交审核' : '提交注册审核'}
           </AtButton>

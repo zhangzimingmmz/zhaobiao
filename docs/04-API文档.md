@@ -23,14 +23,14 @@
 
 ## 2. 关键接口清单
 
-- **GET /api/list**：公告列表，必填 page、pageSize、category；可选 keyword、timeStart、timeEnd、regionCode、source、purchaseManner 等。
-- **GET /api/detail/bid/:id**：招投标详情；`content` 为后端按来源站点格式化后的可渲染正文。对 site1，当详情页已补抓成功时优先返回详情页 HTML 正文而非列表压平文本。
+- **GET /api/list**：公告列表，必填 page、pageSize、category；可选 keyword、timeStart、timeEnd、regionCode、source、purchaseManner 等。当前 notices 只保留最近 30 天数据，超出保留窗口的历史采集公告不会再出现在列表中。
+- **GET /api/detail/bid/:id**：招投标详情；`content` 为后端按来源站点格式化后的可渲染正文。对 site1，当详情页已补抓成功时优先返回详情页 HTML 正文而非列表压平文本。若某条 notices 已因 30 天 retention 被删除，详情接口将返回未找到。
 - **GET /api/detail/info/:id**：信息展示详情；`content` 为后端按来源站点格式化后的可渲染正文。
 - **GET /api/auth/captcha**：获取验证码。
 - **POST /api/auth/login**：手机号+验证码登录，返回 JWT。
 - **POST /api/auth/register**：企业认证提交。
 - **GET /api/auth/audit-status**：当前用户审核状态。
-- **GET /api/favorites**：当前登录用户收藏列表，只返回仍可解析的源数据。
+- **GET /api/favorites**：当前登录用户收藏列表，只返回仍可解析的源数据。若某条 `bid` notices 因 30 天 retention 被清理，其关联 favorites 会同步删除。
 - **POST /api/favorites/toggle**：切换登录用户的收藏状态；`bid` 需传 `targetSite`。
 - **GET /api/admin/crawl/actions**：可执行的采集动作列表。
 - **GET /api/admin/crawl/runs**：采集运行记录。

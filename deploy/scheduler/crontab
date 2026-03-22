@@ -3,6 +3,7 @@ CRON_TZ=Asia/Shanghai
 # site1 routine windows
 5 */2 * * * python /app/scripts/scheduler_submit.py site1.incremental
 40 3 * * * python /app/scripts/scheduler_submit.py site1.recovery
+10 4 * * * python -m crawler.notice_retention --db /app/data/notices.db --days 30 --apply
 
 # site2 routine windows
 20 */2 * * * python /app/scripts/scheduler_submit.py site2.incremental

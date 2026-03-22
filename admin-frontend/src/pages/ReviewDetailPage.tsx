@@ -132,12 +132,6 @@ export function ReviewDetailPage({
         </div>
       </div>
       <div className="card stack">
-        <div className="detail-label">营业执照</div>
-        <a href={item.licenseImage} target="_blank" rel="noreferrer">
-          查看图片
-        </a>
-      </div>
-      <div className="card stack">
         <div className="detail-label" style={{ marginBottom: 8 }}>驳回原因</div>
         <Input.TextArea
             value={rejectReason}

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { View, Text, Picker } from '@tarojs/components'
+import { View, Text, Picker, ScrollView } from '@tarojs/components'
 import { AtInput, AtButton } from 'taro-ui'
 import './index.scss'
 
@@ -28,8 +28,8 @@ const SOURCE_OPTIONS = [
   { code: '513400', label: '凉山州' },
 ]
 
-// 地区与来源共用同一套行政区划代码
-const REGION_OPTIONS = SOURCE_OPTIONS.slice(1)
+// 地区与来源共用同一套行政区划代码；地区筛选也需要支持“全部”
+const REGION_OPTIONS = SOURCE_OPTIONS
 
 const METHOD_OPTIONS = [
   { code: '', label: '全部' },
@@ -65,8 +65,8 @@ const ARTICLE_CATEGORY_OPTIONS = [
 const SHEET_META = {
   time: { title: '发布时间', grid: 'two' },
   source: { title: '交易来源', grid: 'two' },
-  region: { title: '选择地区', grid: 'two' },
-  nature: { title: '采购性质', grid: 'one' },
+  region: { title: '区划', grid: 'two' },
+  nature: { title: '项目分类', grid: 'one' },
   method: { title: '采购方式', grid: 'one' },
   purchaser: { title: '采购人', grid: 'one' },
   category: { title: '文章分类', grid: 'one' },
@@ -112,7 +112,9 @@ export default function FilterSheet({
     setDraftCode('')
     setStartDate('')
     setEndDate('')
-    if (onApply) onApply(type, '', '')
+    if (onApply) {
+      onApply(type, '', '')
+    } 
     if (onClose) onClose()
   }
 
@@ -226,7 +228,7 @@ export default function FilterSheet({
           <AtInput
             name="purchaser"
             value={draftCode}
-            placeholder="输入采购人名称"
+            placeholder="请输入采购人名称"
             onChange={(v) => setDraftCode(v)}
           />
         </View>
@@ -294,7 +296,9 @@ export default function FilterSheet({
           <Text className="filter-sheet__title">{sheetMeta.title}</Text>
           <Text className="filter-sheet__close" onClick={onClose}>关闭</Text>
         </View>
-        <View className="filter-sheet__body">{renderBody()}</View>
+        <ScrollView scrollY className="filter-sheet__body">
+          {renderBody()}
+        </ScrollView>
         <View className="filter-sheet__footer">
           <AtButton type="secondary" onClick={handleReset} className="filter-sheet__footer-reset">
             重置

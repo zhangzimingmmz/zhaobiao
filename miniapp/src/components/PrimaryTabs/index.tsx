@@ -10,7 +10,6 @@ const TABS = [
 export default function PrimaryTabs({ value, onChange }) {
   return (
     <View className="primary-tabs">
-      <Text className="primary-tabs__eyebrow">主频道</Text>
       <View className="primary-tabs__rail">
         {TABS.map((tab) => {
           const active = tab.id === value

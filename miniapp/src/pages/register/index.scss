@@ -19,7 +19,44 @@
     line-height: 1.6;
   }
 
+  &__form {
+    display: flex;
+    flex-direction: column;
+    gap: 24rpx;
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 12rpx;
+
+    .at-input {
+      margin-bottom: 0;
+    }
+  }
+
+  &__label {
+    font-size: 28rpx;
+    line-height: 1.5;
+    color: $color-title;
+    font-weight: 600;
+  }
+
+  &__required {
+    margin-right: 6rpx;
+    color: #f53f3f;
+  }
+
   &__textarea {
-    margin-bottom: 24rpx;
+    margin-bottom: 0;
+
+    .at-textarea__textarea {
+      line-height: 1.5;
+      min-height: 88rpx;
+    }
+
+    .at-textarea__counter {
+      font-size: 22rpx;
+    }
   }
 }

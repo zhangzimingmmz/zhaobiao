@@ -3,12 +3,6 @@ import Taro from '@tarojs/taro'
 import AppIcon from '../AppIcon'
 import './index.scss'
 
-const TAB_SUBTITLE_MAP = {
-  金堂招讯通: '一站掌握本地招采与政策资讯',
-  收藏: '登录后可跨设备查看账号收藏',
-  我的: '账户状态、登录入口与功能管理',
-}
-
 function getNavMetrics() {
   const windowInfo = Taro.getWindowInfo()
   const menuRect = Taro.getMenuButtonBoundingClientRect
@@ -42,7 +36,6 @@ export default function TopBar({
 }) {
   const resolvedVariant = variant === 'home' ? 'tab' : variant
   const { statusBarHeight, navHeight, capsuleSpace, totalHeight } = getNavMetrics()
-  const tabSubtitle = TAB_SUBTITLE_MAP[title] || '本地招采与资讯服务'
 
   const handleBack = () => {
     if (onBack) onBack()
@@ -105,7 +98,6 @@ export default function TopBar({
           style={{ height: `${navHeight}px`, paddingRight: `${capsuleSpace}px` }}
         >
           <View className="top-bar__tab-copy">
-            <Text className="top-bar__subtitle top-bar__subtitle--tab">{tabSubtitle}</Text>
             <Text className="top-bar__title top-bar__title--tab">{title}</Text>
           </View>
         </View>

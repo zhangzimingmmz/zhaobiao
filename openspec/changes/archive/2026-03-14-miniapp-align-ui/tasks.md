@@ -16,7 +16,7 @@
 - [ ] 3.2 实现 engineering-engineering 布局：招标计划/招标公告按钮行 + 搜索框 + 发布时间/交易来源
 - [ ] 3.3 实现 engineering-procurement 布局：搜索框 + 发布时间/交易来源
 - [ ] 3.4 实现 procurement-intention 布局：搜索框 + 发布时间/区划
-- [ ] 3.5 实现 procurement-announcement 布局：搜索框 + 采购性质/采购方式/发布时间/区划
+- [ ] 3.5 实现 procurement-announcement 布局：搜索框 + 项目分类/采购方式/发布时间/区划
 - [ ] 3.6 实现 information 布局：仅搜索框
 - [ ] 3.7 筛选按钮带图标，占位符随业务态变化
 
@@ -32,7 +32,7 @@
 
 ## 5. BidCard 完整展示
 
-- [ ] 5.1 增加采购性质、采购方式、预算金额标签展示（蓝/绿/橙）
+- [ ] 5.1 增加项目分类、采购方式、预算金额标签展示（蓝/绿/橙）
 - [ ] 5.2 增加招标人、区划、截止时间行，带图标
 - [ ] 5.3 圆角卡片、边框样式与 ui 一致
 - [ ] 5.4 列表接口字段映射：budget、purchaser、regionName、expireTime、purchaseNature、purchaseManner（接口暂无时用 Mock）

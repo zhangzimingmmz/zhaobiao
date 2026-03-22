@@ -1,7 +1,7 @@
 ## ADDED Requirements
 
 ### Requirement: BidCard 完整字段展示
-BidCard 组件 SHALL 展示标题、采购性质标签（蓝）、采购方式标签（绿）、预算金额（橙）、招标人、区划、截止时间、发布时间，带对应图标。
+BidCard 组件 SHALL 展示标题、项目分类标签（蓝）、采购方式标签（绿）、预算金额（橙）、招标人、区划、截止时间、发布时间，带对应图标。
 
 #### Scenario: 有预算时显示
 - **WHEN** 列表项包含 budget 字段

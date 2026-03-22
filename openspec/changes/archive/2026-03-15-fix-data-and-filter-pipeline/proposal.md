@@ -1,6 +1,6 @@
 ## Why
 
-数据与查询接口全流程存在多处问题：S-code 映射与 site1 实际数据不符（选广安出遂宁）、purchaseNature 未落库导致采购性质筛选无效、002002001 的 tradingsourcevalue 数据源缺失导致 source 筛选无结果。需统一梳理问题并制定解决方案，公共问题采用公共方案。
+数据与查询接口全流程存在多处问题：S-code 映射与 site1 实际数据不符（选广安出遂宁）、purchaseNature 未落库导致项目分类筛选无效、002002001 的 tradingsourcevalue 数据源缺失导致 source 筛选无结果。需统一梳理问题并制定解决方案，公共问题采用公共方案。
 
 ## 问题汇总（数据与查询全流程）
 
@@ -15,7 +15,7 @@
 
 | 问题 ID | 描述 | 根因 | 影响范围 |
 |---------|------|------|----------|
-| **P3** | 采购性质筛选无效 | purchaseNature 未落库：表无列、爬虫未映射、API 无参数、前端未传 | 政府采购-采购公告 |
+| **P3** | 项目分类筛选无效 | purchaseNature 未落库：表无列、爬虫未映射、API 无参数、前端未传 | 政府采购-采购公告 |
 
 ### 三、数据源缺失类（无法从接口补全）
 
@@ -33,7 +33,7 @@
 
 ### New Capabilities
 
-- `purchase-nature-filter`：采购性质（purchaseNature）从落库到 API 筛选到前端传参的完整支持
+- `purchase-nature-filter`：项目分类（purchaseNature）从落库到 API 筛选到前端传参的完整支持
 
 ### Modified Capabilities
 

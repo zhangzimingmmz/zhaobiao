@@ -100,8 +100,8 @@ export function App() {
     }
     if (path === "/articles/new") {
       return {
-        title: "新增文章",
-        subtitle: "创建并发布公众号文章。",
+        title: "新增信息展示",
+        subtitle: "创建信息展示并关联公众号文章。",
         content: <ArticleEditorPage navigate={navigate} />,
       };
     }

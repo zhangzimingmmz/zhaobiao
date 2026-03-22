@@ -69,7 +69,7 @@ const HOME_STATES = {
     id: 'procurement-announcement',
     listKind: 'bid',
     emptyTitle: '暂无采购公告',
-    emptyDescription: '可以调整采购性质、采购方式或区划后再试。',
+    emptyDescription: '可以调整项目分类、采购方式或区划后再试。',
   },
   'info:work_dynamics': {
     id: 'information',
@@ -343,11 +343,19 @@ export default function Index() {
     const sec = SECONDARY_MAP[id]
     setSecondary(sec && sec[0] ? sec[0].id : '')
     if (id === 'construction') setAnnouncementType('plan')
+    setKeyword('')
     setFilterValues({})
   }
 
   const handleSecondaryChange = (id) => {
     setSecondary(id)
+    setKeyword('')
+    setFilterValues({})
+  }
+
+  const handleAnnouncementTypeChange = (value) => {
+    setAnnouncementType(value)
+    setKeyword('')
     setFilterValues({})
   }
 
@@ -502,7 +510,7 @@ export default function Index() {
         onFilterClick={handleFilterClick}
         filterValues={filterLabels}
         announcementType={announcementType}
-        onAnnouncementTypeChange={setAnnouncementType}
+        onAnnouncementTypeChange={handleAnnouncementTypeChange}
       />
       <View className="index-page__list">
         {renderListFeedback()}

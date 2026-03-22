@@ -16,13 +16,13 @@
 
   &--with-cover {
     .info-card__body {
-      min-height: 188rpx;
+      min-height: 168rpx;
     }
   }
 
   &--text-only {
     .info-card__body {
-      min-height: 220rpx;
+      min-height: 0;
     }
   }
 
@@ -62,7 +62,6 @@
 
   &__badge-row {
     margin-bottom: 12rpx;
-    min-height: 40rpx;
   }
 
   &__badge {
@@ -79,8 +78,7 @@
   &__time {
     font-size: $font-2xs;
     color: $color-caption;
-    margin-top: auto;
-    padding-top: 18rpx;
+    margin-top: 14rpx;
     display: flex;
     align-items: center;
     gap: 6rpx;
@@ -90,7 +88,6 @@
     font-size: $font-sm;
     color: $color-body;
     line-height: 1.6;
-    min-height: 3.2em;
   }
 
   &__cover {

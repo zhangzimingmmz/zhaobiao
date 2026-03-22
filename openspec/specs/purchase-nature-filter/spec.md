@@ -3,7 +3,7 @@
 ## Purpose
 TBD - created by archiving change fix-data-and-filter-pipeline. Update Purpose after archive.
 ## Requirements
-### Requirement: 采购性质落库
+### Requirement: 项目分类落库
 
 notices 表 SHALL 包含 `purchase_nature` 列（TEXT，可空）。site2 爬虫在写入采购公告（category_num=00101）时 SHALL 从 API 响应的 `purchaseNature` 字段映射并写入。
 
@@ -31,12 +31,12 @@ notices 表 SHALL 包含 `purchase_nature` 列（TEXT，可空）。site2 爬虫
 - **WHEN** 传入数据库中不存在的 purchaseNature 值
 - **THEN** 响应 `data.total` 为 0，`data.list` 为空数组，HTTP 200
 
-### Requirement: 前端传递采购性质筛选
+### Requirement: 前端传递项目分类筛选
 
 `index.tsx` 的 buildParams SHALL 将 `filterValues.nature?.code` 作为 `purchaseNature` 参数传给 `api.list()`。
 
-#### Scenario: 选择采购性质后 API 调用携带 purchaseNature
+#### Scenario: 选择项目分类后 API 调用携带 purchaseNature
 
-- **WHEN** 用户在 FilterSheet 的「采购性质」中选择「货物」并确认
+- **WHEN** 用户在 FilterSheet 的「项目分类」中选择「货物」并确认
 - **THEN** `api.list()` 参数中包含 `purchaseNature: '1'`
 

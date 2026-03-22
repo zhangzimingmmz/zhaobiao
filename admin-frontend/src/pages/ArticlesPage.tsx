@@ -182,14 +182,14 @@ export function ArticlesPage({ navigate }: ArticlesPageProps) {
       pagination={{ defaultPageSize: 10, showSizeChanger: true }}
       scroll={{ x: 920 }}
       toolBarRender={() => [
+        <Button key="new" type="primary" onClick={() => navigate("/articles/new")}>
+          新增信息展示
+        </Button>,
         <Button
           key="wechat-publish"
           onClick={() => window.open(OFFICIAL_ACCOUNT_PUBLISH_URL, "_blank", "noopener,noreferrer")}
         >
-          公众号信息发布
-        </Button>,
-        <Button key="new" type="primary" onClick={() => navigate("/articles/new")}>
-          新增文章
+          公众号信息发布右→
         </Button>,
       ]}
     />

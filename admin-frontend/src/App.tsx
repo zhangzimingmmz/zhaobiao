@@ -11,6 +11,7 @@ import { RunsPage } from "./pages/RunsPage";
 import { RunDetailPage } from "./pages/RunDetailPage";
 import { ArticlesPage } from "./pages/ArticlesPage";
 import { ArticleEditorPage } from "./pages/ArticleEditorPage";
+import { SettingsPage } from "./pages/SettingsPage";
 import { getAdminToken } from "./lib/auth";
 
 type RouteMeta = {
@@ -117,6 +118,13 @@ export function App() {
         title: "采集控制",
         subtitle: "选择动作、填写参数并提交运行。",
         content: <CrawlPage navigate={navigate} />,
+      };
+    }
+    if (path === "/settings") {
+      return {
+        title: "运营设置",
+        subtitle: "配置客服电话等小程序运营信息。",
+        content: <SettingsPage />,
       };
     }
     if (path === "/runs") {

@@ -10,6 +10,7 @@ const ROUTE = {
     { path: "/companies", name: "企业管理" },
     { path: "/articles", name: "内容管理" },
     { path: "/crawl", name: "采集控制" },
+    { path: "/settings", name: "运营设置" },
     { path: "/runs", name: "运行记录" },
   ],
 };

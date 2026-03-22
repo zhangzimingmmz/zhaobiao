@@ -189,7 +189,7 @@ export function ArticlesPage({ navigate }: ArticlesPageProps) {
           key="wechat-publish"
           onClick={() => window.open(OFFICIAL_ACCOUNT_PUBLISH_URL, "_blank", "noopener,noreferrer")}
         >
-          公众号信息发布右→
+          公众号信息发布→
         </Button>,
       ]}
     />

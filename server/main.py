@@ -180,6 +180,12 @@ CREATE TABLE IF NOT EXISTS user_favorites (
     created_at      TEXT NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS app_settings (
+    key             TEXT PRIMARY KEY,
+    value           TEXT,
+    updated_at      TEXT NOT NULL
+);
 """
 
 
@@ -242,6 +248,26 @@ def _ensure_column(conn: sqlite3.Connection, table: str, column: str, definition
     }
     if column not in columns:
         conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {definition}")
+
+
+def _get_app_setting(conn: sqlite3.Connection, key: str) -> str:
+    row = conn.execute(
+        "SELECT value FROM app_settings WHERE key = ? LIMIT 1",
+        (key,),
+    ).fetchone()
+    return (row["value"] if row and row["value"] is not None else "").strip()
+
+
+def _set_app_setting(conn: sqlite3.Connection, key: str, value: str) -> None:
+    now = datetime.now(timezone.utc).isoformat()
+    conn.execute(
+        """INSERT INTO app_settings (key, value, updated_at)
+           VALUES (?, ?, ?)
+           ON CONFLICT(key) DO UPDATE SET
+             value = excluded.value,
+             updated_at = excluded.updated_at""",
+        (key, value.strip(), now),
+    )
 
 
 @app.on_event("startup")
@@ -1640,6 +1666,69 @@ from server.article_utils import extract_article_info, now_iso, generate_id
 
 class ValidateUrlRequest(BaseModel):
     url: str
+
+
+class SupportPhoneUpdateRequest(BaseModel):
+    supportPhone: str = Field(default="")
+
+
+def _normalize_support_phone(value: Optional[str]) -> str:
+    phone = (value or "").strip()
+    if not phone:
+        return ""
+    if len(phone) > 32:
+        raise HTTPException(status_code=400, detail="客服电话长度不能超过 32 位")
+    if not re.fullmatch(r"[\d\-+\s()#]{5,32}", phone):
+        raise HTTPException(status_code=400, detail="客服电话格式不正确")
+    return phone
+
+
+@app.get("/api/admin/app-settings/contact")
+def get_admin_contact_settings(authorization: Optional[str] = Header(None)):
+    """管理员查看客服电话配置。"""
+    get_admin_user(authorization)
+    conn = _get_conn()
+    try:
+        return {
+            "code": 200,
+            "data": {
+                "supportPhone": _get_app_setting(conn, "support_phone"),
+            },
+        }
+    finally:
+        conn.close()
+
+
+@app.put("/api/admin/app-settings/contact")
+def update_admin_contact_settings(
+    req: SupportPhoneUpdateRequest,
+    authorization: Optional[str] = Header(None),
+):
+    """管理员更新客服电话配置。"""
+    get_admin_user(authorization)
+    phone = _normalize_support_phone(req.supportPhone)
+    conn = _get_conn()
+    try:
+        _set_app_setting(conn, "support_phone", phone)
+        conn.commit()
+        return {"code": 200, "data": {"supportPhone": phone}}
+    finally:
+        conn.close()
+
+
+@app.get("/api/app/contact")
+def get_public_contact_settings():
+    """小程序读取客服电话配置。"""
+    conn = _get_conn()
+    try:
+        return {
+            "code": 200,
+            "data": {
+                "supportPhone": _get_app_setting(conn, "support_phone"),
+            },
+        }
+    finally:
+        conn.close()
 
 
 @app.post("/api/admin/articles/validate-url")

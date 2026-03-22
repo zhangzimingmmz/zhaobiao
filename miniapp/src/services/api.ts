@@ -26,6 +26,9 @@ export const api = {
   me() {
     return get('/api/auth/me')
   },
+  getContactSettings() {
+    return get('/api/app/contact')
+  },
   // 文章相关接口
   getArticles(params) {
     return get('/api/articles', params)

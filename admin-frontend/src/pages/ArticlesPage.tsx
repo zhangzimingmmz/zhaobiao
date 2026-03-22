@@ -1,13 +1,15 @@
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import { ProTable } from "@ant-design/pro-components";
 import type { ActionType } from "@ant-design/pro-components";
 import type { ProColumns } from "@ant-design/pro-components";
-import { Button, Modal, message, Tag } from "antd";
+import { Button, Input, Modal, message, Tag } from "antd";
 import {
   getAdminArticles,
   publishArticle,
   unpublishArticle,
   deleteArticle,
+  getContactSettings,
+  updateContactSettings,
   type Article,
 } from "../lib/api";
 
@@ -26,9 +28,36 @@ type ArticlesPageProps = {
 
 export function ArticlesPage({ navigate }: ArticlesPageProps) {
   const actionRef = useRef<ActionType>(null);
+  const [contactModalOpen, setContactModalOpen] = useState(false);
+  const [contactPhone, setContactPhone] = useState("");
+  const [contactSaving, setContactSaving] = useState(false);
   const categoryLabel = (c: string | null) => (c ? CATEGORY_LABELS[c] ?? c : "-");
 
   const reload = () => actionRef.current?.reload();
+
+  const openContactModal = async () => {
+    try {
+      const data = await getContactSettings();
+      setContactPhone(data.supportPhone || "");
+      setContactModalOpen(true);
+    } catch (err) {
+      message.error(err instanceof Error ? err.message : "读取客服电话失败");
+    }
+  };
+
+  const saveContactPhone = async () => {
+    setContactSaving(true);
+    try {
+      const data = await updateContactSettings(contactPhone.trim());
+      setContactPhone(data.supportPhone || "");
+      setContactModalOpen(false);
+      message.success(data.supportPhone ? "客服电话已保存" : "客服电话已清空");
+    } catch (err) {
+      message.error(err instanceof Error ? err.message : "保存客服电话失败");
+    } finally {
+      setContactSaving(false);
+    }
+  };
 
   const handlePublish = async (record: Article) => {
     Modal.confirm({
@@ -158,40 +187,61 @@ export function ArticlesPage({ navigate }: ArticlesPageProps) {
   ];
 
   return (
-    <ProTable<Article>
-      actionRef={actionRef}
-      columns={columns}
-      rowKey="id"
-      request={async (params) => {
-        const data = await getAdminArticles({
-          status: params.status || undefined,
-          category: params.category || undefined,
-          keyword: params.keyword || undefined,
-          page: params.current ?? 1,
-          pageSize: params.pageSize ?? 10,
-        });
-        return { data: data.list, success: true, total: data.total };
-      }}
-      search={{
-        labelWidth: "auto",
-        defaultCollapsed: false,
-      }}
-      form={{
-        initialValues: { status: "", category: "", keyword: "" },
-      }}
-      pagination={{ defaultPageSize: 10, showSizeChanger: true }}
-      scroll={{ x: 920 }}
-      toolBarRender={() => [
-        <Button key="new" type="primary" onClick={() => navigate("/articles/new")}>
-          新增信息展示
-        </Button>,
-        <Button
-          key="wechat-publish"
-          onClick={() => window.open(OFFICIAL_ACCOUNT_PUBLISH_URL, "_blank", "noopener,noreferrer")}
-        >
-          公众号信息发布右→
-        </Button>,
-      ]}
-    />
+    <>
+      <ProTable<Article>
+        actionRef={actionRef}
+        columns={columns}
+        rowKey="id"
+        request={async (params) => {
+          const data = await getAdminArticles({
+            status: params.status || undefined,
+            category: params.category || undefined,
+            keyword: params.keyword || undefined,
+            page: params.current ?? 1,
+            pageSize: params.pageSize ?? 10,
+          });
+          return { data: data.list, success: true, total: data.total };
+        }}
+        search={{
+          labelWidth: "auto",
+          defaultCollapsed: false,
+        }}
+        form={{
+          initialValues: { status: "", category: "", keyword: "" },
+        }}
+        pagination={{ defaultPageSize: 10, showSizeChanger: true }}
+        scroll={{ x: 920 }}
+        toolBarRender={() => [
+          <Button key="new" type="primary" onClick={() => navigate("/articles/new")}>
+            新增信息展示
+          </Button>,
+          <Button key="support-phone" onClick={openContactModal}>
+            客服电话设置
+          </Button>,
+          <Button
+            key="wechat-publish"
+            onClick={() => window.open(OFFICIAL_ACCOUNT_PUBLISH_URL, "_blank", "noopener,noreferrer")}
+          >
+            公众号信息发布右→
+          </Button>,
+        ]}
+      />
+      <Modal
+        title="设置客服电话"
+        open={contactModalOpen}
+        onOk={saveContactPhone}
+        okText="保存"
+        cancelText="取消"
+        confirmLoading={contactSaving}
+        onCancel={() => !contactSaving && setContactModalOpen(false)}
+      >
+        <Input
+          value={contactPhone}
+          onChange={(event) => setContactPhone(event.target.value)}
+          placeholder="请输入客服电话，例如 400-123-4567"
+          maxLength={32}
+        />
+      </Modal>
+    </>
   );
 }

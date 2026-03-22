@@ -1,8 +1,7 @@
 @import '../../styles/variables.scss';
 
 .secondary-tabs {
-  padding: 18rpx 32rpx 10rpx;
-  background: linear-gradient(180deg, $color-bg 0%, $color-bg-soft 100%);
+  padding: 0;
 
   &__list {
     display: flex;

@@ -495,23 +495,27 @@ export default function Index() {
   return (
     <View className="page page--tab index-page">
       <TopBar title="金堂招讯通" variant="tab" />
-      <PrimaryTabs value={primary} onChange={handlePrimaryChange} />
-      {secondaryTabs.length > 0 && (
-        <SecondaryTabs
-          tabs={secondaryTabs}
-          value={secondary}
-          onChange={handleSecondaryChange}
-        />
-      )}
-      <FilterBar
-        type={homeState.id}
-        keyword={keyword}
-        onKeywordChange={setKeyword}
-        onFilterClick={handleFilterClick}
-        filterValues={filterLabels}
-        announcementType={announcementType}
-        onAnnouncementTypeChange={handleAnnouncementTypeChange}
-      />
+      <View className="index-page__top-panel">
+        <PrimaryTabs value={primary} onChange={handlePrimaryChange} />
+        <View className="index-page__control-panel">
+          {secondaryTabs.length > 0 && (
+            <SecondaryTabs
+              tabs={secondaryTabs}
+              value={secondary}
+              onChange={handleSecondaryChange}
+            />
+          )}
+          <FilterBar
+            type={homeState.id}
+            keyword={keyword}
+            onKeywordChange={setKeyword}
+            onFilterClick={handleFilterClick}
+            filterValues={filterLabels}
+            announcementType={announcementType}
+            onAnnouncementTypeChange={handleAnnouncementTypeChange}
+          />
+        </View>
+      </View>
       <View className="index-page__list">
         {renderListFeedback()}
         {renderFooter()}

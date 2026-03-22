@@ -39,6 +39,21 @@ export async function apiRequest<T>(
 
 export const apiBase = API_BASE;
 
+export type ContactSettings = {
+  supportPhone: string;
+};
+
+export async function getContactSettings(): Promise<ContactSettings> {
+  return apiRequest<ContactSettings>("/api/admin/app-settings/contact");
+}
+
+export async function updateContactSettings(supportPhone: string): Promise<ContactSettings> {
+  return apiRequest<ContactSettings>("/api/admin/app-settings/contact", {
+    method: "PUT",
+    body: { supportPhone },
+  });
+}
+
 
 // ────────────────────────────────────────────────────────────
 // Article Management API

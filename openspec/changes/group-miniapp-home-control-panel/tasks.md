@@ -1,20 +1,20 @@
 ## 1. Panel Structure
 
-- [ ] 1.1 Introduce a page-level `HomeControlPanel` wrapper on the miniapp home page that groups `SecondaryTabs`, the supported announcement-type switch, search, and filter controls.
-- [ ] 1.2 Keep `PrimaryTabs` outside that wrapper so the first-level channel switch remains a separate page-navigation layer.
-- [ ] 1.3 Update the home page layout structure so the panel wrapper, not the child components, owns the unified outer background, border radius, border, and shadow.
+- [x] 1.1 Introduce a page-level `HomeControlPanel` wrapper on the miniapp home page that groups `SecondaryTabs`, the supported announcement-type switch, search, and filter controls.
+- [x] 1.2 Keep `PrimaryTabs` outside that wrapper so the first-level channel switch remains a separate page-navigation layer.
+- [x] 1.3 Update the home page layout structure so the panel wrapper, not the child components, owns the unified outer background, border radius, border, and shadow.
 
 ## 2. Child Component Responsibility Cleanup
 
-- [ ] 2.1 Refactor `SecondaryTabs` styles so it no longer renders a full standalone background card when used inside the unified home control panel.
-- [ ] 2.2 Refactor `FilterBar` styles so its outer shell no longer behaves like an independent white card, while preserving internal search and filter affordances.
-- [ ] 2.3 Ensure the engineering announcement-type segment is rendered as a panel-internal section instead of a visually separate card layer.
+- [x] 2.1 Refactor `SecondaryTabs` styles so it no longer renders a full standalone background card when used inside the unified home control panel.
+- [x] 2.2 Refactor `FilterBar` styles so its outer shell no longer behaves like an independent white card, while preserving internal search and filter affordances.
+- [x] 2.3 Ensure the engineering announcement-type segment is rendered as a panel-internal section instead of a visually separate card layer.
 
 ## 3. State-Specific Validation
 
-- [ ] 3.1 Verify the engineering states render as `PrimaryTabs` + unified control panel + list, with the announcement-type switch included inside the panel.
-- [ ] 3.2 Verify procurement states render the same panel family while preserving one-row and two-row filter layouts as needed.
-- [ ] 3.3 Verify the information state remains visually lighter than engineering/procurement but still uses the same control-panel ownership model.
+- [x] 3.1 Verify the engineering states render as `PrimaryTabs` + unified control panel + list, with the announcement-type switch included inside the panel.
+- [x] 3.2 Verify procurement states render the same panel family while preserving one-row and two-row filter layouts as needed.
+- [x] 3.3 Verify the information state remains visually lighter than engineering/procurement but still uses the same control-panel ownership model.
 
 ## 4. Visual Acceptance
 

@@ -89,8 +89,28 @@ export default function Profile() {
       .finally(() => setAuditLoading(false))
   }, [isLoggedIn])
 
-  const handleSettings = () => Taro.showToast({ title: '设置', icon: 'none' })
-  const handleContact = () => Taro.showToast({ title: '联系客服', icon: 'none' })
+  const handleContact = async () => {
+    try {
+      const res = await api.getContactSettings()
+      const supportPhone = res.data?.data?.supportPhone?.trim?.() || ''
+      if (!supportPhone) {
+        Taro.showToast({ title: '暂未设置客服电话', icon: 'none' })
+        return
+      }
+      Taro.showModal({
+        title: '联系客服',
+        content: `客服电话：${supportPhone}`,
+        confirmText: '拨打',
+        success: (modalRes) => {
+          if (modalRes.confirm) {
+            Taro.makePhoneCall({ phoneNumber: supportPhone })
+          }
+        },
+      })
+    } catch {
+      Taro.showToast({ title: '获取客服电话失败', icon: 'none' })
+    }
+  }
   
   const handleLogout = () => {
     Taro.showModal({
@@ -251,18 +271,18 @@ export default function Profile() {
             mobile={auditData?.mobile}
           />
           <View className="profile-page__header-info">
-            <View className="profile-page__header-name-row">
+            <View className="profile-page__header-meta-row">
               <Text className="profile-page__legal-name">
                 {auditData?.legalPersonName || auditData?.username || (auditLoading ? '加载中...' : '—')}
               </Text>
+              <Text className="profile-page__mobile">{auditData?.mobile || '—'}</Text>
               <Text className={'profile-page__badge' + (auditStatus === 'approved' ? ' profile-page__badge--approved' : auditStatus === 'pending' ? ' profile-page__badge--pending' : auditStatus === 'rejected' ? ' profile-page__badge--rejected' : '')}>{getStatusLabel()}</Text>
             </View>
-            <Text className="profile-page__mobile">{auditData?.mobile || '—'}</Text>
           </View>
         </View>
         <Text className="profile-page__summary-desc">
           {auditStatus === 'approved'
-            ? '当前账号已通过审核，可以正常登录并使用平台能力。'
+            ? '当前账号已通过审核，可正常登录使用平台功能。'
             : auditStatus === 'pending'
               ? '注册资料审核中，审核通过前不能登录。'
               : auditStatus === 'rejected'
@@ -309,11 +329,6 @@ export default function Profile() {
       {isLoggedIn ? (
         <>
           <View className="profile-page__menu">
-            <View className="profile-page__item" onClick={handleSettings}>
-              <AppIcon name="settings" size={36} color="#4E5969" />
-              <Text className="profile-page__item-text">设置</Text>
-              <AppIcon name="chevronright" size={28} color="#86909C" />
-            </View>
             <View className="profile-page__item" onClick={handleContact}>
               <AppIcon name="messagecircle" size={36} color="#4E5969" />
               <Text className="profile-page__item-text">联系客服</Text>

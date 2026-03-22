@@ -187,6 +187,51 @@ class DetailContentRenderingTests(unittest.TestCase):
         self.assertIn("拟招标项目名称", summary)
         self.assertNotIn("<table", summary)
 
+    def test_site1_prefers_source_page_url_over_upstream_origin_url(self):
+        conn = self.server_main._get_conn()
+        try:
+            upsert_one(
+                conn,
+                {
+                    "id": "notice-site1-origin-choice",
+                    "title": "主站原文优先测试",
+                    "webdate": "2026-03-21 10:00:00",
+                    "zhuanzai": "测试来源",
+                    "region_name": "成都市",
+                    "region_code": "510100",
+                    "categorynum": "002001001",
+                    "linkurl": "/jyxx/002001/002001001/20260321/TEST-ID.html",
+                    "origin_url": "http://www.example-upstream.com/jump.html?infoid=TEST-ID",
+                    "content": "<p>正文</p>",
+                    "description": "测试摘要",
+                },
+                "site1_sc_ggzyjy",
+            )
+        finally:
+            conn.close()
+
+        expected_source_page = "https://ggzyjy.sc.gov.cn/jyxx/002001/002001001/20260321/TEST-ID.html"
+
+        detail_response = self.client.get("/api/detail/bid/notice-site1-origin-choice")
+        self.assertEqual(detail_response.status_code, 200)
+        detail_data = detail_response.json()["data"]
+        self.assertEqual(detail_data["originUrl"], expected_source_page)
+        self.assertEqual(
+            detail_data["upstreamOriginUrl"],
+            "http://www.example-upstream.com/jump.html?infoid=TEST-ID",
+        )
+
+        list_response = self.client.get("/api/list?page=1&pageSize=10&category=002001001")
+        self.assertEqual(list_response.status_code, 200)
+        list_item = next(
+            item for item in list_response.json()["data"]["list"] if item["id"] == "notice-site1-origin-choice"
+        )
+        self.assertEqual(list_item["originUrl"], expected_source_page)
+        self.assertEqual(
+            list_item["upstreamOriginUrl"],
+            "http://www.example-upstream.com/jump.html?infoid=TEST-ID",
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -456,15 +456,22 @@ def _load_user_favorite_sets(conn: sqlite3.Connection, user_id: Optional[str]) -
 # 列表与详情行映射
 # ────────────────────────────────────────────────────────────
 
+def _build_source_page_url(row: sqlite3.Row, site: str) -> Optional[str]:
+    """返回主站详情页地址，而不是主站页面中再次转发的下游原文链接。"""
+    linkurl = row["linkurl"] or ""
+    if linkurl:
+        return (SITE1_BASE if "site1" in (site or "") else SITE2_BASE) + linkurl
+    if "site2" in (site or ""):
+        plan_id = row["plan_id"] or ""
+        return f"{SITE2_BASE}/maincms-web/article?type=notice&id={row['id']}&planId={plan_id}"
+    upstream_origin_url = row["origin_url"] or None
+    return upstream_origin_url
+
+
 def _row_list_item(row: sqlite3.Row, site: str, *, favorited: bool = False) -> dict[str, Any]:
     """存储行 → 列表单条（《接口文档-前端与小程序》1.4）"""
-    linkurl = row["linkurl"] or ""
-    origin_url = row["origin_url"]
-    if not origin_url and linkurl:
-        origin_url = (SITE1_BASE if "site1" in (site or "") else SITE2_BASE) + linkurl
-    if not origin_url and "site2" in (site or ""):
-        plan_id = row["plan_id"] or ""
-        origin_url = f"{SITE2_BASE}/maincms-web/article?type=notice&id={row['id']}&planId={plan_id}"
+    origin_url = _build_source_page_url(row, site)
+    upstream_origin_url = row["origin_url"] or None
     summary = row["description"] or row["content"] or ""
     if summary and re.search(r"<[a-zA-Z][^>]*>", summary):
         summary = BeautifulSoup(summary, "html.parser").get_text(" ", strip=True)
@@ -480,6 +487,7 @@ def _row_list_item(row: sqlite3.Row, site: str, *, favorited: bool = False) -> d
         "categoryNum": row["category_num"],
         "categoryName": CATEGORY_NAMES.get(row["category_num"] or "", ""),
         "originUrl": origin_url,
+        "upstreamOriginUrl": upstream_origin_url,
         "summary": summary,
         "planId": row["plan_id"],
         "purchaseNature": row["purchase_nature"] if "purchase_nature" in row.keys() else None,
@@ -489,13 +497,8 @@ def _row_list_item(row: sqlite3.Row, site: str, *, favorited: bool = False) -> d
 
 def _row_detail_bid(row: sqlite3.Row, site: str, *, favorited: bool = False) -> dict[str, Any]:
     """存储行 → 招投标详情（《接口文档-前端与小程序》2.4）"""
-    linkurl = row["linkurl"] or ""
-    origin_url = row["origin_url"]
-    if not origin_url and linkurl:
-        origin_url = (SITE1_BASE if "site1" in (site or "") else SITE2_BASE) + linkurl
-    if not origin_url and "site2" in (site or ""):
-        plan_id = row["plan_id"] or ""
-        origin_url = f"{SITE2_BASE}/maincms-web/article?type=notice&id={row['id']}&planId={plan_id}"
+    origin_url = _build_source_page_url(row, site)
+    upstream_origin_url = row["origin_url"] or None
     source_site_name = "四川省公共资源交易平台" if "site1" in (site or "") else "四川省政府采购网" if "site2" in (site or "") else None
     return {
         "id": row["id"],
@@ -514,6 +517,7 @@ def _row_detail_bid(row: sqlite3.Row, site: str, *, favorited: bool = False) -> 
         "openTime": row["open_tender_time"],
         "content": render_notice_body(row["content"], site, row["category_num"]),
         "originUrl": origin_url,
+        "upstreamOriginUrl": upstream_origin_url,
         "sourceSiteName": source_site_name,
         "favorited": favorited,
     }
@@ -521,13 +525,8 @@ def _row_detail_bid(row: sqlite3.Row, site: str, *, favorited: bool = False) -> 
 
 def _row_detail_info(row: sqlite3.Row, site: str, *, favorited: bool = False) -> dict[str, Any]:
     """存储行 → 信息展示详情（《接口文档-前端与小程序》3.4）"""
-    origin_url = row["origin_url"]
-    linkurl = row["linkurl"] or ""
-    if not origin_url and linkurl:
-        origin_url = (SITE1_BASE if "site1" in (site or "") else SITE2_BASE) + linkurl
-    if not origin_url and "site2" in (site or ""):
-        plan_id = row["plan_id"] or ""
-        origin_url = f"{SITE2_BASE}/maincms-web/article?type=notice&id={row['id']}&planId={plan_id}"
+    origin_url = _build_source_page_url(row, site)
+    upstream_origin_url = row["origin_url"] or None
     source_site_name = "四川省公共资源交易平台" if "site1" in (site or "") else "四川省政府采购网" if "site2" in (site or "") else None
     return {
         "id": row["id"],
@@ -537,6 +536,7 @@ def _row_detail_info(row: sqlite3.Row, site: str, *, favorited: bool = False) ->
         "description": row["description"],
         "content": render_notice_body(row["content"], site, row["category_num"]),
         "originUrl": origin_url,
+        "upstreamOriginUrl": upstream_origin_url,
         "sourceSiteName": source_site_name,
         "favorited": favorited,
     }

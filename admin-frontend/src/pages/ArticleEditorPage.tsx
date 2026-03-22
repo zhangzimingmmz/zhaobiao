@@ -160,7 +160,7 @@ export function ArticleEditorPage({ id, navigate }: ArticleEditorPageProps) {
         <div>
           <div className="article-editor-shortcut__title">公众号信息发布快捷入口</div>
           <Typography.Text type="secondary">
-            先进入企业微信公众号后台新建或编辑图文，再将文章链接粘贴到下方表单中创建发布对象。
+            登录自己企业微信公众号，创建所需的“政策法规”或“工作动态”等文章。再将文章链接粘贴到下方“公众号文章链接”框内，最后点击【创建并发布】。
           </Typography.Text>
         </div>
         <Space wrap>

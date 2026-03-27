@@ -26,7 +26,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(mess
 logger = logging.getLogger(__name__)
 
 
-DEFAULT_CATEGORY_ORDER = ("002001009", "002001001", "002002001")
+DEFAULT_CATEGORY_ORDER = ("002001009", "002001010", "002001001", "002002001")
 
 
 @dataclass
@@ -274,7 +274,7 @@ def main() -> None:
         "--category",
         action="append",
         default=None,
-        help="仅回填指定分类，可重复传入多次；默认按 002001009 -> 002001001 -> 002002001 顺序全跑",
+        help="仅回填指定分类，可重复传入多次；默认按 002001009 -> 002001010 -> 002001001 -> 002002001 顺序全跑",
     )
     parser.add_argument("--limit", type=int, default=None, help="每个分类限制回填条数")
     parser.add_argument("--batch-size", type=int, default=100, help="每批写库条数")

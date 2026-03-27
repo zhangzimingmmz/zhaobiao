@@ -40,7 +40,7 @@ RETRY_BACKOFF = 2.0
 # 请求超时（秒）
 REQUEST_TIMEOUT = 30
 
-# 三类业务的 categorynum 与 condition
+# 四类业务的 categorynum 与 condition
 CATEGORIES = {
     "002001009": {
         "name": "工程建设-招标计划",
@@ -48,6 +48,20 @@ CATEGORIES = {
             {
                 "fieldName": "categorynum",
                 "equal": "002001009",
+                "notEqual": None,
+                "equalList": None,
+                "notEqualList": None,
+                "isLike": True,
+                "likeType": 2,
+            }
+        ],
+    },
+    "002001010": {
+        "name": "工程建设-招标文件预公示",
+        "condition": [
+            {
+                "fieldName": "categorynum",
+                "equal": "002001010",
                 "notEqual": None,
                 "equalList": None,
                 "notEqualList": None,

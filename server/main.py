@@ -100,6 +100,7 @@ def _escape_like(value: str) -> str:
 # category_num → categoryName 映射（与《接口文档-前端与小程序》菜单对应）
 CATEGORY_NAMES = {
     "002001009": "招标计划",
+    "002001010": "招标文件预公示",
     "002001001": "招标公告",
     "002002001": "政府采购采购公告",
     "59": "采购意向公开",
@@ -423,7 +424,7 @@ def _application_snapshot(row: sqlite3.Row) -> dict[str, Any]:
 
 
 def _infer_favorites_type(category_num: Optional[str]) -> str:
-    if category_num in {"002001009", "002001001", "002002001"}:
+    if category_num in {"002001009", "002001010", "002001001", "002002001"}:
         return "construction"
     if category_num in {"59", "00101"}:
         return "government"

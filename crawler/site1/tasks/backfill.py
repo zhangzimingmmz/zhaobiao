@@ -3,7 +3,7 @@ SITE1 初始化采集任务（backfill）
 
 用法:
     python -m crawler.site1.tasks.backfill --start 2026-03-01 --end 2026-03-14
-    python -m crawler.site1.tasks.backfill --start 2026-03-01 --end 2026-03-14 --category 002001009
+    python -m crawler.site1.tasks.backfill --start 2026-03-01 --end 2026-03-14 --category 002001010
     python -m crawler.site1.tasks.backfill --start 2026-03-01 --end 2026-03-14 --db notices.db
 """
 from __future__ import annotations
@@ -94,7 +94,7 @@ def main() -> None:
     parser.add_argument(
         "--category",
         default=",".join(config.ALL_CATEGORY_IDS),
-        help="分类 ID，逗号分隔，默认全部三类",
+        help="分类 ID，逗号分隔，默认全部已配置分类（含招标文件预公示）",
     )
     parser.add_argument("--db", default="notices.db", help="SQLite DB 路径")
     args = parser.parse_args()

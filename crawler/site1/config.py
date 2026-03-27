@@ -107,8 +107,13 @@ CATEGORIES = {
     },
 }
 
-# 所有分类 ID 列表
-ALL_CATEGORY_IDS = list(CATEGORIES.keys())
+# 当前启用采集的分类 ID 列表
+# 说明：002002001（政府采购采购公告，网站一）保留历史查询能力，但不再参与后续采集。
+ALL_CATEGORY_IDS = [
+    "002001009",
+    "002001010",
+    "002001001",
+]
 
 # 网站一 Base URL（用于拼接 originUrl）
 BASE_URL = "https://ggzyjy.sc.gov.cn"

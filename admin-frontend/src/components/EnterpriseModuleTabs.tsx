@@ -12,7 +12,7 @@ export function EnterpriseModuleTabs({ active, navigate }: EnterpriseModuleTabsP
       <Segmented
         value={active}
         options={[
-          { label: "申请视图", value: "applications" },
+          { label: "申请列表", value: "applications" },
           { label: "企业档案", value: "companies" },
         ]}
         onChange={(value) =>

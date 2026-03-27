@@ -68,10 +68,10 @@ export function CompanyDetailPage({
   function handleDelete() {
     let confirmCreditCode = "";
     Modal.confirm({
-      title: "删除测试企业数据",
+      title: "删除企业数据",
       content: (
         <div style={{ display: "grid", gap: 12 }}>
-          <div>该操作会删除该企业账号及其全部申请记录，仅对测试数据开放。</div>
+          <div>该操作会删除该企业账号及其全部申请记录，删除后不可恢复。</div>
           <div>请输入该企业的统一社会信用代码完成确认。</div>
           <Input
             placeholder={item?.creditCode || "请输入统一社会信用代码"}
@@ -86,7 +86,7 @@ export function CompanyDetailPage({
       onOk: async () => {
         try {
           await deleteTestCompanyData(id, confirmCreditCode);
-          message.success("测试企业数据已删除");
+          message.success("企业数据已删除");
           navigate("/enterprise/companies");
         } catch (err) {
           const msg = err instanceof Error ? err.message : "删除失败";
@@ -115,9 +115,9 @@ export function CompanyDetailPage({
             {isSuperAdmin() ? (
               <Button onClick={() => setEditing(true)}>编辑档案</Button>
             ) : null}
-            {isSuperAdmin() && item.isTestData ? (
+            {isSuperAdmin() ? (
               <Button danger onClick={handleDelete}>
-                删除测试数据
+                删除企业
               </Button>
             ) : null}
           </div>
@@ -140,7 +140,6 @@ export function CompanyDetailPage({
           <Descriptions.Item label="最近审核时间">{item.auditAt || "-"}</Descriptions.Item>
           <Descriptions.Item label="审核人">{item.auditedByName || item.auditedBy || "-"}</Descriptions.Item>
           <Descriptions.Item label="驳回原因">{item.rejectReason || "-"}</Descriptions.Item>
-          <Descriptions.Item label="测试数据">{item.isTestData ? "是" : "否"}</Descriptions.Item>
         </Descriptions>
       </Card>
 

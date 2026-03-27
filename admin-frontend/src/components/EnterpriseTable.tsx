@@ -19,10 +19,10 @@ export function EnterpriseTable({ view, navigate }: EnterpriseTableProps) {
   function handleDelete(record: ReviewItem) {
     let confirmCreditCode = "";
     Modal.confirm({
-      title: "删除测试企业数据",
+      title: "删除企业数据",
       content: (
         <div style={{ display: "grid", gap: 12 }}>
-          <div>该操作会删除该企业账号及其全部申请记录，仅对测试数据开放。</div>
+          <div>该操作会删除该企业账号及其全部申请记录，删除后不可恢复。</div>
           <div>请输入该企业的统一社会信用代码完成确认。</div>
           <Input
             placeholder={record.creditCode || "请输入统一社会信用代码"}
@@ -37,7 +37,7 @@ export function EnterpriseTable({ view, navigate }: EnterpriseTableProps) {
       onOk: async () => {
         try {
           await deleteTestCompanyData(record.id, confirmCreditCode);
-          message.success("测试企业数据已删除");
+          message.success("企业数据已删除");
           await actionRef.current?.reload();
         } catch (err) {
           const msg = err instanceof Error ? err.message : "删除失败";
@@ -52,7 +52,7 @@ export function EnterpriseTable({ view, navigate }: EnterpriseTableProps) {
     showActions: true,
     timeMode: isApplications ? "created" : "audit",
     onDelete: isApplications ? undefined : handleDelete,
-    canDelete: (record) => !isApplications && isSuperAdmin() && Boolean(record.isTestData),
+    canDelete: () => !isApplications && isSuperAdmin(),
     onView: (record) =>
       navigate(
         isApplications

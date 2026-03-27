@@ -25,13 +25,11 @@ export type ReviewItem = {
   auditAt: string | null;
   auditedBy: string | null;
   auditedByName?: string | null;
-  isTestData?: boolean;
 };
 
 export type ReviewDetail = ReviewItem & {
   licenseImage: string;
   rejectReason: string | null;
-  isTestData?: boolean;
 };
 
 export type CompaniesData = {

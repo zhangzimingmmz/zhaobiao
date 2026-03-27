@@ -437,7 +437,6 @@ def _application_to_admin_payload(row: sqlite3.Row) -> dict[str, Any]:
         "auditAt": row["audit_at"],
         "auditedBy": audited_by,
         "auditedByName": _admin_display_name(audited_by),
-        "isTestData": _looks_like_test_company(row),
     }
 
 
@@ -1694,7 +1693,6 @@ def admin_company_detail(application_id: str, authorization: Optional[str] = Hea
 
         payload = _application_to_admin_payload(row)
         payload["licenseImage"] = row["license_image"]
-        payload["isTestData"] = _looks_like_test_company(row)
         return {"code": 200, "data": payload}
     finally:
         conn.close()
@@ -1772,7 +1770,7 @@ def admin_delete_test_company(
     req: DeleteTestCompanyRequest,
     authorization: Optional[str] = Header(None),
 ):
-    """超级管理员删除测试企业数据。"""
+    """超级管理员删除企业档案及关联账号数据。"""
     admin = get_admin_user(authorization)
     _require_super_admin(admin)
 
@@ -1787,8 +1785,6 @@ def admin_delete_test_company(
         ).fetchone()
         if not row:
             return {"code": 404, "message": "企业档案不存在"}
-        if not _looks_like_test_company(row):
-            return {"code": 400, "message": "仅允许删除识别为测试数据的企业档案"}
         if (req.confirmCreditCode or "").strip() != (row["credit_code"] or ""):
             return {"code": 400, "message": "统一社会信用代码确认不一致"}
 

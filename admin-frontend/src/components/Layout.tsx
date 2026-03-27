@@ -92,6 +92,14 @@ function EnvironmentChip() {
 }
 
 export function Layout({ path, title, subtitle, navigate, onLogout, children }: LayoutProps) {
+  const currentPath = (() => {
+    if (path.startsWith("/enterprise/")) return "/enterprise/applications";
+    if (path.startsWith("/articles/")) return "/articles";
+    if (path.startsWith("/settings/")) return "/settings";
+    if (path.startsWith("/runs/")) return "/runs";
+    return path;
+  })();
+
   const menuItemRender = (item: { path?: string }, defaultDom: React.ReactNode) => (
     <a
       onClick={(e) => {
@@ -107,7 +115,7 @@ export function Layout({ path, title, subtitle, navigate, onLogout, children }: 
   return (
     <ProLayout
       route={ROUTE}
-      location={{ pathname: path }}
+      location={{ pathname: currentPath }}
       menuItemRender={menuItemRender}
       logo={<Logo />}
       title=""

@@ -35,6 +35,7 @@
 ### 配置来源
 
 - 环境变量：`.env.backend`；API 需 `NOTICES_DB`、`JWT_SECRET`、`ADMIN_TOKEN` 等；admin-frontend 需 `ADMIN_FRONTEND_API_BASE` 指向 API 公网地址。
+- 管理员账号：`ADMIN_USERNAME` / `ADMIN_PASSWORD` 仍用于 `super_admin`；`ADMIN_REVIEWER1_*`、`ADMIN_REVIEWER2_*` 仅用于兼容导入旧 reviewer，日常新增/停用/改密改由后台“运营设置 -> 审核员管理”完成。
 - IP 池配置：`crawler/site2/config.py` 中的 `PROXY_EXTRACT_URL`、`PROXY_USER`、`PROXY_PASS` 用于配置青果短效代理的认证信息。
 
 ### 日志与监控
@@ -111,7 +112,7 @@
 
 1. 新采集记录应优先带 `_detail`；
 2. 历史记录若只存了列表层 `content`，需要额外跑 `detail_backfill`；
-3. 优先回填 `002001009`、`002001001`，最后再补 `002002001`。
+3. 工程建设已包含 `002001010`（招标文件预公示），建议按 `002001009`、`002001010`、`002001001` 的顺序回填，最后再补 `002002001`。
 
 推荐先做 dry-run：
 
@@ -124,19 +125,20 @@ python3 -m crawler.site1.tasks.detail_backfill \
   --max-failures 20
 ```
 
-正式回填工程建设两类：
+正式回填工程建设三类：
 
 ```bash
 python3 -m crawler.site1.tasks.detail_backfill \
   --db data/notices.db \
   --category 002001009 \
+  --category 002001010 \
   --category 002001001 \
   --batch-size 50 \
   --sleep-seconds 0.3 \
   --max-failures 20
 ```
 
-若要补齐 `site1` 三类：
+若要补齐 `site1` 四类：
 
 ```bash
 python3 -m crawler.site1.tasks.detail_backfill \
@@ -147,6 +149,22 @@ python3 -m crawler.site1.tasks.detail_backfill \
 ```
 
 执行前建议先备份生产 `notices.db`。
+
+### site1 新增“招标文件预公示”后如何验证
+
+若工程建设频道新增了“招标文件预公示”页签，建议先用受控 backfill 验证源站是否存在 `002001010` 数据，再决定是否执行历史补齐。
+
+先验证近一段时间：
+
+```bash
+python3 -m crawler.site1.tasks.backfill \
+  --start 2026-03-01 \
+  --end 2026-03-27 \
+  --category 002001010 \
+  --db /tmp/site1_preview_validation.db
+```
+
+验证通过后，如需补齐生产历史数据，可按业务上线时间缩小窗口执行正式回填；执行前务必先备份生产 `notices.db`，避免误把过大窗口直接打到生产库。
 
 ### notices 只保留最近 30 天
 

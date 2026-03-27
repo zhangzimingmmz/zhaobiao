@@ -72,3 +72,12 @@ export type CrawlRun = {
   upsertedCount: number | null;
   errorCount: number | null;
 };
+
+export type AdminReviewer = {
+  adminId: string;
+  username: string;
+  role: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+};

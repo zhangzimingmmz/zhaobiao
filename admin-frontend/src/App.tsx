@@ -12,6 +12,7 @@ import { RunDetailPage } from "./pages/RunDetailPage";
 import { ArticlesPage } from "./pages/ArticlesPage";
 import { ArticleEditorPage } from "./pages/ArticleEditorPage";
 import { SettingsPage } from "./pages/SettingsPage";
+import { ReviewerManagementPage } from "./pages/ReviewerManagementPage";
 import { clearAdminSession, getAdminToken } from "./lib/auth";
 
 type RouteMeta = {
@@ -140,7 +141,14 @@ export function App() {
       return {
         title: "运营设置",
         subtitle: "配置客服电话等小程序运营信息。",
-        content: <SettingsPage />,
+        content: <SettingsPage navigate={navigate} />,
+      };
+    }
+    if (path === "/settings/reviewers") {
+      return {
+        title: "审核员管理",
+        subtitle: "由超级管理员统一维护审核员账号。",
+        content: <ReviewerManagementPage navigate={navigate} />,
       };
     }
     if (path === "/runs") {

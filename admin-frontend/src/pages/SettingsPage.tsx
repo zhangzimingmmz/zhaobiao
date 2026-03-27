@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { Card, Button, Input, message } from "antd";
 import { getContactSettings, updateContactSettings } from "../lib/api";
+import { isSuperAdmin } from "../lib/auth";
 
-export function SettingsPage() {
+export function SettingsPage({ navigate }: { navigate: (path: string) => void }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [supportPhone, setSupportPhone] = useState("");
@@ -37,22 +38,35 @@ export function SettingsPage() {
   };
 
   return (
-    <Card title="客服电话设置" loading={loading}>
-      <div style={{ maxWidth: 520 }}>
-        <div style={{ marginBottom: 12, color: "#595959", fontSize: 14 }}>
-          小程序“我的 &gt; 联系客服”会读取这里配置的号码，并支持用户直接拨打。
+    <div style={{ display: "grid", gap: 16 }}>
+      <Card title="客服电话设置" loading={loading}>
+        <div style={{ maxWidth: 520 }}>
+          <div style={{ marginBottom: 12, color: "#595959", fontSize: 14 }}>
+            小程序“我的 &gt; 联系客服”会读取这里配置的号码，并支持用户直接拨打。
+          </div>
+          <Input
+            value={supportPhone}
+            onChange={(event) => setSupportPhone(event.target.value)}
+            placeholder="请输入客服电话，例如 400-123-4567"
+            maxLength={32}
+            style={{ marginBottom: 16 }}
+          />
+          <Button type="primary" onClick={handleSave} loading={saving}>
+            保存
+          </Button>
         </div>
-        <Input
-          value={supportPhone}
-          onChange={(event) => setSupportPhone(event.target.value)}
-          placeholder="请输入客服电话，例如 400-123-4567"
-          maxLength={32}
-          style={{ marginBottom: 16 }}
-        />
-        <Button type="primary" onClick={handleSave} loading={saving}>
-          保存
-        </Button>
-      </div>
-    </Card>
+      </Card>
+
+      {isSuperAdmin() ? (
+        <Card title="审核员管理">
+          <div style={{ maxWidth: 640 }}>
+            <div style={{ marginBottom: 12, color: "#595959", fontSize: 14 }}>
+              超级管理员可在这里统一管理审核员账号，包括新增、重置密码和启用/停用。
+            </div>
+            <Button onClick={() => navigate("/settings/reviewers")}>进入审核员管理</Button>
+          </div>
+        </Card>
+      ) : null}
+    </div>
   );
 }

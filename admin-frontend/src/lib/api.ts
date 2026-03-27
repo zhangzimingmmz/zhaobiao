@@ -1,5 +1,5 @@
 import { getAdminToken } from "./auth";
-import type { ApiResponse, ReviewDetail } from "./types";
+import type { AdminReviewer, ApiResponse, ReviewDetail } from "./types";
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? "http://127.0.0.1:8000";
 
@@ -51,6 +51,40 @@ export async function updateContactSettings(supportPhone: string): Promise<Conta
   return apiRequest<ContactSettings>("/api/admin/app-settings/contact", {
     method: "PUT",
     body: { supportPhone },
+  });
+}
+
+export async function getAdminReviewers(): Promise<{ total: number; list: AdminReviewer[] }> {
+  return apiRequest<{ total: number; list: AdminReviewer[] }>("/api/admin/reviewers");
+}
+
+export async function createAdminReviewer(input: {
+  username: string;
+  password: string;
+}): Promise<AdminReviewer> {
+  return apiRequest<AdminReviewer>("/api/admin/reviewers", {
+    method: "POST",
+    body: input,
+  });
+}
+
+export async function resetAdminReviewerPassword(
+  adminId: string,
+  password: string,
+): Promise<AdminReviewer> {
+  return apiRequest<AdminReviewer>(`/api/admin/reviewers/${adminId}/reset-password`, {
+    method: "POST",
+    body: { password },
+  });
+}
+
+export async function updateAdminReviewerStatus(
+  adminId: string,
+  status: "active" | "disabled",
+): Promise<AdminReviewer> {
+  return apiRequest<AdminReviewer>(`/api/admin/reviewers/${adminId}/status`, {
+    method: "POST",
+    body: { status },
   });
 }
 

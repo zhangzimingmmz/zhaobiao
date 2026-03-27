@@ -111,13 +111,14 @@ CATEGORY_NAMES = {
     "00101": "采购公告",
 }
 
-ADMIN_ACCOUNTS = [
-    {
-        "adminId": "super_admin",
-        "username": ADMIN_USERNAME,
-        "password": ADMIN_PASSWORD,
-        "role": "super_admin",
-    },
+SUPER_ADMIN_ACCOUNT = {
+    "adminId": "super_admin",
+    "username": ADMIN_USERNAME,
+    "password": ADMIN_PASSWORD,
+    "role": "super_admin",
+}
+
+BOOTSTRAP_REVIEWER_ACCOUNTS = [
     {
         "adminId": "reviewer_1",
         "username": ADMIN_REVIEWER1_USERNAME,
@@ -131,8 +132,6 @@ ADMIN_ACCOUNTS = [
         "role": "reviewer",
     },
 ]
-ADMIN_ACCOUNTS_BY_USERNAME = {item["username"]: item for item in ADMIN_ACCOUNTS if item["username"]}
-ADMIN_ACCOUNTS_BY_ID = {item["adminId"]: item for item in ADMIN_ACCOUNTS}
 
 # ────────────────────────────────────────────────────────────
 # 数据库初始化：建表 DDL（幂等）
@@ -214,6 +213,16 @@ CREATE TABLE IF NOT EXISTS app_settings (
     value           TEXT,
     updated_at      TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS admin_users (
+    id              TEXT PRIMARY KEY,
+    username        TEXT NOT NULL UNIQUE,
+    password_hash   TEXT NOT NULL,
+    role            TEXT NOT NULL,
+    status          TEXT NOT NULL DEFAULT 'active',
+    created_at      TEXT NOT NULL,
+    updated_at      TEXT NOT NULL
+);
 """
 
 
@@ -264,6 +273,13 @@ def _init_db() -> None:
         conn.execute(
             "CREATE UNIQUE INDEX IF NOT EXISTS idx_user_favorites_info_unique ON user_favorites(user_id, target_type, target_id) WHERE target_type = 'info'"
         )
+        conn.execute(
+            "CREATE UNIQUE INDEX IF NOT EXISTS idx_admin_users_username_unique ON admin_users(username)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_admin_users_role_status ON admin_users(role, status, updated_at DESC)"
+        )
+        _bootstrap_reviewer_accounts(conn)
         conn.commit()
     finally:
         conn.close()
@@ -296,6 +312,95 @@ def _set_app_setting(conn: sqlite3.Connection, key: str, value: str) -> None:
              updated_at = excluded.updated_at""",
         (key, value.strip(), now),
     )
+
+
+def _normalize_admin_username(value: str) -> str:
+    username = (value or "").strip()
+    if not username:
+        raise HTTPException(status_code=200, detail={"code": 400, "message": "用户名不能为空"})
+    if len(username) < 3 or len(username) > 32:
+        raise HTTPException(status_code=200, detail={"code": 400, "message": "用户名长度需在 3-32 位之间"})
+    if not re.fullmatch(r"[A-Za-z0-9_.-]{3,32}", username):
+        raise HTTPException(status_code=200, detail={"code": 400, "message": "用户名仅支持字母、数字、点、下划线和中划线"})
+    return username
+
+
+def _normalize_admin_password(value: str) -> str:
+    password = (value or "").strip()
+    if len(password) < 8 or len(password) > 128:
+        raise HTTPException(status_code=200, detail={"code": 400, "message": "密码长度需在 8-128 位之间"})
+    return password
+
+
+def _should_bootstrap_reviewer(account: dict[str, str]) -> bool:
+    username = (account.get("username") or "").strip()
+    password = (account.get("password") or "").strip()
+    if not username or not password:
+        return False
+    if password.startswith("replace-with-"):
+        return False
+    return True
+
+
+def _bootstrap_reviewer_accounts(conn: sqlite3.Connection) -> None:
+    now = _now_iso()
+    for account in BOOTSTRAP_REVIEWER_ACCOUNTS:
+        if not _should_bootstrap_reviewer(account):
+            continue
+        existing_by_id = conn.execute(
+            "SELECT id FROM admin_users WHERE id = ? LIMIT 1",
+            (account["adminId"],),
+        ).fetchone()
+        if existing_by_id:
+            continue
+        existing_by_username = conn.execute(
+            "SELECT id FROM admin_users WHERE username = ? LIMIT 1",
+            ((account["username"] or "").strip(),),
+        ).fetchone()
+        if existing_by_username:
+            continue
+        conn.execute(
+            """INSERT INTO admin_users (id, username, password_hash, role, status, created_at, updated_at)
+               VALUES (?, ?, ?, 'reviewer', 'active', ?, ?)""",
+            (
+                account["adminId"],
+                _normalize_admin_username(account["username"]),
+                hash_password(_normalize_admin_password(account["password"])),
+                now,
+                now,
+            ),
+        )
+
+
+def _serialize_admin_user(row: sqlite3.Row) -> dict[str, Any]:
+    return {
+        "adminId": row["id"],
+        "username": row["username"],
+        "role": row["role"],
+        "status": row["status"],
+        "createdAt": row["created_at"],
+        "updatedAt": row["updated_at"],
+    }
+
+
+def _get_admin_db_account_by_id(conn: sqlite3.Connection, admin_id: Optional[str]) -> Optional[sqlite3.Row]:
+    if not admin_id:
+        return None
+    return conn.execute(
+        """SELECT id, username, password_hash, role, status, created_at, updated_at
+           FROM admin_users
+           WHERE id = ? LIMIT 1""",
+        (admin_id,),
+    ).fetchone()
+
+
+def _get_admin_db_account_by_username(conn: sqlite3.Connection, username: str) -> Optional[sqlite3.Row]:
+    return conn.execute(
+        """SELECT id, username, password_hash, role, status, created_at, updated_at
+           FROM admin_users
+           WHERE username = ? LIMIT 1""",
+        (username,),
+    ).fetchone()
 
 
 @app.on_event("startup")
@@ -377,12 +482,27 @@ def get_admin_user(authorization: Optional[str] = Header(None)) -> dict:
         admin_id = payload.get("adminId") or ("super_admin" if role == "super_admin" else "")
         if admin_id == "admin":
             admin_id = "super_admin"
-        username = payload.get("username") or _admin_username_by_id(admin_id) or ADMIN_USERNAME
-        return {
-            "role": role,
-            "adminId": admin_id,
-            "username": username,
-        }
+        if role == "super_admin":
+            return {
+                "role": "super_admin",
+                "adminId": "super_admin",
+                "username": payload.get("username") or ADMIN_USERNAME,
+            }
+        conn = _get_conn()
+        try:
+            row = _get_admin_db_account_by_id(conn, admin_id)
+        finally:
+            conn.close()
+        if row and row["role"] == "reviewer" and row["status"] == "active":
+            return {
+                "role": "reviewer",
+                "adminId": row["id"],
+                "username": row["username"],
+            }
+        raise HTTPException(
+            status_code=200,
+            detail={"code": 403, "message": "审核员账号不可用"},
+        )
 
     raise HTTPException(
         status_code=200,
@@ -397,8 +517,14 @@ def _now_iso() -> str:
 def _admin_username_by_id(admin_id: Optional[str]) -> Optional[str]:
     if not admin_id:
         return None
-    account = ADMIN_ACCOUNTS_BY_ID.get(admin_id)
-    return account["username"] if account else admin_id
+    if admin_id in {"admin", "super_admin"}:
+        return ADMIN_USERNAME
+    conn = _get_conn()
+    try:
+        row = _get_admin_db_account_by_id(conn, admin_id)
+        return row["username"] if row else admin_id
+    finally:
+        conn.close()
 
 
 def _admin_display_name(admin_id: Optional[str], username: Optional[str] = None) -> Optional[str]:
@@ -415,6 +541,7 @@ def _require_super_admin(admin: dict) -> None:
 
 def _application_to_admin_payload(row: sqlite3.Row) -> dict[str, Any]:
     audited_by = row["audited_by"]
+    audited_by_username = row["audited_by_username"] if "audited_by_username" in row.keys() else None
     return {
         "id": row["id"],
         "userId": row["user_id"],
@@ -436,7 +563,7 @@ def _application_to_admin_payload(row: sqlite3.Row) -> dict[str, Any]:
         "updatedAt": row["updated_at"],
         "auditAt": row["audit_at"],
         "auditedBy": audited_by,
-        "auditedByName": _admin_display_name(audited_by),
+        "auditedByName": _admin_display_name(audited_by, audited_by_username),
     }
 
 
@@ -1116,15 +1243,45 @@ class AdminLoginRequest(BaseModel):
 
 @app.post("/api/admin/login")
 def admin_login(req: AdminLoginRequest):
-    """固定账号密码管理员登录，返回管理员 JWT。"""
-    account = ADMIN_ACCOUNTS_BY_USERNAME.get(req.username)
-    if not account or req.password != account["password"]:
+    """管理员登录，返回管理员 JWT。"""
+    username = (req.username or "").strip()
+    password = req.password or ""
+
+    if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+        token = create_access_token(
+            {
+                "role": SUPER_ADMIN_ACCOUNT["role"],
+                "adminId": SUPER_ADMIN_ACCOUNT["adminId"],
+                "username": SUPER_ADMIN_ACCOUNT["username"],
+            },
+            expires_days=3650,
+        )
+        return {
+            "code": 200,
+            "data": {
+                "token": token,
+                "tokenType": "Bearer",
+                "username": SUPER_ADMIN_ACCOUNT["username"],
+                "adminId": SUPER_ADMIN_ACCOUNT["adminId"],
+                "role": SUPER_ADMIN_ACCOUNT["role"],
+            },
+        }
+
+    conn = _get_conn()
+    try:
+        account = _get_admin_db_account_by_username(conn, username)
+    finally:
+        conn.close()
+
+    if not account or account["role"] != "reviewer" or not verify_password(password, account["password_hash"]):
         return {"code": 400, "message": "账号或密码错误"}
+    if account["status"] != "active":
+        return {"code": 403, "message": "账号已停用"}
 
     token = create_access_token(
         {
             "role": account["role"],
-            "adminId": account["adminId"],
+            "adminId": account["id"],
             "username": account["username"],
         },
         expires_days=3650,
@@ -1135,7 +1292,7 @@ def admin_login(req: AdminLoginRequest):
             "token": token,
             "tokenType": "Bearer",
             "username": account["username"],
-            "adminId": account["adminId"],
+            "adminId": account["id"],
             "role": account["role"],
         },
     }
@@ -1402,9 +1559,11 @@ def admin_review_list(
                        ea.legal_person_phone, ea.business_scope, ea.business_address,
                        ea.status, ea.reject_reason,
                        ea.created_at, ea.updated_at, ea.audit_at, ea.audited_by,
+                       au.username AS audited_by_username,
                        u.mobile, u.username, u.account_status
                 FROM enterprise_applications ea
                 LEFT JOIN users u ON ea.user_id = u.id
+                LEFT JOIN admin_users au ON ea.audited_by = au.id
                 WHERE {where} {order}""",
             params,
         ).fetchall()
@@ -1424,9 +1583,10 @@ def admin_review_detail(application_id: str, authorization: Optional[str] = Head
     conn = _get_conn()
     try:
         row = conn.execute(
-            """SELECT ea.*, u.mobile, u.username, u.account_status
+            """SELECT ea.*, au.username AS audited_by_username, u.mobile, u.username, u.account_status
                FROM enterprise_applications ea
                LEFT JOIN users u ON ea.user_id = u.id
+               LEFT JOIN admin_users au ON ea.audited_by = au.id
                WHERE ea.id = ? LIMIT 1""",
             (application_id,),
         ).fetchone()
@@ -1651,9 +1811,11 @@ def admin_company_list(
                        ea.contact_phone, ea.legal_person_name, ea.legal_person_phone,
                        ea.business_scope, ea.business_address, ea.status, ea.reject_reason,
                        ea.created_at, ea.updated_at, ea.audit_at, ea.audited_by,
+                       au.username AS audited_by_username,
                        u.mobile, u.username, u.account_status
                 FROM enterprise_applications ea
                 LEFT JOIN users u ON ea.user_id = u.id
+                LEFT JOIN admin_users au ON ea.audited_by = au.id
                 WHERE ea.id IN (
                     SELECT id FROM enterprise_applications ea1
                     WHERE ea1.created_at = (
@@ -1681,9 +1843,10 @@ def admin_company_detail(application_id: str, authorization: Optional[str] = Hea
     conn = _get_conn()
     try:
         row = conn.execute(
-            """SELECT ea.*, u.mobile, u.username, u.account_status
+            """SELECT ea.*, au.username AS audited_by_username, u.mobile, u.username, u.account_status
                FROM enterprise_applications ea
                LEFT JOIN users u ON ea.user_id = u.id
+               LEFT JOIN admin_users au ON ea.audited_by = au.id
                WHERE ea.id = ? LIMIT 1""",
             (application_id,),
         ).fetchone()
@@ -1950,6 +2113,135 @@ def get_public_contact_settings():
                 "supportPhone": _get_app_setting(conn, "support_phone"),
             },
         }
+    finally:
+        conn.close()
+
+
+class AdminReviewerCreateRequest(BaseModel):
+    username: str
+    password: str
+
+
+class AdminReviewerResetPasswordRequest(BaseModel):
+    password: str
+
+
+class AdminReviewerStatusRequest(BaseModel):
+    status: str
+
+
+@app.get("/api/admin/reviewers")
+def admin_reviewer_list(authorization: Optional[str] = Header(None)):
+    """超级管理员查看审核员账号列表。"""
+    admin = get_admin_user(authorization)
+    _require_super_admin(admin)
+    conn = _get_conn()
+    try:
+        rows = conn.execute(
+            """SELECT id, username, role, status, created_at, updated_at
+               FROM admin_users
+               WHERE role = 'reviewer'
+               ORDER BY CASE status WHEN 'active' THEN 0 ELSE 1 END, updated_at DESC, created_at DESC"""
+        ).fetchall()
+        return {
+            "code": 200,
+            "data": {
+                "total": len(rows),
+                "list": [_serialize_admin_user(row) for row in rows],
+            },
+        }
+    finally:
+        conn.close()
+
+
+@app.post("/api/admin/reviewers")
+def admin_reviewer_create(
+    req: AdminReviewerCreateRequest,
+    authorization: Optional[str] = Header(None),
+):
+    """超级管理员创建审核员账号。"""
+    admin = get_admin_user(authorization)
+    _require_super_admin(admin)
+
+    username = _normalize_admin_username(req.username)
+    password = _normalize_admin_password(req.password)
+    if username == ADMIN_USERNAME:
+        return {"code": 400, "message": "该用户名已被占用"}
+
+    now = _now_iso()
+    reviewer_id = f"reviewer_{uuid.uuid4().hex[:12]}"
+    conn = _get_conn()
+    try:
+        exists = _get_admin_db_account_by_username(conn, username)
+        if exists:
+            return {"code": 400, "message": "该用户名已被占用"}
+        conn.execute(
+            """INSERT INTO admin_users (id, username, password_hash, role, status, created_at, updated_at)
+               VALUES (?, ?, ?, 'reviewer', 'active', ?, ?)""",
+            (reviewer_id, username, hash_password(password), now, now),
+        )
+        conn.commit()
+        row = _get_admin_db_account_by_id(conn, reviewer_id)
+        return {"code": 200, "data": _serialize_admin_user(row)}
+    finally:
+        conn.close()
+
+
+@app.post("/api/admin/reviewers/{admin_id}/reset-password")
+def admin_reviewer_reset_password(
+    admin_id: str,
+    req: AdminReviewerResetPasswordRequest,
+    authorization: Optional[str] = Header(None),
+):
+    """超级管理员重置审核员密码。"""
+    admin = get_admin_user(authorization)
+    _require_super_admin(admin)
+
+    password = _normalize_admin_password(req.password)
+    now = _now_iso()
+    conn = _get_conn()
+    try:
+        row = _get_admin_db_account_by_id(conn, admin_id)
+        if not row or row["role"] != "reviewer":
+            return {"code": 404, "message": "审核员账号不存在"}
+        conn.execute(
+            "UPDATE admin_users SET password_hash = ?, updated_at = ? WHERE id = ?",
+            (hash_password(password), now, admin_id),
+        )
+        conn.commit()
+        updated = _get_admin_db_account_by_id(conn, admin_id)
+        return {"code": 200, "data": _serialize_admin_user(updated)}
+    finally:
+        conn.close()
+
+
+@app.post("/api/admin/reviewers/{admin_id}/status")
+def admin_reviewer_update_status(
+    admin_id: str,
+    req: AdminReviewerStatusRequest,
+    authorization: Optional[str] = Header(None),
+):
+    """超级管理员启用或禁用审核员账号。"""
+    admin = get_admin_user(authorization)
+    _require_super_admin(admin)
+
+    status = (req.status or "").strip().lower()
+    if status not in {"active", "disabled"}:
+        return {"code": 400, "message": "状态仅支持 active 或 disabled"}
+
+    now = _now_iso()
+    conn = _get_conn()
+    try:
+        row = _get_admin_db_account_by_id(conn, admin_id)
+        if not row or row["role"] != "reviewer":
+            return {"code": 404, "message": "审核员账号不存在"}
+        conn.execute(
+            "UPDATE admin_users SET status = ?, updated_at = ? WHERE id = ?",
+            (status, now, admin_id),
+        )
+        conn.commit()
+        updated = _get_admin_db_account_by_id(conn, admin_id)
+        return {"code": 200, "data": _serialize_admin_user(updated)}
     finally:
         conn.close()
 

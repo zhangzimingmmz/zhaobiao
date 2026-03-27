@@ -2,6 +2,15 @@ export type ApiResponse<T> = {
   code: number;
   message?: string;
   data?: T;
+  detail?:
+    | string
+    | {
+        code?: number;
+        message?: string;
+      }
+    | Array<{
+        msg?: string;
+      }>;
 };
 
 export type ReviewItem = {

@@ -12,6 +12,8 @@ import type { AdminReviewer } from "../lib/types";
 import { isSuperAdmin } from "../lib/auth";
 import { UnauthorizedState } from "../components/States";
 
+const PASSWORD_LENGTH_RULE = { min: 8, max: 128, message: "密码长度需在 8-128 位之间" };
+
 type ReviewerManagementPageProps = {
   navigate: (path: string) => void;
 };
@@ -184,7 +186,10 @@ export function ReviewerManagementPage({ navigate }: ReviewerManagementPageProps
           <Form.Item
             name="password"
             label="初始密码"
-            rules={[{ required: true, message: "请输入初始密码" }]}
+            rules={[
+              { required: true, message: "请输入初始密码" },
+              PASSWORD_LENGTH_RULE,
+            ]}
           >
             <Input.Password placeholder="至少 8 位" maxLength={128} />
           </Form.Item>
@@ -206,7 +211,10 @@ export function ReviewerManagementPage({ navigate }: ReviewerManagementPageProps
           <Form.Item
             name="password"
             label="新密码"
-            rules={[{ required: true, message: "请输入新密码" }]}
+            rules={[
+              { required: true, message: "请输入新密码" },
+              PASSWORD_LENGTH_RULE,
+            ]}
           >
             <Input.Password placeholder="至少 8 位" maxLength={128} />
           </Form.Item>

@@ -32,9 +32,40 @@ export async function apiRequest<T>(
 
   const payload = (await response.json()) as ApiResponse<T>;
   if (payload.code !== 200 || payload.data === undefined) {
-    throw new Error(payload.message ?? "请求失败");
+    throw new Error(extractApiErrorMessage(payload));
   }
   return payload.data;
+}
+
+function extractApiErrorMessage(payload: ApiResponse<unknown>): string {
+  if (typeof payload.message === "string" && payload.message.trim()) {
+    return payload.message;
+  }
+
+  if (typeof payload.detail === "string" && payload.detail.trim()) {
+    return payload.detail;
+  }
+
+  if (Array.isArray(payload.detail)) {
+    const firstError = payload.detail.find(
+      (item) => typeof item?.msg === "string" && item.msg.trim(),
+    );
+    if (firstError?.msg) {
+      return firstError.msg;
+    }
+  }
+
+  if (
+    payload.detail &&
+    typeof payload.detail === "object" &&
+    !Array.isArray(payload.detail) &&
+    typeof payload.detail.message === "string" &&
+    payload.detail.message.trim()
+  ) {
+    return payload.detail.message;
+  }
+
+  return "请求失败";
 }
 
 export const apiBase = API_BASE;

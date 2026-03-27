@@ -12,7 +12,7 @@ import { RunDetailPage } from "./pages/RunDetailPage";
 import { ArticlesPage } from "./pages/ArticlesPage";
 import { ArticleEditorPage } from "./pages/ArticleEditorPage";
 import { SettingsPage } from "./pages/SettingsPage";
-import { getAdminToken } from "./lib/auth";
+import { clearAdminSession, getAdminToken } from "./lib/auth";
 
 type RouteMeta = {
   title: string;
@@ -178,7 +178,17 @@ export function App() {
   if (!route) return null;
 
   return (
-    <Layout path={path} title={route.title} subtitle={route.subtitle} navigate={navigate}>
+    <Layout
+      path={path}
+      title={route.title}
+      subtitle={route.subtitle}
+      navigate={navigate}
+      onLogout={() => {
+        clearAdminSession();
+        setAuthed(false);
+        navigate("/login");
+      }}
+    >
       {route.content}
     </Layout>
   );

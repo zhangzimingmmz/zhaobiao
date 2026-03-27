@@ -1,5 +1,6 @@
 import React from "react";
 import { ProLayout } from "@ant-design/pro-components";
+import { Button } from "antd";
 import { getAdminRole, getAdminUsername } from "../lib/auth";
 
 const ROUTE = {
@@ -19,6 +20,7 @@ type LayoutProps = {
   title: string;
   subtitle?: string;
   navigate: (path: string) => void;
+  onLogout: () => void;
   children: React.ReactNode;
 };
 
@@ -89,7 +91,7 @@ function EnvironmentChip() {
   );
 }
 
-export function Layout({ path, title, subtitle, navigate, children }: LayoutProps) {
+export function Layout({ path, title, subtitle, navigate, onLogout, children }: LayoutProps) {
   const menuItemRender = (item: { path?: string }, defaultDom: React.ReactNode) => (
     <a
       onClick={(e) => {
@@ -116,6 +118,7 @@ export function Layout({ path, title, subtitle, navigate, children }: LayoutProp
         <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
           <EnvironmentChip />
           <OperatorChip />
+          <Button onClick={onLogout}>退出登录</Button>
         </div>
       )}
       layout="mix"

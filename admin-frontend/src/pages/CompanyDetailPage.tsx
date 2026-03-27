@@ -66,16 +66,17 @@ export function CompanyDetailPage({
   }
 
   function handleDelete() {
-    let confirmText = "";
+    let confirmCreditCode = "";
     Modal.confirm({
       title: "删除测试企业数据",
       content: (
         <div style={{ display: "grid", gap: 12 }}>
           <div>该操作会删除该企业账号及其全部申请记录，仅对测试数据开放。</div>
+          <div>请输入该企业的统一社会信用代码完成确认。</div>
           <Input
-            placeholder="请输入 DELETE 确认"
+            placeholder={item?.creditCode || "请输入统一社会信用代码"}
             onChange={(event) => {
-              confirmText = event.target.value;
+              confirmCreditCode = event.target.value;
             }}
           />
         </div>
@@ -84,7 +85,7 @@ export function CompanyDetailPage({
       okButtonProps: { danger: true },
       onOk: async () => {
         try {
-          await deleteTestCompanyData(id, confirmText);
+          await deleteTestCompanyData(id, confirmCreditCode);
           message.success("测试企业数据已删除");
           navigate("/enterprise/companies");
         } catch (err) {

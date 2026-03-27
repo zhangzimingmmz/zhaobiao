@@ -437,6 +437,7 @@ def _application_to_admin_payload(row: sqlite3.Row) -> dict[str, Any]:
         "auditAt": row["audit_at"],
         "auditedBy": audited_by,
         "auditedByName": _admin_display_name(audited_by),
+        "isTestData": _looks_like_test_company(row),
     }
 
 
@@ -1762,7 +1763,7 @@ def admin_company_update(
 
 
 class DeleteTestCompanyRequest(BaseModel):
-    confirmText: str
+    confirmCreditCode: str
 
 
 @app.post("/api/admin/companies/{application_id}/delete-test-data")
@@ -1774,9 +1775,6 @@ def admin_delete_test_company(
     """超级管理员删除测试企业数据。"""
     admin = get_admin_user(authorization)
     _require_super_admin(admin)
-
-    if req.confirmText.strip().upper() != "DELETE":
-        return {"code": 400, "message": "请在确认框中输入 DELETE"}
 
     conn = _get_conn()
     try:
@@ -1791,6 +1789,8 @@ def admin_delete_test_company(
             return {"code": 404, "message": "企业档案不存在"}
         if not _looks_like_test_company(row):
             return {"code": 400, "message": "仅允许删除识别为测试数据的企业档案"}
+        if (req.confirmCreditCode or "").strip() != (row["credit_code"] or ""):
+            return {"code": 400, "message": "统一社会信用代码确认不一致"}
 
         conn.execute("DELETE FROM user_favorites WHERE user_id = ?", (row["user_id"],))
         conn.execute("DELETE FROM enterprise_applications WHERE user_id = ?", (row["user_id"],))

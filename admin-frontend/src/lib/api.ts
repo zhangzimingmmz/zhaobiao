@@ -84,7 +84,7 @@ export async function updateCompanyDetail(id: string, data: CompanyUpdateInput):
   });
 }
 
-export async function deleteTestCompanyData(id: string, confirmText: string): Promise<{
+export async function deleteTestCompanyData(id: string, confirmCreditCode: string): Promise<{
   applicationId: string;
   userId: string;
   deletedBy: string;
@@ -97,7 +97,7 @@ export async function deleteTestCompanyData(id: string, confirmText: string): Pr
     deletedByName: string;
   }>(`/api/admin/companies/${id}/delete-test-data`, {
     method: "POST",
-    body: { confirmText },
+    body: { confirmCreditCode },
   });
 }
 

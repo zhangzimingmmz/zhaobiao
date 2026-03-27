@@ -1,8 +1,11 @@
-import React from "react";
+import React, { useRef } from "react";
 import { ProTable } from "@ant-design/pro-components";
-import { apiRequest } from "../lib/api";
+import type { ActionType } from "@ant-design/pro-components";
+import { Input, Modal, message } from "antd";
+import { apiRequest, deleteTestCompanyData } from "../lib/api";
 import { createEnterpriseColumns } from "./EnterpriseColumns";
 import type { CompaniesData, ReviewItem, ReviewsData } from "../lib/types";
+import { isSuperAdmin } from "../lib/auth";
 
 type EnterpriseTableProps = {
   view: "applications" | "companies";
@@ -11,9 +14,45 @@ type EnterpriseTableProps = {
 
 export function EnterpriseTable({ view, navigate }: EnterpriseTableProps) {
   const isApplications = view === "applications";
+  const actionRef = useRef<ActionType>();
+
+  function handleDelete(record: ReviewItem) {
+    let confirmCreditCode = "";
+    Modal.confirm({
+      title: "删除测试企业数据",
+      content: (
+        <div style={{ display: "grid", gap: 12 }}>
+          <div>该操作会删除该企业账号及其全部申请记录，仅对测试数据开放。</div>
+          <div>请输入该企业的统一社会信用代码完成确认。</div>
+          <Input
+            placeholder={record.creditCode || "请输入统一社会信用代码"}
+            onChange={(event) => {
+              confirmCreditCode = event.target.value;
+            }}
+          />
+        </div>
+      ),
+      okText: "确认删除",
+      okButtonProps: { danger: true },
+      onOk: async () => {
+        try {
+          await deleteTestCompanyData(record.id, confirmCreditCode);
+          message.success("测试企业数据已删除");
+          await actionRef.current?.reload();
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : "删除失败";
+          message.error(msg);
+          throw err;
+        }
+      },
+    });
+  }
+
   const columns = createEnterpriseColumns({
     showActions: true,
     timeMode: isApplications ? "created" : "audit",
+    onDelete: isApplications ? undefined : handleDelete,
+    canDelete: (record) => !isApplications && isSuperAdmin() && Boolean(record.isTestData),
     onView: (record) =>
       navigate(
         isApplications
@@ -24,6 +63,7 @@ export function EnterpriseTable({ view, navigate }: EnterpriseTableProps) {
 
   return (
     <ProTable<ReviewItem>
+      actionRef={actionRef}
       columns={columns}
       request={async (params) => {
         const status = params.status;

@@ -7,13 +7,15 @@ import { reviewStatusLabel, reviewStatusBadgeClass } from "../lib/statusLabels";
 export interface EnterpriseColumnsOptions {
   showActions?: boolean;
   onView?: (record: ReviewItem) => void;
+  onDelete?: (record: ReviewItem) => void;
+  canDelete?: (record: ReviewItem) => boolean;
   timeMode?: "created" | "audit";
 }
 
 export const createEnterpriseColumns = (
   options: EnterpriseColumnsOptions = {}
 ): ProColumns<ReviewItem>[] => {
-  const { showActions = false, onView, timeMode = "audit" } = options;
+  const { showActions = false, onView, onDelete, canDelete, timeMode = "audit" } = options;
 
   const columns: ProColumns<ReviewItem>[] = [
     {
@@ -97,11 +99,21 @@ export const createEnterpriseColumns = (
       title: "操作",
       key: "action",
       valueType: "option",
-      render: (_, r) => (
-        <Button type="link" size="small" onClick={() => onView(r)}>
-          查看
-        </Button>
-      ),
+      render: (_, r) => {
+        const items = [
+          <Button key="view" type="link" size="small" onClick={() => onView(r)}>
+            查看
+          </Button>,
+        ];
+        if (onDelete && (!canDelete || canDelete(r))) {
+          items.push(
+            <Button key="delete" type="link" danger size="small" onClick={() => onDelete(r)}>
+              删除
+            </Button>
+          );
+        }
+        return items;
+      },
     });
   }
 

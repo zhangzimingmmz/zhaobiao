@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { message, Button, Input, Modal } from "antd";
-import { apiRequest } from "../lib/api";
+import { apiRequest, invalidateReview } from "../lib/api";
 import type { ReviewDetail } from "../lib/types";
+import { EnterpriseModuleTabs } from "../components/EnterpriseModuleTabs";
 import { ErrorState, LoadingState } from "../components/States";
 import { reviewStatusLabel, reviewStatusBadgeClass } from "../lib/statusLabels";
+import { isSuperAdmin } from "../lib/auth";
 
 export function ReviewDetailPage({
   id,
@@ -70,7 +72,44 @@ export function ReviewDetailPage({
     });
   }
 
-  const isFinal = item?.status === "approved" || item?.status === "rejected";
+  function invalidateApplication() {
+    let reason = "管理员作废申请";
+    Modal.confirm({
+      title: "作废申请",
+      content: (
+        <div style={{ display: "grid", gap: 12 }}>
+          <div>该操作仅限超级管理员，用于异常或测试申请清理。</div>
+          <Input.TextArea
+            rows={3}
+            defaultValue={reason}
+            onChange={(event) => {
+              reason = event.target.value;
+            }}
+          />
+        </div>
+      ),
+      okButtonProps: { danger: true },
+      okText: "确认作废",
+      onOk: async () => {
+        setSubmitting(true);
+        setError("");
+        try {
+          await invalidateReview(id, reason);
+          message.success("申请已作废");
+          await load();
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : "作废失败";
+          setError(msg);
+          message.error(msg);
+          throw err;
+        } finally {
+          setSubmitting(false);
+        }
+      },
+    });
+  }
+
+  const isFinal = item?.status === "approved" || item?.status === "rejected" || item?.status === "invalidated";
 
   if (loading) return <LoadingState />;
   if (error && !item) return <ErrorState error={error} />;
@@ -78,6 +117,7 @@ export function ReviewDetailPage({
 
   return (
     <div className="stack">
+      <EnterpriseModuleTabs active="applications" navigate={navigate} />
       {error ? <ErrorState error={error} /> : null}
       <div className="card">
         <div style={{ marginBottom: 16, display: "flex", alignItems: "center", gap: 12 }}>
@@ -85,6 +125,24 @@ export function ReviewDetailPage({
           <span className={reviewStatusBadgeClass(item.status)} style={{ fontSize: "1rem", padding: "4px 12px" }}>
             {reviewStatusLabel(item.status)}
           </span>
+        </div>
+        <div className="detail-grid" style={{ marginBottom: 16 }}>
+          <div>
+            <div className="detail-label">提交时间</div>
+            <div>{item.createdAt || "-"}</div>
+          </div>
+          <div>
+            <div className="detail-label">审核时间</div>
+            <div>{item.auditAt || "-"}</div>
+          </div>
+          <div>
+            <div className="detail-label">审核人</div>
+            <div>{item.auditedByName || item.auditedBy || "-"}</div>
+          </div>
+          <div>
+            <div className="detail-label">账号状态</div>
+            <div>{item.accountStatus || "-"}</div>
+          </div>
         </div>
         <div className="detail-label" style={{ marginBottom: 8 }}>企业信息</div>
         <div className="detail-grid">
@@ -145,13 +203,21 @@ export function ReviewDetailPage({
           </div>
         ) : null}
         <div style={{ display: "flex", gap: 8 }}>
-          <Button onClick={() => navigate("/reviews")}>返回列表</Button>
+          <Button onClick={() => navigate("/enterprise/applications")}>返回申请列表</Button>
           <Button disabled={submitting || isFinal} onClick={() => submitDecision("reject")}>
             {submitting ? "处理中..." : "驳回"}
           </Button>
           <Button type="primary" disabled={submitting || isFinal} onClick={() => submitDecision("approve")}>
             {submitting ? "处理中..." : "通过"}
           </Button>
+          {isSuperAdmin() ? (
+            <Button onClick={() => navigate(`/enterprise/companies/${item.id}`)}>查看企业档案</Button>
+          ) : null}
+          {isSuperAdmin() ? (
+            <Button danger disabled={submitting || item.status === "invalidated"} onClick={invalidateApplication}>
+              作废申请
+            </Button>
+          ) : null}
         </div>
       </div>
     </div>

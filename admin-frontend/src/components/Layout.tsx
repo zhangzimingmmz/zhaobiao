@@ -1,13 +1,12 @@
 import React from "react";
 import { ProLayout } from "@ant-design/pro-components";
-import { getAdminUsername } from "../lib/auth";
+import { getAdminRole, getAdminUsername } from "../lib/auth";
 
 const ROUTE = {
   path: "/",
   routes: [
     { path: "/dashboard", name: "总览" },
-    { path: "/reviews", name: "审核队列" },
-    { path: "/companies", name: "企业管理" },
+    { path: "/enterprise/applications", name: "企业管理" },
     { path: "/articles", name: "内容管理" },
     { path: "/crawl", name: "采集控制" },
     { path: "/settings", name: "运营设置" },
@@ -50,6 +49,8 @@ function Logo() {
 }
 
 function OperatorChip() {
+  const role = getAdminRole();
+  const roleLabel = role === "super_admin" ? "超级管理员" : "审核员";
   return (
     <div
       style={{
@@ -60,7 +61,8 @@ function OperatorChip() {
         fontSize: 14,
       }}
     >
-      {getAdminUsername() ?? "admin"}
+      <span>{getAdminUsername() ?? "admin"}</span>
+      <span style={{ marginLeft: 8, color: "#8c8c8c" }}>{roleLabel}</span>
     </div>
   );
 }

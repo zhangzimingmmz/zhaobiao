@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Form, Input, Button } from "antd";
-import { apiRequest } from "../lib/api";
+import { apiRequest, type AdminLoginResponse } from "../lib/api";
 import { saveAdminSession } from "../lib/auth";
 
 type LoginPageProps = {
@@ -14,7 +14,7 @@ export function LoginPage({ onSuccess }: LoginPageProps) {
   async function handleFinish(values: { username: string; password: string }) {
     setSubmitting(true);
     try {
-      const data = await apiRequest<{ token: string; tokenType: string; username: string }>(
+      const data = await apiRequest<AdminLoginResponse>(
         "/api/admin/login",
         {
           method: "POST",
@@ -22,7 +22,7 @@ export function LoginPage({ onSuccess }: LoginPageProps) {
           auth: false,
         },
       );
-      saveAdminSession(data.token, data.username);
+      saveAdminSession(data.token, data.username, data.role, data.adminId);
       onSuccess();
     } catch (err) {
       form.setFields([{ name: "password", errors: [err instanceof Error ? err.message : "登录失败"] }]);

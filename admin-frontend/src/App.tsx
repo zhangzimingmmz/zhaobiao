@@ -47,6 +47,22 @@ export function App() {
   }, []);
 
   useEffect(() => {
+    if (path === "/reviews") {
+      navigate("/enterprise/applications");
+      return;
+    }
+    if (path.startsWith("/reviews/")) {
+      navigate(path.replace("/reviews/", "/enterprise/applications/"));
+      return;
+    }
+    if (path === "/companies") {
+      navigate("/enterprise/companies");
+      return;
+    }
+    if (path.startsWith("/companies/")) {
+      navigate(path.replace("/companies/", "/enterprise/companies/"));
+      return;
+    }
     if (!authed && path !== "/login") {
       navigate("/login");
     }
@@ -64,32 +80,32 @@ export function App() {
         content: <DashboardPage navigate={navigate} />,
       };
     }
-    if (path === "/reviews") {
+    if (path === "/enterprise/applications") {
       return {
-        title: "企业审核",
-        subtitle: "处理企业认证申请。",
+        title: "企业管理",
+        subtitle: "在同一模块中处理申请审核和企业档案。",
         content: <ReviewsPage navigate={navigate} />,
       };
     }
-    if (path.startsWith("/reviews/")) {
+    if (path.startsWith("/enterprise/applications/")) {
       return {
-        title: "审核详情",
-        subtitle: "查看企业资料并完成审核。",
-        content: <ReviewDetailPage id={path.replace("/reviews/", "")} navigate={navigate} />,
+        title: "申请详情",
+        subtitle: "查看企业提交资料并完成审核。",
+        content: <ReviewDetailPage id={path.replace("/enterprise/applications/", "")} navigate={navigate} />,
       };
     }
-    if (path === "/companies") {
+    if (path === "/enterprise/companies") {
       return {
-        title: "企业目录",
-        subtitle: "查看企业清单和认证状态。",
+        title: "企业管理",
+        subtitle: "查看当前企业档案与最近审核结果。",
         content: <CompaniesPage navigate={navigate} />,
       };
     }
-    if (path.startsWith("/companies/")) {
+    if (path.startsWith("/enterprise/companies/")) {
       return {
-        title: "公司详情",
-        subtitle: "查看企业当前档案与预留信息位。",
-        content: <CompanyDetailPage id={path.replace("/companies/", "")} navigate={navigate} />,
+        title: "企业档案详情",
+        subtitle: "维护企业当前档案并查看审核留痕。",
+        content: <CompanyDetailPage id={path.replace("/enterprise/companies/", "")} navigate={navigate} />,
       };
     }
     if (path === "/articles") {

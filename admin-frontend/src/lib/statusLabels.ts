@@ -8,6 +8,7 @@ export function reviewStatusLabel(status: string): string {
     pending: "待审核",
     approved: "已通过",
     rejected: "已驳回",
+    invalidated: "已作废",
   };
   return map[status] ?? status;
 }
@@ -18,6 +19,7 @@ export function reviewStatusBadgeClass(status: string): string {
     pending: "badge badge-pending",
     approved: "badge badge-success",
     rejected: "badge badge-fail",
+    invalidated: "badge badge-fail",
   };
   return map[status] ?? "badge badge-pending";
 }

@@ -1,5 +1,5 @@
 import { getAdminToken } from "./auth";
-import type { ApiResponse } from "./types";
+import type { ApiResponse, ReviewDetail } from "./types";
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? "http://127.0.0.1:8000";
 
@@ -51,6 +51,74 @@ export async function updateContactSettings(supportPhone: string): Promise<Conta
   return apiRequest<ContactSettings>("/api/admin/app-settings/contact", {
     method: "PUT",
     body: { supportPhone },
+  });
+}
+
+export type AdminLoginResponse = {
+  token: string;
+  tokenType: string;
+  username: string;
+  adminId: string;
+  role: string;
+};
+
+export type CompanyUpdateInput = {
+  companyName: string;
+  creditCode: string;
+  contactName?: string;
+  contactPhone?: string;
+  legalPersonName?: string;
+  legalPersonPhone?: string;
+  businessScope?: string;
+  businessAddress?: string;
+};
+
+export async function getCompanyDetail(id: string): Promise<ReviewDetail> {
+  return apiRequest<ReviewDetail>(`/api/admin/companies/${id}`);
+}
+
+export async function updateCompanyDetail(id: string, data: CompanyUpdateInput): Promise<ReviewDetail> {
+  return apiRequest<ReviewDetail>(`/api/admin/companies/${id}`, {
+    method: "PUT",
+    body: data,
+  });
+}
+
+export async function deleteTestCompanyData(id: string, confirmText: string): Promise<{
+  applicationId: string;
+  userId: string;
+  deletedBy: string;
+  deletedByName: string;
+}> {
+  return apiRequest<{
+    applicationId: string;
+    userId: string;
+    deletedBy: string;
+    deletedByName: string;
+  }>(`/api/admin/companies/${id}/delete-test-data`, {
+    method: "POST",
+    body: { confirmText },
+  });
+}
+
+export async function invalidateReview(id: string, reason: string): Promise<{
+  applicationId: string;
+  status: string;
+  reason: string;
+  auditAt: string;
+  auditedBy: string;
+  auditedByName: string;
+}> {
+  return apiRequest<{
+    applicationId: string;
+    status: string;
+    reason: string;
+    auditAt: string;
+    auditedBy: string;
+    auditedByName: string;
+  }>(`/api/admin/reviews/${id}/invalidate`, {
+    method: "POST",
+    body: { reason },
   });
 }
 

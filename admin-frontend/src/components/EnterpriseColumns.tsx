@@ -7,14 +7,13 @@ import { reviewStatusLabel, reviewStatusBadgeClass } from "../lib/statusLabels";
 export interface EnterpriseColumnsOptions {
   showActions?: boolean;
   onView?: (record: ReviewItem) => void;
-  showCreatedAt?: boolean;
-  showAuditAt?: boolean;
+  timeMode?: "created" | "audit";
 }
 
 export const createEnterpriseColumns = (
   options: EnterpriseColumnsOptions = {}
 ): ProColumns<ReviewItem>[] => {
-  const { showActions = false, onView, showCreatedAt = false, showAuditAt = true } = options;
+  const { showActions = false, onView, timeMode = "audit" } = options;
 
   const columns: ProColumns<ReviewItem>[] = [
     {
@@ -62,14 +61,21 @@ export const createEnterpriseColumns = (
         pending: { text: "待审核" },
         approved: { text: "已通过" },
         rejected: { text: "已驳回" },
+        invalidated: { text: "已作废" },
       },
       render: (_, r) => (
         <span className={reviewStatusBadgeClass(r.status)}>{reviewStatusLabel(r.status)}</span>
       ),
     },
+    {
+      title: "审核人",
+      dataIndex: "auditedByName",
+      key: "auditedByName",
+      render: (_, r) => r.auditedByName || r.auditedBy || "-",
+    },
   ];
 
-  if (showCreatedAt) {
+  if (timeMode === "created") {
     columns.push({
       title: "提交时间",
       dataIndex: "createdAt",
@@ -77,7 +83,7 @@ export const createEnterpriseColumns = (
     });
   }
 
-  if (showAuditAt) {
+  if (timeMode === "audit") {
     columns.push({
       title: "审核时间",
       dataIndex: "auditAt",

@@ -47,6 +47,10 @@ DB_PATH = os.environ.get("NOTICES_DB", str(_root / "data" / "notices.db"))
 ADMIN_TOKEN = os.environ.get("ADMIN_TOKEN", "admin-secret-token-change-in-production")
 ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "admin")
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin123456")
+ADMIN_REVIEWER1_USERNAME = os.environ.get("ADMIN_REVIEWER1_USERNAME", "reviewer1")
+ADMIN_REVIEWER1_PASSWORD = os.environ.get("ADMIN_REVIEWER1_PASSWORD", "reviewer123456")
+ADMIN_REVIEWER2_USERNAME = os.environ.get("ADMIN_REVIEWER2_USERNAME", "reviewer2")
+ADMIN_REVIEWER2_PASSWORD = os.environ.get("ADMIN_REVIEWER2_PASSWORD", "reviewer223456")
 
 # 站点 Base URL，拼装 originUrl 用
 SITE1_BASE = "https://ggzyjy.sc.gov.cn"
@@ -106,6 +110,29 @@ CATEGORY_NAMES = {
     "59": "采购意向公开",
     "00101": "采购公告",
 }
+
+ADMIN_ACCOUNTS = [
+    {
+        "adminId": "super_admin",
+        "username": ADMIN_USERNAME,
+        "password": ADMIN_PASSWORD,
+        "role": "super_admin",
+    },
+    {
+        "adminId": "reviewer_1",
+        "username": ADMIN_REVIEWER1_USERNAME,
+        "password": ADMIN_REVIEWER1_PASSWORD,
+        "role": "reviewer",
+    },
+    {
+        "adminId": "reviewer_2",
+        "username": ADMIN_REVIEWER2_USERNAME,
+        "password": ADMIN_REVIEWER2_PASSWORD,
+        "role": "reviewer",
+    },
+]
+ADMIN_ACCOUNTS_BY_USERNAME = {item["username"]: item for item in ADMIN_ACCOUNTS if item["username"]}
+ADMIN_ACCOUNTS_BY_ID = {item["adminId"]: item for item in ADMIN_ACCOUNTS}
 
 # ────────────────────────────────────────────────────────────
 # 数据库初始化：建表 DDL（幂等）
@@ -336,14 +363,25 @@ def get_admin_user(authorization: Optional[str] = Header(None)) -> dict:
         )
     token = authorization.removeprefix("Bearer ").strip()
     if token == ADMIN_TOKEN:
-        return {"role": "admin", "adminId": "admin", "username": ADMIN_USERNAME}
+        return {
+            "role": "super_admin",
+            "adminId": "super_admin",
+            "username": ADMIN_USERNAME,
+        }
 
     payload = decode_access_token(token)
-    if payload and payload.get("role") == "admin":
+    if payload and payload.get("role") in {"admin", "super_admin", "reviewer"}:
+        role = payload.get("role") or "super_admin"
+        if role == "admin":
+            role = "super_admin"
+        admin_id = payload.get("adminId") or ("super_admin" if role == "super_admin" else "")
+        if admin_id == "admin":
+            admin_id = "super_admin"
+        username = payload.get("username") or _admin_username_by_id(admin_id) or ADMIN_USERNAME
         return {
-            "role": "admin",
-            "adminId": payload.get("adminId", "admin"),
-            "username": payload.get("username", ADMIN_USERNAME),
+            "role": role,
+            "adminId": admin_id,
+            "username": username,
         }
 
     raise HTTPException(
@@ -354,6 +392,68 @@ def get_admin_user(authorization: Optional[str] = Header(None)) -> dict:
 
 def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
+
+
+def _admin_username_by_id(admin_id: Optional[str]) -> Optional[str]:
+    if not admin_id:
+        return None
+    account = ADMIN_ACCOUNTS_BY_ID.get(admin_id)
+    return account["username"] if account else admin_id
+
+
+def _admin_display_name(admin_id: Optional[str], username: Optional[str] = None) -> Optional[str]:
+    return username or _admin_username_by_id(admin_id)
+
+
+def _require_super_admin(admin: dict) -> None:
+    if admin.get("role") != "super_admin":
+        raise HTTPException(
+            status_code=200,
+            detail={"code": 403, "message": "仅超级管理员可执行该操作"},
+        )
+
+
+def _application_to_admin_payload(row: sqlite3.Row) -> dict[str, Any]:
+    audited_by = row["audited_by"]
+    return {
+        "id": row["id"],
+        "userId": row["user_id"],
+        "username": row["username"],
+        "userMobile": row["mobile"],
+        "companyName": row["company_name"] or row["username"] or "-",
+        "creditCode": row["credit_code"],
+        "contactName": row["contact_name"] or row["legal_person_name"],
+        "contactPersonName": row["contact_name"],
+        "contactPhone": row["contact_phone"] or row["mobile"],
+        "legalPersonName": row["legal_person_name"],
+        "legalPersonPhone": row["legal_person_phone"],
+        "businessScope": row["business_scope"],
+        "businessAddress": row["business_address"],
+        "status": row["status"],
+        "accountStatus": row["account_status"],
+        "rejectReason": row["reject_reason"],
+        "createdAt": row["created_at"],
+        "updatedAt": row["updated_at"],
+        "auditAt": row["audit_at"],
+        "auditedBy": audited_by,
+        "auditedByName": _admin_display_name(audited_by),
+    }
+
+
+def _looks_like_test_company(row: sqlite3.Row) -> bool:
+    signals = [
+        row["company_name"],
+        row["username"],
+        row["credit_code"],
+        row["contact_name"],
+        row["contact_phone"],
+        row["mobile"],
+        row["legal_person_name"],
+        row["business_address"],
+    ]
+    normalized = " ".join(str(value).lower() for value in signals if value)
+    test_tokens = ["测试", "test", "demo", "sample", "admin", "zzm", "123456", "000000"]
+    return any(token in normalized for token in test_tokens)
 
 
 def _latest_application_for_user(conn: sqlite3.Connection, user_id: str) -> Optional[sqlite3.Row]:
@@ -1017,14 +1117,15 @@ class AdminLoginRequest(BaseModel):
 @app.post("/api/admin/login")
 def admin_login(req: AdminLoginRequest):
     """固定账号密码管理员登录，返回管理员 JWT。"""
-    if req.username != ADMIN_USERNAME or req.password != ADMIN_PASSWORD:
+    account = ADMIN_ACCOUNTS_BY_USERNAME.get(req.username)
+    if not account or req.password != account["password"]:
         return {"code": 400, "message": "账号或密码错误"}
 
     token = create_access_token(
         {
-            "role": "admin",
-            "adminId": "admin",
-            "username": ADMIN_USERNAME,
+            "role": account["role"],
+            "adminId": account["adminId"],
+            "username": account["username"],
         },
         expires_days=3650,
     )
@@ -1033,7 +1134,9 @@ def admin_login(req: AdminLoginRequest):
         "data": {
             "token": token,
             "tokenType": "Bearer",
-            "username": ADMIN_USERNAME,
+            "username": account["username"],
+            "adminId": account["adminId"],
+            "role": account["role"],
         },
     }
 
@@ -1306,30 +1409,7 @@ def admin_review_list(
             params,
         ).fetchall()
 
-        list_data = [
-            {
-                "id": row["id"],
-                "userId": row["user_id"],
-                "username": row["username"],
-                "userMobile": row["mobile"],
-                "companyName": row["company_name"] or row["username"] or "-",
-                "creditCode": row["credit_code"],
-                "contactName": row["legal_person_name"] or row["contact_name"],
-                "contactPersonName": row["contact_name"],
-                "contactPhone": row["legal_person_phone"] or row["contact_phone"] or row["mobile"],
-                "legalPersonName": row["legal_person_name"],
-                "legalPersonPhone": row["legal_person_phone"],
-                "businessScope": row["business_scope"],
-                "businessAddress": row["business_address"],
-                "status": row["status"],
-                "accountStatus": row["account_status"],
-                "createdAt": row["created_at"],
-                "updatedAt": row["updated_at"],
-                "auditAt": row["audit_at"],
-                "auditedBy": row["audited_by"],
-            }
-            for row in rows
-        ]
+        list_data = [_application_to_admin_payload(row) for row in rows]
 
         return {"code": 200, "data": {"total": total, "list": list_data}}
     finally:
@@ -1354,32 +1434,9 @@ def admin_review_detail(application_id: str, authorization: Optional[str] = Head
         if not row:
             return {"code": 404, "message": "申请记录不存在"}
 
-        return {
-            "code": 200,
-            "data": {
-                "id": row["id"],
-                "userId": row["user_id"],
-                "username": row["username"],
-                "userMobile": row["mobile"],
-                "companyName": row["company_name"] or row["username"] or "-",
-                "creditCode": row["credit_code"],
-                "contactName": row["legal_person_name"] or row["contact_name"],
-                "contactPersonName": row["contact_name"],
-                "contactPhone": row["legal_person_phone"] or row["contact_phone"] or row["mobile"],
-                "legalPersonName": row["legal_person_name"],
-                "legalPersonPhone": row["legal_person_phone"],
-                "businessScope": row["business_scope"],
-                "businessAddress": row["business_address"],
-                "licenseImage": row["license_image"],
-                "status": row["status"],
-                "accountStatus": row["account_status"],
-                "rejectReason": row["reject_reason"],
-                "createdAt": row["created_at"],
-                "updatedAt": row["updated_at"],
-                "auditAt": row["audit_at"],
-                "auditedBy": row["audited_by"],
-            },
-        }
+        payload = _application_to_admin_payload(row)
+        payload["licenseImage"] = row["license_image"]
+        return {"code": 200, "data": payload}
     finally:
         conn.close()
 
@@ -1392,7 +1449,7 @@ class ApproveRequest(BaseModel):
 def admin_approve(application_id: str, req: ApproveRequest, authorization: Optional[str] = Header(None)):
     """管理员审核通过企业认证申请。"""
     admin = get_admin_user(authorization)
-    admin_id = admin.get("adminId", "admin")
+    admin_id = admin.get("adminId", "super_admin")
 
     conn = _get_conn()
     try:
@@ -1431,6 +1488,7 @@ def admin_approve(application_id: str, req: ApproveRequest, authorization: Optio
                 "status": "approved",
                 "auditAt": now,
                 "auditedBy": admin_id,
+                "auditedByName": _admin_display_name(admin_id, admin.get("username")),
             },
         }
     finally:
@@ -1445,7 +1503,7 @@ class RejectRequest(BaseModel):
 def admin_reject(application_id: str, req: RejectRequest, authorization: Optional[str] = Header(None)):
     """管理员驳回企业认证申请。"""
     admin = get_admin_user(authorization)
-    admin_id = admin.get("adminId", "admin")
+    admin_id = admin.get("adminId", "super_admin")
 
     if not req.rejectReason:
         return {"code": 400, "message": "驳回原因不能为空"}
@@ -1488,6 +1546,62 @@ def admin_reject(application_id: str, req: RejectRequest, authorization: Optiona
                 "rejectReason": req.rejectReason,
                 "auditAt": now,
                 "auditedBy": admin_id,
+                "auditedByName": _admin_display_name(admin_id, admin.get("username")),
+            },
+        }
+    finally:
+        conn.close()
+
+
+class InvalidateRequest(BaseModel):
+    reason: Optional[str] = None
+
+
+@app.post("/api/admin/reviews/{application_id}/invalidate")
+def admin_invalidate_review(
+    application_id: str,
+    req: InvalidateRequest,
+    authorization: Optional[str] = Header(None),
+):
+    """超级管理员作废企业认证申请。"""
+    admin = get_admin_user(authorization)
+    _require_super_admin(admin)
+    admin_id = admin.get("adminId", "super_admin")
+
+    now = _now_iso()
+    reason = (req.reason or "管理员作废申请").strip() or "管理员作废申请"
+
+    conn = _get_conn()
+    try:
+        row = conn.execute(
+            "SELECT id, user_id FROM enterprise_applications WHERE id = ? LIMIT 1",
+            (application_id,),
+        ).fetchone()
+        if not row:
+            return {"code": 404, "message": "申请记录不存在"}
+
+        conn.execute(
+            """UPDATE enterprise_applications
+               SET status = 'invalidated', reject_reason = ?, audit_at = ?, audited_by = ?, updated_at = ?
+               WHERE id = ?""",
+            (reason, now, admin_id, now, application_id),
+        )
+        conn.execute(
+            """UPDATE users
+               SET account_status = 'rejected', updated_at = ?
+               WHERE id = ?""",
+            (now, row["user_id"]),
+        )
+        conn.commit()
+        return {
+            "code": 200,
+            "data": {
+                "applicationId": application_id,
+                "status": "invalidated",
+                "reason": reason,
+                "auditAt": now,
+                "auditedBy": admin_id,
+                "auditedByName": _admin_display_name(admin_id, admin.get("username")),
             },
         }
     finally:
@@ -1552,33 +1666,145 @@ def admin_company_list(
             params_with_limit,
         ).fetchall()
 
-        list_data = [
-            {
-                "id": row["id"],
-                "userId": row["user_id"],
-                "username": row["username"],
-                "userMobile": row["mobile"],
-                "companyName": row["company_name"] or row["username"] or "-",
-                "creditCode": row["credit_code"],
-                "contactName": row["legal_person_name"] or row["contact_name"],
-                "contactPersonName": row["contact_name"],
-                "contactPhone": row["legal_person_phone"] or row["contact_phone"] or row["mobile"],
-                "legalPersonName": row["legal_person_name"],
-                "legalPersonPhone": row["legal_person_phone"],
-                "businessScope": row["business_scope"],
-                "businessAddress": row["business_address"],
-                "status": row["status"],
-                "accountStatus": row["account_status"],
-                "rejectReason": row["reject_reason"],
-                "createdAt": row["created_at"],
-                "updatedAt": row["updated_at"],
-                "auditAt": row["audit_at"],
-                "auditedBy": row["audited_by"],
-            }
-            for row in rows
-        ]
+        list_data = [_application_to_admin_payload(row) for row in rows]
 
         return {"code": 200, "data": {"total": total, "list": list_data}}
+    finally:
+        conn.close()
+
+
+@app.get("/api/admin/companies/{application_id}")
+def admin_company_detail(application_id: str, authorization: Optional[str] = Header(None)):
+    """管理员查看企业当前档案详情。"""
+    get_admin_user(authorization)
+
+    conn = _get_conn()
+    try:
+        row = conn.execute(
+            """SELECT ea.*, u.mobile, u.username, u.account_status
+               FROM enterprise_applications ea
+               LEFT JOIN users u ON ea.user_id = u.id
+               WHERE ea.id = ? LIMIT 1""",
+            (application_id,),
+        ).fetchone()
+
+        if not row:
+            return {"code": 404, "message": "企业档案不存在"}
+
+        payload = _application_to_admin_payload(row)
+        payload["licenseImage"] = row["license_image"]
+        payload["isTestData"] = _looks_like_test_company(row)
+        return {"code": 200, "data": payload}
+    finally:
+        conn.close()
+
+
+class AdminCompanyUpdateRequest(BaseModel):
+    companyName: str
+    creditCode: str
+    contactName: Optional[str] = None
+    contactPhone: Optional[str] = None
+    legalPersonName: Optional[str] = None
+    legalPersonPhone: Optional[str] = None
+    businessScope: Optional[str] = None
+    businessAddress: Optional[str] = None
+
+
+@app.put("/api/admin/companies/{application_id}")
+def admin_company_update(
+    application_id: str,
+    req: AdminCompanyUpdateRequest,
+    authorization: Optional[str] = Header(None),
+):
+    """超级管理员更新企业档案。"""
+    admin = get_admin_user(authorization)
+    _require_super_admin(admin)
+
+    if not req.companyName.strip():
+        return {"code": 400, "message": "企业名称不能为空"}
+    if not req.creditCode.strip():
+        return {"code": 400, "message": "统一社会信用代码不能为空"}
+
+    now = _now_iso()
+    conn = _get_conn()
+    try:
+        row = conn.execute(
+            "SELECT id FROM enterprise_applications WHERE id = ? LIMIT 1",
+            (application_id,),
+        ).fetchone()
+        if not row:
+            return {"code": 404, "message": "企业档案不存在"}
+
+        conn.execute(
+            """UPDATE enterprise_applications
+               SET company_name = ?, credit_code = ?, contact_name = ?, contact_phone = ?,
+                   legal_person_name = ?, legal_person_phone = ?, business_scope = ?,
+                   business_address = ?, updated_at = ?
+               WHERE id = ?""",
+            (
+                req.companyName.strip(),
+                req.creditCode.strip(),
+                req.contactName.strip() if req.contactName else None,
+                req.contactPhone.strip() if req.contactPhone else None,
+                req.legalPersonName.strip() if req.legalPersonName else None,
+                req.legalPersonPhone.strip() if req.legalPersonPhone else None,
+                req.businessScope.strip() if req.businessScope else None,
+                req.businessAddress.strip() if req.businessAddress else None,
+                now,
+                application_id,
+            ),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+    return admin_company_detail(application_id, authorization)
+
+
+class DeleteTestCompanyRequest(BaseModel):
+    confirmText: str
+
+
+@app.post("/api/admin/companies/{application_id}/delete-test-data")
+def admin_delete_test_company(
+    application_id: str,
+    req: DeleteTestCompanyRequest,
+    authorization: Optional[str] = Header(None),
+):
+    """超级管理员删除测试企业数据。"""
+    admin = get_admin_user(authorization)
+    _require_super_admin(admin)
+
+    if req.confirmText.strip().upper() != "DELETE":
+        return {"code": 400, "message": "请在确认框中输入 DELETE"}
+
+    conn = _get_conn()
+    try:
+        row = conn.execute(
+            """SELECT ea.*, u.mobile, u.username, u.account_status
+               FROM enterprise_applications ea
+               LEFT JOIN users u ON ea.user_id = u.id
+               WHERE ea.id = ? LIMIT 1""",
+            (application_id,),
+        ).fetchone()
+        if not row:
+            return {"code": 404, "message": "企业档案不存在"}
+        if not _looks_like_test_company(row):
+            return {"code": 400, "message": "仅允许删除识别为测试数据的企业档案"}
+
+        conn.execute("DELETE FROM user_favorites WHERE user_id = ?", (row["user_id"],))
+        conn.execute("DELETE FROM enterprise_applications WHERE user_id = ?", (row["user_id"],))
+        conn.execute("DELETE FROM users WHERE id = ?", (row["user_id"],))
+        conn.commit()
+        return {
+            "code": 200,
+            "data": {
+                "applicationId": application_id,
+                "userId": row["user_id"],
+                "deletedBy": admin.get("adminId"),
+                "deletedByName": admin.get("username"),
+            },
+        }
     finally:
         conn.close()
 

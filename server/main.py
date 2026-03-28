@@ -1568,11 +1568,11 @@ def admin_review_list(
         params: list[Any] = []
         
         if status:
-            conditions.append("status = ?")
+            conditions.append("ea.status = ?")
             params.append(status)
 
         where = " AND ".join(conditions)
-        count_sql = f"SELECT COUNT(*) FROM enterprise_applications WHERE {where}"
+        count_sql = f"SELECT COUNT(*) FROM enterprise_applications ea WHERE {where}"
         total = conn.execute(count_sql, params).fetchone()[0]
 
         offset = (page - 1) * pageSize
@@ -1811,7 +1811,7 @@ def admin_company_list(
         params: list[Any] = []
         
         if status:
-            conditions.append("status = ?")
+            conditions.append("ea.status = ?")
             params.append(status)
 
         where = " AND ".join(conditions)
@@ -1819,7 +1819,7 @@ def admin_company_list(
         # 使用子查询获取每个用户的最新申请
         count_sql = f"""
             SELECT COUNT(DISTINCT user_id) 
-            FROM enterprise_applications 
+            FROM enterprise_applications ea
             WHERE id IN (
                 SELECT id FROM enterprise_applications ea1
                 WHERE ea1.created_at = (

@@ -133,6 +133,8 @@ BOOTSTRAP_REVIEWER_ACCOUNTS = [
     },
 ]
 
+MAX_ACTIVE_REVIEWERS = 3
+
 # ────────────────────────────────────────────────────────────
 # 数据库初始化：建表 DDL（幂等）
 # ────────────────────────────────────────────────────────────
@@ -401,6 +403,31 @@ def _get_admin_db_account_by_username(conn: sqlite3.Connection, username: str) -
            WHERE username = ? LIMIT 1""",
         (username,),
     ).fetchone()
+
+
+def _count_active_reviewers(conn: sqlite3.Connection, exclude_admin_id: Optional[str] = None) -> int:
+    if exclude_admin_id:
+        row = conn.execute(
+            """SELECT COUNT(1)
+               FROM admin_users
+               WHERE role = 'reviewer' AND status = 'active' AND id != ?""",
+            (exclude_admin_id,),
+        ).fetchone()
+    else:
+        row = conn.execute(
+            """SELECT COUNT(1)
+               FROM admin_users
+               WHERE role = 'reviewer' AND status = 'active'"""
+        ).fetchone()
+    return int(row[0] if row else 0)
+
+
+def _reviewer_has_audit_history(conn: sqlite3.Connection, admin_id: str) -> bool:
+    row = conn.execute(
+        "SELECT 1 FROM enterprise_applications WHERE audited_by = ? LIMIT 1",
+        (admin_id,),
+    ).fetchone()
+    return row is not None
 
 
 @app.on_event("startup")
@@ -2126,8 +2153,16 @@ class AdminReviewerResetPasswordRequest(BaseModel):
     password: str
 
 
+class AdminReviewerUpdateRequest(BaseModel):
+    username: str
+
+
 class AdminReviewerStatusRequest(BaseModel):
     status: str
+
+
+class AdminReviewerDeleteRequest(BaseModel):
+    confirmUsername: str
 
 
 @app.get("/api/admin/reviewers")
@@ -2147,6 +2182,8 @@ def admin_reviewer_list(authorization: Optional[str] = Header(None)):
             "code": 200,
             "data": {
                 "total": len(rows),
+                "activeCount": _count_active_reviewers(conn),
+                "maxActiveReviewers": MAX_ACTIVE_REVIEWERS,
                 "list": [_serialize_admin_user(row) for row in rows],
             },
         }
@@ -2175,6 +2212,12 @@ def admin_reviewer_create(
         exists = _get_admin_db_account_by_username(conn, username)
         if exists:
             return {"code": 400, "message": "该用户名已被占用"}
+        active_count = _count_active_reviewers(conn)
+        if active_count >= MAX_ACTIVE_REVIEWERS:
+            return {
+                "code": 400,
+                "message": f"最多只能有 {MAX_ACTIVE_REVIEWERS} 个启用中的审核员，请先停用或删除未使用账号",
+            }
         conn.execute(
             """INSERT INTO admin_users (id, username, password_hash, role, status, created_at, updated_at)
                VALUES (?, ?, ?, 'reviewer', 'active', ?, ?)""",
@@ -2215,6 +2258,42 @@ def admin_reviewer_reset_password(
         conn.close()
 
 
+@app.put("/api/admin/reviewers/{admin_id}")
+def admin_reviewer_update(
+    admin_id: str,
+    req: AdminReviewerUpdateRequest,
+    authorization: Optional[str] = Header(None),
+):
+    """超级管理员修改审核员用户名。"""
+    admin = get_admin_user(authorization)
+    _require_super_admin(admin)
+
+    username = _normalize_admin_username(req.username)
+    if username == ADMIN_USERNAME:
+        return {"code": 400, "message": "该用户名已被占用"}
+
+    now = _now_iso()
+    conn = _get_conn()
+    try:
+        row = _get_admin_db_account_by_id(conn, admin_id)
+        if not row or row["role"] != "reviewer":
+            return {"code": 404, "message": "审核员账号不存在"}
+        if row["username"] == username:
+            return {"code": 400, "message": "用户名未发生变化"}
+        exists = _get_admin_db_account_by_username(conn, username)
+        if exists and exists["id"] != admin_id:
+            return {"code": 400, "message": "该用户名已被占用"}
+        conn.execute(
+            "UPDATE admin_users SET username = ?, updated_at = ? WHERE id = ?",
+            (username, now, admin_id),
+        )
+        conn.commit()
+        updated = _get_admin_db_account_by_id(conn, admin_id)
+        return {"code": 200, "data": _serialize_admin_user(updated)}
+    finally:
+        conn.close()
+
+
 @app.post("/api/admin/reviewers/{admin_id}/status")
 def admin_reviewer_update_status(
     admin_id: str,
@@ -2235,6 +2314,13 @@ def admin_reviewer_update_status(
         row = _get_admin_db_account_by_id(conn, admin_id)
         if not row or row["role"] != "reviewer":
             return {"code": 404, "message": "审核员账号不存在"}
+        if status == "active" and row["status"] != "active":
+            active_count = _count_active_reviewers(conn, exclude_admin_id=admin_id)
+            if active_count >= MAX_ACTIVE_REVIEWERS:
+                return {
+                    "code": 400,
+                    "message": f"最多只能有 {MAX_ACTIVE_REVIEWERS} 个启用中的审核员，请先停用或删除未使用账号",
+                }
         conn.execute(
             "UPDATE admin_users SET status = ?, updated_at = ? WHERE id = ?",
             (status, now, admin_id),
@@ -2242,6 +2328,38 @@ def admin_reviewer_update_status(
         conn.commit()
         updated = _get_admin_db_account_by_id(conn, admin_id)
         return {"code": 200, "data": _serialize_admin_user(updated)}
+    finally:
+        conn.close()
+
+
+@app.delete("/api/admin/reviewers/{admin_id}")
+def admin_reviewer_delete(
+    admin_id: str,
+    req: AdminReviewerDeleteRequest,
+    authorization: Optional[str] = Header(None),
+):
+    """超级管理员删除从未参与审核的审核员账号。"""
+    admin = get_admin_user(authorization)
+    _require_super_admin(admin)
+
+    conn = _get_conn()
+    try:
+        row = _get_admin_db_account_by_id(conn, admin_id)
+        if not row or row["role"] != "reviewer":
+            return {"code": 404, "message": "审核员账号不存在"}
+        if (req.confirmUsername or "").strip() != row["username"]:
+            return {"code": 400, "message": "请输入该审核员用户名以确认删除"}
+        if _reviewer_has_audit_history(conn, admin_id):
+            return {"code": 400, "message": "该审核员已有历史审核记录，不能删除，请改为停用或修改用户名"}
+        conn.execute("DELETE FROM admin_users WHERE id = ?", (admin_id,))
+        conn.commit()
+        return {
+            "code": 200,
+            "data": {
+                "adminId": admin_id,
+                "username": row["username"],
+            },
+        }
     finally:
         conn.close()
 

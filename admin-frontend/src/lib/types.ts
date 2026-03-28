@@ -90,3 +90,10 @@ export type AdminReviewer = {
   createdAt: string;
   updatedAt: string;
 };
+
+export type AdminReviewerListData = {
+  total: number;
+  activeCount: number;
+  maxActiveReviewers: number;
+  list: AdminReviewer[];
+};

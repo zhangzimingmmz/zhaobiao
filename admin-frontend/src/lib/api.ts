@@ -1,5 +1,5 @@
 import { getAdminToken } from "./auth";
-import type { AdminReviewer, ApiResponse, ReviewDetail } from "./types";
+import type { AdminReviewer, AdminReviewerListData, ApiResponse, ReviewDetail } from "./types";
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? "http://127.0.0.1:8000";
 
@@ -85,8 +85,8 @@ export async function updateContactSettings(supportPhone: string): Promise<Conta
   });
 }
 
-export async function getAdminReviewers(): Promise<{ total: number; list: AdminReviewer[] }> {
-  return apiRequest<{ total: number; list: AdminReviewer[] }>("/api/admin/reviewers");
+export async function getAdminReviewers(): Promise<AdminReviewerListData> {
+  return apiRequest<AdminReviewerListData>("/api/admin/reviewers");
 }
 
 export async function createAdminReviewer(input: {
@@ -109,6 +109,16 @@ export async function resetAdminReviewerPassword(
   });
 }
 
+export async function updateAdminReviewerUsername(
+  adminId: string,
+  username: string,
+): Promise<AdminReviewer> {
+  return apiRequest<AdminReviewer>(`/api/admin/reviewers/${adminId}`, {
+    method: "PUT",
+    body: { username },
+  });
+}
+
 export async function updateAdminReviewerStatus(
   adminId: string,
   status: "active" | "disabled",
@@ -116,6 +126,16 @@ export async function updateAdminReviewerStatus(
   return apiRequest<AdminReviewer>(`/api/admin/reviewers/${adminId}/status`, {
     method: "POST",
     body: { status },
+  });
+}
+
+export async function deleteAdminReviewer(
+  adminId: string,
+  confirmUsername: string,
+): Promise<{ adminId: string; username: string }> {
+  return apiRequest<{ adminId: string; username: string }>(`/api/admin/reviewers/${adminId}`, {
+    method: "DELETE",
+    body: { confirmUsername },
   });
 }
 

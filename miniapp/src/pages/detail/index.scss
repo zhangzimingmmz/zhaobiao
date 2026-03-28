@@ -117,4 +117,36 @@
     font-size: $font-sm;
     color: $color-caption;
   }
+
+  &__attachments {
+    display: flex;
+    flex-direction: column;
+    gap: 16rpx;
+  }
+
+  &__attachment {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20rpx;
+    padding: 20rpx 22rpx;
+    border: 1rpx solid $color-border;
+    border-radius: $radius-lg;
+    background: rgba(22, 119, 255, 0.04);
+  }
+
+  &__attachment-name {
+    flex: 1;
+    font-size: $font-sm;
+    color: $color-body;
+    line-height: 1.5;
+    word-break: break-word;
+  }
+
+  &__attachment-action {
+    flex-shrink: 0;
+    font-size: $font-xs;
+    font-weight: 700;
+    color: $color-primary;
+  }
 }

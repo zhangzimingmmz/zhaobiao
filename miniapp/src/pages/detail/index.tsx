@@ -8,6 +8,16 @@ import { formatDate, formatDateTime } from '../../utils/formatDate'
 import { useProtectedPage } from '../../hooks/useProtectedPage'
 import './index.scss'
 
+function normalizeAttachments(detailData) {
+  if (!Array.isArray(detailData?.attachments)) return []
+  return detailData.attachments
+    .map((item) => ({
+      name: item?.name || '附件',
+      url: item?.url || '',
+    }))
+    .filter((item) => !!item.url)
+}
+
 export default function Detail() {
   const isAuthorized = useProtectedPage('请先登录后查看详情')
   const [detail, setDetail] = useState(null)
@@ -29,8 +39,12 @@ export default function Detail() {
     api.detailBid(id)
       .then((res) => {
         if (res.data && res.data.code === 200 && res.data.data) {
-          setDetail(res.data.data)
-          setFavorited(!!res.data.data.favorited)
+          const nextDetail = {
+            ...res.data.data,
+            attachments: normalizeAttachments(res.data.data),
+          }
+          setDetail(nextDetail)
+          setFavorited(!!nextDetail.favorited)
         }
       })
       .catch(() => setDetail(null))
@@ -70,6 +84,39 @@ export default function Detail() {
       .catch(() => Taro.showToast({ title: '操作失败，请重试', icon: 'none' }))
   }
 
+  const handleDownloadAttachment = (attachment) => {
+    if (!attachment?.url) return
+
+    Taro.showLoading({ title: '下载中...', mask: true })
+    Taro.downloadFile({
+      url: attachment.url,
+      success: (res) => {
+        if (res.statusCode !== 200 || !res.tempFilePath) {
+          Taro.showToast({ title: '附件下载失败，请稍后重试', icon: 'none' })
+          return
+        }
+        Taro.openDocument({
+          filePath: res.tempFilePath,
+          showMenu: true,
+          fail: () => {
+            Taro.showToast({ title: '附件已下载，但暂时无法打开', icon: 'none' })
+          },
+        })
+      },
+      fail: (err) => {
+        const errMsg = String(err?.errMsg || '')
+        if (errMsg.includes('domain list')) {
+          Taro.showToast({ title: '附件域名未加入小程序下载白名单', icon: 'none' })
+          return
+        }
+        Taro.showToast({ title: '附件下载失败，请稍后重试', icon: 'none' })
+      },
+      complete: () => {
+        Taro.hideLoading()
+      },
+    })
+  }
+
   const dateTimeFields = ['报名开始', '报名截止', '开标时间']
   const structuredRows = detail
     ? [
@@ -87,6 +134,7 @@ export default function Detail() {
         dateTimeFields.includes(label) ? formatDateTime(value) : value,
       ])
     : []
+  const attachments = Array.isArray(detail?.attachments) ? detail.attachments : []
 
   if (!isAuthorized) {
     return null
@@ -145,6 +193,23 @@ export default function Detail() {
                 <Text className="detail-section__item-value">{value}</Text>
               </View>
             ))}
+          </View>
+        )}
+        {attachments.length > 0 && (
+          <View className="secondary-card detail-section">
+            <Text className="detail-section__label">附件下载</Text>
+            <View className="detail-section__attachments">
+              {attachments.map((attachment, index) => (
+                <View
+                  key={`${attachment.url}-${index}`}
+                  className="detail-section__attachment"
+                  onClick={() => handleDownloadAttachment(attachment)}
+                >
+                  <Text className="detail-section__attachment-name">{attachment.name}</Text>
+                  <Text className="detail-section__attachment-action">下载并打开</Text>
+                </View>
+              ))}
+            </View>
           </View>
         )}
         <View className="secondary-card detail-section">

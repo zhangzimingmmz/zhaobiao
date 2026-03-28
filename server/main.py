@@ -10,7 +10,7 @@ import sys
 import uuid
 from bs4 import BeautifulSoup
 from datetime import datetime, timezone
-from urllib.parse import urlparse
+from urllib.parse import urljoin, urlparse
 from pathlib import Path
 from typing import Any, Optional
 
@@ -719,8 +719,46 @@ def _build_source_page_url(row: sqlite3.Row, site: str) -> Optional[str]:
     if "site2" in (site or ""):
         plan_id = row["plan_id"] or ""
         return f"{SITE2_BASE}/maincms-web/article?type=notice&id={row['id']}&planId={plan_id}"
-    upstream_origin_url = row["origin_url"] or None
+    upstream_origin_url = _normalize_notice_url(row["origin_url"], site)
     return upstream_origin_url
+
+
+def _normalize_notice_url(url: Optional[str], site: str) -> Optional[str]:
+    raw = (url or "").strip()
+    if not raw or raw == "0":
+        return None
+    if raw.lower().startswith("javascript:"):
+        return None
+    if raw.startswith(("http://", "https://")):
+        return raw
+    base = SITE1_BASE if "site1" in (site or "") else SITE2_BASE
+    return urljoin(base, raw)
+
+
+def _extract_notice_attachments(content: Optional[str], site: str) -> list[dict[str, str]]:
+    html = (content or "").strip()
+    if not html:
+        return []
+
+    soup = BeautifulSoup(html, "html.parser")
+    nodes = soup.select(".attach_content a[href], a.attachUrl[href]")
+    if not nodes:
+        return []
+
+    attachments: list[dict[str, str]] = []
+    seen_urls: set[str] = set()
+    for node in nodes:
+        href = _normalize_notice_url(node.get("href"), site)
+        if not href or href in seen_urls:
+            continue
+        name = (
+            (node.get("title") or "").strip()
+            or node.get_text(" ", strip=True)
+            or "附件"
+        )
+        attachments.append({"name": name, "url": href})
+        seen_urls.add(href)
+    return attachments
 
 
 def _row_list_item(row: sqlite3.Row, site: str, *, favorited: bool = False) -> dict[str, Any]:
@@ -753,7 +791,8 @@ def _row_list_item(row: sqlite3.Row, site: str, *, favorited: bool = False) -> d
 def _row_detail_bid(row: sqlite3.Row, site: str, *, favorited: bool = False) -> dict[str, Any]:
     """存储行 → 招投标详情（《接口文档-前端与小程序》2.4）"""
     origin_url = _build_source_page_url(row, site)
-    upstream_origin_url = row["origin_url"] or None
+    upstream_origin_url = _normalize_notice_url(row["origin_url"], site)
+    raw_content = row["content"]
     source_site_name = "四川省公共资源交易平台" if "site1" in (site or "") else "四川省政府采购网" if "site2" in (site or "") else None
     return {
         "id": row["id"],
@@ -770,7 +809,8 @@ def _row_detail_bid(row: sqlite3.Row, site: str, *, favorited: bool = False) -> 
         "enrollStart": None,
         "enrollEnd": None,
         "openTime": row["open_tender_time"],
-        "content": render_notice_body(row["content"], site, row["category_num"]),
+        "content": render_notice_body(raw_content, site, row["category_num"]),
+        "attachments": _extract_notice_attachments(raw_content, site),
         "originUrl": origin_url,
         "upstreamOriginUrl": upstream_origin_url,
         "sourceSiteName": source_site_name,

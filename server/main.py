@@ -761,6 +761,27 @@ def _extract_notice_attachments(content: Optional[str], site: str) -> list[dict[
     return attachments
 
 
+def _strip_notice_attachment_markup(content: Optional[str]) -> Optional[str]:
+    html = (content or "").strip()
+    if not html:
+        return None
+
+    soup = BeautifulSoup(html, "html.parser")
+
+    # Remove dedicated attachment containers so the正文区 no longer exposes a second,
+    # unreliable download entry.
+    for node in soup.select(".attach_content"):
+        node.decompose()
+
+    # If attachment links are embedded inline outside the dedicated container,
+    # replace them with plain text instead of clickable anchors.
+    for node in soup.select("a.attachUrl"):
+        node.replace_with(node.get_text(" ", strip=True) or "附件")
+
+    cleaned = str(soup).strip()
+    return cleaned or None
+
+
 def _row_list_item(row: sqlite3.Row, site: str, *, favorited: bool = False) -> dict[str, Any]:
     """存储行 → 列表单条（《接口文档-前端与小程序》1.4）"""
     origin_url = _build_source_page_url(row, site)
@@ -793,6 +814,7 @@ def _row_detail_bid(row: sqlite3.Row, site: str, *, favorited: bool = False) -> 
     origin_url = _build_source_page_url(row, site)
     upstream_origin_url = _normalize_notice_url(row["origin_url"], site)
     raw_content = row["content"]
+    display_content = _strip_notice_attachment_markup(raw_content)
     source_site_name = "四川省公共资源交易平台" if "site1" in (site or "") else "四川省政府采购网" if "site2" in (site or "") else None
     return {
         "id": row["id"],
@@ -809,7 +831,7 @@ def _row_detail_bid(row: sqlite3.Row, site: str, *, favorited: bool = False) -> 
         "enrollStart": None,
         "enrollEnd": None,
         "openTime": row["open_tender_time"],
-        "content": render_notice_body(raw_content, site, row["category_num"]),
+        "content": render_notice_body(display_content, site, row["category_num"]) if display_content else None,
         "attachments": _extract_notice_attachments(raw_content, site),
         "originUrl": origin_url,
         "upstreamOriginUrl": upstream_origin_url,

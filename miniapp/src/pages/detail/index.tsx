@@ -18,6 +18,18 @@ function normalizeAttachments(detailData) {
     .filter((item) => !!item.url)
 }
 
+function inferFileType(attachment) {
+  const source = `${attachment?.name || ''} ${attachment?.url || ''}`.toLowerCase()
+  if (source.includes('.pdf')) return 'pdf'
+  if (source.includes('.docx')) return 'docx'
+  if (source.includes('.doc')) return 'doc'
+  if (source.includes('.xlsx')) return 'xlsx'
+  if (source.includes('.xls')) return 'xls'
+  if (source.includes('.pptx')) return 'pptx'
+  if (source.includes('.ppt')) return 'ppt'
+  return undefined
+}
+
 export default function Detail() {
   const isAuthorized = useProtectedPage('请先登录后查看详情')
   const [detail, setDetail] = useState(null)
@@ -86,6 +98,7 @@ export default function Detail() {
 
   const handleDownloadAttachment = (attachment) => {
     if (!attachment?.url) return
+    const fileType = inferFileType(attachment)
 
     Taro.showLoading({ title: '下载中...', mask: true })
     Taro.downloadFile({
@@ -97,6 +110,7 @@ export default function Detail() {
         }
         Taro.openDocument({
           filePath: res.tempFilePath,
+          fileType,
           showMenu: true,
           fail: () => {
             Taro.showToast({ title: '附件已下载，但暂时无法打开', icon: 'none' })

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { View, Text } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
-import { AtInput, AtButton } from 'taro-ui'
+import { AtButton } from 'taro-ui'
 import TopBar from '../../components/TopBar'
 import AvatarInitials from '../../components/AvatarInitials'
 import AppIcon from '../../components/AppIcon'
@@ -17,19 +17,6 @@ export default function Profile() {
   const [nextAction, setNextAction] = useState('')
   const [auditLoading, setAuditLoading] = useState(false)
   
-  // 登录表单状态
-  const [username, setUsername] = useState('')
-  const [usernameCursor, setUsernameCursor] = useState(0)
-  const [password, setPassword] = useState('')
-  const [passwordCursor, setPasswordCursor] = useState(0)
-  const [loginLoading, setLoginLoading] = useState(false)
-
-  const syncInput = (setValue, setCursor) => (value, event) => {
-    const nextValue = String(value ?? '')
-    setValue(nextValue)
-    setCursor(event?.detail?.cursor ?? nextValue.length)
-  }
-
   useDidShow(() => {
     setIsLoggedIn(!!Taro.getStorageSync('token'))
   })
@@ -120,51 +107,12 @@ export default function Profile() {
         if (res.confirm) {
           Taro.removeStorageSync('token')
           setIsLoggedIn(false)
-          setUsername('')
-          setPassword('')
           setAuditData(null)
           setAuditStatus('')
           setNextAction('')
         }
       },
     })
-  }
-
-  const handleLogin = () => {
-    if (!username || !password) {
-      Taro.showToast({ title: '请填写登录名和密码', icon: 'none' })
-      return
-    }
-
-    setLoginLoading(true)
-    api.login({ username, password })
-      .then((res) => {
-        if (res.data?.code === 200 && res.data?.data?.token) {
-          Taro.setStorageSync('token', res.data.data.token)
-          Taro.showToast({ title: '登录成功' })
-          setIsLoggedIn(true)
-          setUsername('')
-          setPassword('')
-          return
-        }
-
-        if (res.data?.code === 403 && res.data?.data?.applicationId) {
-          saveRegistrationContext({
-            applicationId: res.data.data.applicationId,
-            username,
-          })
-          const title = res.data?.data?.status === 'rejected' ? '账号审核未通过，请重新提交资料' : '账号审核中'
-          const target =
-            res.data?.data?.status === 'rejected' ? '/pages/register/index' : '/pages/audit-status/index'
-          Taro.showToast({ title, icon: 'none', duration: 2000 })
-          setTimeout(() => Taro.redirectTo({ url: target }), 1000)
-          return
-        }
-
-        Taro.showToast({ title: res.data?.message || '登录失败', icon: 'none' })
-      })
-      .catch(() => Taro.showToast({ title: '登录失败', icon: 'none' }))
-      .finally(() => setLoginLoading(false))
   }
 
   const handleVerificationAction = () => {
@@ -201,58 +149,36 @@ export default function Profile() {
     handleVerificationAction()
   }
 
-  // 未登录状态 - 显示登录表单
+  // 未登录且无审核上下文：轻量引导进入独立登录页
   if (!isLoggedIn && !auditStatus) {
     return (
       <View className="page page--tab profile-page">
         <TopBar title="我的" variant="tab" />
-        <View className="profile-page__login-section">
-          <View className="profile-page__login-intro">
-            <Text className="profile-page__section-label">账号状态</Text>
-            <Text className="profile-page__guest-title">未登录</Text>
+        <View className="profile-page__guest">
+          <View className="profile-page__guest-hero">
+            <Text className="profile-page__guest-kicker">账号</Text>
+            <Text className="profile-page__guest-title">登录后使用完整功能</Text>
             <Text className="profile-page__guest-desc">
-              审核通过后使用账号密码登录，即可查看招投标内容。
+              审核通过的企业账号可登录查看招采资讯、收藏与管理资料。
             </Text>
           </View>
-          
-          <View className="profile-page__login-form card form-card">
-            <AtInput
-              name="username"
-              placeholder="请输入登录名"
-              value={username}
-              cursor={usernameCursor}
-              onChange={syncInput(setUsername, setUsernameCursor)}
-            />
-            <AtInput
-              name="password"
-              type="password"
-              placeholder="请输入登录密码"
-              value={password}
-              cursor={passwordCursor}
-              onChange={syncInput(setPassword, setPasswordCursor)}
-            />
-            <AtButton type="primary" full onClick={handleLogin} loading={loginLoading} className="profile-page__login-btn">
+          <View className="profile-page__guest-card card">
+            <AtButton
+              type="primary"
+              full
+              className="profile-page__guest-login"
+              onClick={() => Taro.navigateTo({ url: '/pages/login/index' })}
+            >
               登录
             </AtButton>
-            
-            <View className="profile-page__actions">
-              <Text 
-                className="profile-page__link" 
-                onClick={() => Taro.navigateTo({ url: '/pages/register/index' })}
-              >
-                还没有账号？去注册
-              </Text>
-            </View>
-            
-            <View className="profile-page__agreement">
-              <Text className="text-caption">登录即表示同意</Text>
-              <Text className="text-primary">《用户协议》</Text>
-              <Text className="text-caption"> 与 </Text>
-              <Text className="text-primary">《隐私政策》</Text>
+            <View
+              className="profile-page__guest-register"
+              onClick={() => Taro.navigateTo({ url: '/pages/register/index' })}
+            >
+              <Text className="profile-page__guest-register-text">还没有账号？去注册</Text>
             </View>
           </View>
         </View>
-        
         <Text className="profile-page__version text-caption">版本 0.0.1</Text>
       </View>
     )

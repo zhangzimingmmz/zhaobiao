@@ -1,50 +1,26 @@
-@import '../../styles/variables.scss';
+@import '../../styles/auth-family.scss';
 
 .register-page {
   &__body {
-    padding: 40rpx 32rpx 48rpx;
+    gap: 14rpx;
   }
 
-  &__intro {
-    margin-bottom: 32rpx;
-  }
-
-  &__tip {
-    background: $color-primary-bg;
-    padding: 28rpx;
-    border-radius: $radius-lg;
-    margin-bottom: 32rpx;
-    font-size: 28rpx;
-    color: $color-body;
-    line-height: 1.6;
+  &__card {
+    gap: 22rpx;
   }
 
   &__form {
-    display: flex;
-    flex-direction: column;
-    gap: 24rpx;
+    gap: 22rpx;
   }
 
   &__field {
-    display: flex;
-    flex-direction: column;
-    gap: 12rpx;
-
     .at-input {
       margin-bottom: 0;
     }
   }
 
   &__label {
-    font-size: 28rpx;
-    line-height: 1.5;
-    color: $color-title;
-    font-weight: 600;
-  }
-
-  &__required {
-    margin-right: 6rpx;
-    color: #f53f3f;
+    font-size: $font-sm;
   }
 
   &__textarea {
@@ -52,7 +28,7 @@
 
     .at-textarea__textarea {
       line-height: 1.5;
-      min-height: 88rpx;
+      min-height: 108rpx;
     }
 
     .at-textarea__counter {

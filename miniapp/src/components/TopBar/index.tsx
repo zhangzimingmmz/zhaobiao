@@ -1,7 +1,10 @@
 import { View, Text } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import AppIcon from '../AppIcon'
+import { hasAuthToken, HOME_PAGE_URL, LOGIN_PAGE_URL } from '../../utils/auth'
 import './index.scss'
+
+const BACK_ICON_COLOR = '#4E5969'
 
 function getNavMetrics() {
   const windowInfo = Taro.getWindowInfo()
@@ -40,6 +43,17 @@ export default function TopBar({
   const handleBack = () => {
     if (onBack) onBack()
     else {
+      const pages = typeof getCurrentPages === 'function' ? getCurrentPages() : []
+
+      if (pages.length <= 1) {
+        if (hasAuthToken()) {
+          Taro.switchTab({ url: HOME_PAGE_URL })
+        } else if (pages[0]?.route !== 'pages/login/index') {
+          Taro.reLaunch({ url: LOGIN_PAGE_URL })
+        }
+        return
+      }
+
       Taro.navigateBack({
         fail: () => {
           Taro.switchTab({ url: '/pages/index/index' })
@@ -88,17 +102,30 @@ export default function TopBar({
   }
 
   if (resolvedVariant === 'tab') {
+    const tabChannel = !!showBack
     return (
       <View
-        className="top-bar top-bar--tab"
+        className={'top-bar top-bar--tab' + (tabChannel ? ' top-bar--tab-channel' : '')}
         style={rootStyle}
       >
         <View
           className="top-bar__inner top-bar__inner--tab"
           style={{ height: `${navHeight}px`, paddingRight: `${capsuleSpace}px` }}
         >
+          {showBack && (
+            <View className="top-bar__back top-bar__back--tab" onClick={handleBack}>
+              <AppIcon name="chevronleft" size={40} color={BACK_ICON_COLOR} />
+            </View>
+          )}
           <View className="top-bar__tab-copy">
-            <Text className="top-bar__title top-bar__title--tab">{title}</Text>
+            <Text
+              className={
+                'top-bar__title top-bar__title--tab' +
+                (tabChannel ? ' top-bar__title--tab-channel' : '')
+              }
+            >
+              {title}
+            </Text>
           </View>
         </View>
       </View>
@@ -114,7 +141,7 @@ export default function TopBar({
         <View className="top-bar__side top-bar__side--left">
           {showBack && (
             <View className="top-bar__back" onClick={handleBack}>
-              <Text className="top-bar__back-text">返回</Text>
+              <AppIcon name="chevronleft" size={40} color={BACK_ICON_COLOR} />
             </View>
           )}
         </View>

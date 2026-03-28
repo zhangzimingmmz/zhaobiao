@@ -209,41 +209,44 @@
     font-size: 24rpx;
   }
 
-  // 登录表单样式
-  &__login-section {
-    margin: 32rpx;
-    padding-bottom: 48rpx;
+  &__guest {
+    padding: 24rpx 28rpx 40rpx;
   }
 
-  &__login-intro {
-    margin-bottom: 32rpx;
-    padding: 32rpx 0;
+  &__guest-hero {
+    padding: 28rpx 8rpx 28rpx;
+    margin-bottom: 8rpx;
   }
 
-  &__login-btn {
-    margin-bottom: 32rpx;
+  &__guest-kicker {
+    display: block;
+    font-size: $font-xs;
+    font-weight: 600;
+    color: $color-primary-deep;
+    letter-spacing: 2rpx;
+    margin-bottom: 12rpx;
   }
 
-  &__actions {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 32rpx;
-    padding-top: 24rpx;
-    border-top: 1rpx solid $color-border;
+  &__guest-card {
+    padding: 28rpx 24rpx 24rpx;
+    border-radius: $radius-xl;
+    border: 1rpx solid $color-border;
+    box-shadow: 0 4rpx 18rpx rgba(18, 51, 107, 0.06);
   }
 
-  &__link {
+  &__guest-login {
+    margin-bottom: 0;
+  }
+
+  &__guest-register {
+    margin-top: 24rpx;
+    padding: 16rpx 0 8rpx;
+    text-align: center;
+  }
+
+  &__guest-register-text {
     font-size: $font-sm;
     color: $color-primary;
     font-weight: 500;
-  }
-
-  &__agreement {
-    text-align: center;
-    font-size: $font-xs;
-    color: $color-caption;
-    line-height: 1.8;
-    padding-top: 24rpx;
   }
 }

@@ -1,36 +1,63 @@
-@import '../../styles/variables.scss';
+@import '../../styles/auth-family.scss';
 
 .login-page {
   &__body {
-    padding: 40rpx 32rpx 48rpx;
+    gap: 12rpx;
+    padding: 14rpx 24rpx 22rpx;
   }
 
-  &__intro {
-    margin-bottom: 40rpx;
+  &__band {
+    flex: 0 0 auto;
+  }
+
+  &__form {
+    justify-content: flex-start;
+  }
+
+  &__form-main {
+    gap: 20rpx;
+  }
+
+  &__form-foot {
+    margin-top: 22rpx;
   }
 
   &__submit {
-    margin-bottom: 32rpx;
+    margin-bottom: 0;
   }
 
   &__register {
     text-align: center;
-    margin-bottom: 20rpx;
-    padding: 16rpx 0;
+    margin-bottom: 10rpx;
+    padding: 4rpx 0 6rpx;
   }
 
-  &__register-label {
-    font-size: $font-base;
-    color: $color-primary;
+  &__register-prefix {
+    font-size: 26rpx;
+    color: $color-caption;
+    font-weight: 500;
+  }
+
+  &__register-action {
+    font-size: 26rpx;
+    color: $color-body;
     font-weight: 600;
   }
 
   &__agreement {
     text-align: center;
     font-size: 24rpx;
-    line-height: 1.8;
-    padding-top: 24rpx;
-    margin-top: 24rpx;
-    border-top: 1rpx solid $color-border;
+    line-height: 1.55;
+    padding-top: 0;
+    margin-top: 0;
+    border-top: none;
+  }
+
+  &__agreement-text {
+    color: $color-caption;
+  }
+
+  &__agreement-link {
+    color: $color-body;
   }
 }

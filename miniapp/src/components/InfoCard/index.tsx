@@ -37,7 +37,7 @@ export default function InfoCard({ item, onClick, onFavoriteToggle, favorited })
               <View className="info-card__favorite" onClick={handleFavoriteClick}>
                 <AppIcon
                   name={favorited ? 'heartfill' : 'heart'}
-                  size={52}
+                  size={46}
                   color={favorited ? '#ff4d4f' : '#c9cdd4'}
                 />
               </View>

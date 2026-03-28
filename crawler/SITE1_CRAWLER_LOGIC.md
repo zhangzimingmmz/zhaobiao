@@ -6,11 +6,12 @@
 
 - `https://ggzyjy.sc.gov.cn/jyxx/transactionInfo.html`
 
-本项目只采集以下 3 类公告：
+本项目只采集以下 4 类公告：
 
 1. 工程建设 / 招标计划：`002001009`
-2. 工程建设 / 招标公告：`002001001`
-3. 政府采购 / 采购公告：`002002001`
+2. 工程建设 / 招标文件预公示：`002001010`
+3. 工程建设 / 招标公告：`002001001`
+4. 政府采购 / 采购公告：`002002001`
 
 不采集以下内容：
 
@@ -79,7 +80,27 @@ User-Agent: Mozilla/5.0
 ]
 ```
 
-### 4.2 工程建设 / 招标公告
+### 4.2 工程建设 / 招标文件预公示
+
+- `categorynum = 002001010`
+
+对应 `condition`：
+
+```json
+[
+  {
+    "fieldName": "categorynum",
+    "equal": "002001010",
+    "notEqual": null,
+    "equalList": null,
+    "notEqualList": null,
+    "isLike": true,
+    "likeType": 2
+  }
+]
+```
+
+### 4.3 工程建设 / 招标公告
 
 - `categorynum = 002001001`
 
@@ -99,7 +120,7 @@ User-Agent: Mozilla/5.0
 ]
 ```
 
-### 4.3 政府采购 / 采购公告
+### 4.4 政府采购 / 采购公告
 
 - `categorynum = 002002001`
 
@@ -254,7 +275,7 @@ User-Agent: Mozilla/5.0
 ### 7.6 初始化伪代码
 
 ```text
-for category in [002001009, 002001001, 002002001]:
+for category in [002001009, 002001010, 002001001, 002002001]:
     for window in daily_windows(start, end):
         crawl_window(category, window.start, window.end)
 
@@ -288,8 +309,9 @@ crawl_window(category, start_time, end_time):
 若未显式传分类，任务默认按以下顺序执行：
 
 1. `002001009` 招标计划
-2. `002001001` 招标公告
-3. `002002001` 政府采购采购公告
+2. `002001010` 招标文件预公示
+3. `002001001` 招标公告
+4. `002002001` 政府采购采购公告
 
 这样可以优先修复工程建设正文最乱的历史数据。
 
@@ -306,19 +328,20 @@ python3 -m crawler.site1.tasks.detail_backfill \
   --max-failures 20
 ```
 
-正式回填工程建设两类：
+正式回填工程建设三类：
 
 ```bash
 python3 -m crawler.site1.tasks.detail_backfill \
   --db data/notices.db \
   --category 002001009 \
+  --category 002001010 \
   --category 002001001 \
   --batch-size 50 \
   --sleep-seconds 0.3 \
   --max-failures 20
 ```
 
-正式回填 `site1` 全部三类：
+正式回填 `site1` 全部四类：
 
 ```bash
 python3 -m crawler.site1.tasks.detail_backfill \
@@ -375,7 +398,7 @@ python3 -m crawler.site1.tasks.detail_backfill \
 ```text
 window = previous_complete_two_hour_window(now)
 
-for category in [002001009, 002001001, 002002001]:
+for category in [002001009, 002001010, 002001001, 002002001]:
     crawl_window(category, window.start, window.end)
 ```
 

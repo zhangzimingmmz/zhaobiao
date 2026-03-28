@@ -3,18 +3,25 @@ import { View, Text, ScrollView, RichText } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { AtButton } from 'taro-ui'
 import TopBar from '../../components/TopBar'
-import { config } from '../../config'
 import { api } from '../../services/api'
 import { formatDate, formatDateTime } from '../../utils/formatDate'
+import { useProtectedPage } from '../../hooks/useProtectedPage'
 import './index.scss'
 
 export default function Detail() {
+  const isAuthorized = useProtectedPage('请先登录后查看详情')
   const [detail, setDetail] = useState(null)
   const [loading, setLoading] = useState(true)
   const [favorited, setFavorited] = useState(false)
   const id = Taro.getCurrentInstance().router?.params?.id || ''
 
   useEffect(() => {
+    if (!isAuthorized) {
+      setLoading(false)
+      setDetail(null)
+      return
+    }
+
     if (!id) {
       setLoading(false)
       return
@@ -28,7 +35,7 @@ export default function Detail() {
       })
       .catch(() => setDetail(null))
       .finally(() => setLoading(false))
-  }, [id])
+  }, [id, isAuthorized])
 
   const handleViewOriginal = () => {
     if (detail && detail.originUrl) {
@@ -80,6 +87,10 @@ export default function Detail() {
         dateTimeFields.includes(label) ? formatDateTime(value) : value,
       ])
     : []
+
+  if (!isAuthorized) {
+    return null
+  }
 
   if (loading) {
     return (

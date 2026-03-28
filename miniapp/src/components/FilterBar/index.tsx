@@ -3,16 +3,23 @@ import AppIcon from '../AppIcon'
 import './index.scss'
 
 const FILTER_MODES = {
-  'engineering-engineering': {
+  'engineering-plan': {
     placeholder: '搜索标题或正文关键词',
-    segment: true,
     buttons: [
       { key: 'time', label: '发布时间', icon: 'calendar' },
       { key: 'source', label: '交易来源', icon: 'mappin' },
     ],
     layout: 'row',
   },
-  'engineering-procurement': {
+  'engineering-preview': {
+    placeholder: '搜索标题或正文关键词',
+    buttons: [
+      { key: 'time', label: '发布时间', icon: 'calendar' },
+      { key: 'source', label: '交易来源', icon: 'mappin' },
+    ],
+    layout: 'row',
+  },
+  'engineering-announcement': {
     placeholder: '搜索标题或正文关键词',
     buttons: [
       { key: 'time', label: '发布时间', icon: 'calendar' },
@@ -37,6 +44,14 @@ const FILTER_MODES = {
       { key: 'region', label: '区划', icon: 'mappin' },
     ],
     layout: 'grid',
+  },
+  'procurement-government': {
+    placeholder: '搜索标题或正文关键词',
+    buttons: [
+      { key: 'time', label: '发布时间', icon: 'calendar' },
+      { key: 'source', label: '交易来源', icon: 'mappin' },
+    ],
+    layout: 'row',
   },
   information: {
     placeholder: '搜索标题或正文关键词',
@@ -67,8 +82,6 @@ export default function FilterBar({
   onKeywordChange,
   onFilterClick,
   filterValues = {},
-  announcementType = 'announcement',
-  onAnnouncementTypeChange,
 }) {
   const mode = FILTER_MODES[type]
 
@@ -111,28 +124,7 @@ export default function FilterBar({
 
   return (
     <View className={'filter-bar' + (mode.buttons.length === 0 ? ' filter-bar--minimal' : '')}>
-      {mode.segment && (
-        <View className="filter-bar__segment">
-          {[
-            { key: 'plan', label: '招标计划' },
-            { key: 'announcement', label: '招标公告' },
-          ].map((option) => {
-            const active = announcementType === option.key
-            return (
-              <View
-                key={option.key}
-                className={'filter-bar__segment-item' + (active ? ' filter-bar__segment-item--active' : '')}
-                onClick={() => onAnnouncementTypeChange && onAnnouncementTypeChange(option.key)}
-              >
-                <Text className="filter-bar__segment-text">{option.label}</Text>
-              </View>
-            )
-          })}
-        </View>
-      )}
-
       {renderSearch()}
-
       {mode.buttons.length > 0 && renderButtons(mode.buttons)}
     </View>
   )

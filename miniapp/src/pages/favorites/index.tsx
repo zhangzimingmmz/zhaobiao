@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react'
-import { View, Text } from '@tarojs/components'
+import { View } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
-import { AtButton } from 'taro-ui'
 import SecondaryTabs from '../../components/SecondaryTabs'
 import TopBar from '../../components/TopBar'
 import BidCard from '../../components/BidCard'
@@ -11,6 +10,7 @@ import { api } from '../../services/api'
 import { formatDate } from '../../utils/formatDate'
 import { normalizeArticleCoverUrl, openArticleOriginal } from '../../utils/articlePresentation'
 import { getFavoriteTypeSelection, setFavoriteTypeSelection } from '../../utils/favorites'
+import { useProtectedPage } from '../../hooks/useProtectedPage'
 import './index.scss'
 
 const FAVORITES_TABS = [
@@ -37,17 +37,12 @@ function normalizeFavoriteItem(item) {
 }
 
 export default function Favorites() {
+  const isAuthorized = useProtectedPage('请先登录后查看收藏')
   const [selectedType, setSelectedType] = useState(getFavoriteTypeSelection())
   const [records, setRecords] = useState([])
-  const [isLoggedIn, setIsLoggedIn] = useState(!!Taro.getStorageSync('token'))
   const [loading, setLoading] = useState(false)
 
   const loadFavorites = () => {
-    if (!Taro.getStorageSync('token')) {
-      setRecords([])
-      return
-    }
-
     setLoading(true)
     api.getFavorites({ page: 1, pageSize: 200 })
       .then((res) => {
@@ -67,12 +62,8 @@ export default function Favorites() {
 
   useDidShow(() => {
     setSelectedType(getFavoriteTypeSelection())
-    const loggedIn = !!Taro.getStorageSync('token')
-    setIsLoggedIn(loggedIn)
-    if (loggedIn) {
+    if (isAuthorized) {
       loadFavorites()
-    } else {
-      setRecords([])
     }
   })
 
@@ -118,53 +109,50 @@ export default function Favorites() {
       .catch(() => Taro.showToast({ title: '操作失败，请重试', icon: 'none' }))
   }
 
-  const renderGuestBanner = () => (
-    <View className="favorites-page__banner">
-      <Text className="favorites-page__banner-title">登录后查看收藏</Text>
-      <Text className="favorites-page__banner-desc">收藏已改为账号级服务端数据。请先登录后查看和管理收藏内容。</Text>
-      <AtButton
-        type="primary"
-        full
-        className="favorites-page__banner-action"
-        onClick={() => Taro.navigateTo({ url: '/pages/login/index' })}
-      >
-        去登录
-      </AtButton>
-    </View>
-  )
+  if (!isAuthorized) {
+    return null
+  }
 
   return (
     <View className="page page--tab favorites-page">
       <TopBar title="收藏" variant="tab" />
-      <SecondaryTabs
-        tabs={FAVORITES_TABS}
-        value={selectedType}
-        onChange={handleTypeChange}
-      />
-      <View className="favorites-page__content">
-        {!isLoggedIn && renderGuestBanner()}
+      <View className="favorites-page__section">
+        <View className="favorites-page__switch">
+          <SecondaryTabs
+            tabs={FAVORITES_TABS}
+            value={selectedType}
+            onChange={handleTypeChange}
+          />
+        </View>
+        <View className="favorites-page__content">
+          {loading ? (
+            <EmptyState
+              title="收藏加载中"
+              description="正在从服务端同步当前账号的收藏数据。"
+            />
+          ) : visibleRecords.length === 0 ? (
+            <EmptyState
+              title="当前分类暂无收藏"
+              description="你可以先去首页浏览内容，收藏后会出现在当前分类下。"
+            />
+          ) : (
+            visibleRecords.map((item) => {
+              const normalized = normalizeFavoriteItem(item)
+              const key = `${normalized.viewType}:${normalized.site || ''}:${normalized.id}`
+              if (normalized.viewType === 'info') {
+                return (
+                  <InfoCard
+                    key={key}
+                    item={normalized}
+                    onClick={handleCardClick}
+                    onFavoriteToggle={handleFavoriteToggle}
+                    favorited
+                  />
+                )
+              }
 
-        {loading ? (
-          <EmptyState
-            title="收藏加载中"
-            description="正在从服务端同步当前账号的收藏数据。"
-          />
-        ) : visibleRecords.length === 0 ? (
-          <EmptyState
-            title={isLoggedIn ? '当前分类暂无收藏' : '还没有收藏内容'}
-            description={
-              isLoggedIn
-                ? '你可以先去首页浏览内容，收藏后会出现在当前分类下。'
-                : '登录后可查看账号下的收藏列表。'
-            }
-          />
-        ) : (
-          visibleRecords.map((item) => {
-            const normalized = normalizeFavoriteItem(item)
-            const key = `${normalized.viewType}:${normalized.site || ''}:${normalized.id}`
-            if (normalized.viewType === 'info') {
               return (
-                <InfoCard
+                <BidCard
                   key={key}
                   item={normalized}
                   onClick={handleCardClick}
@@ -172,19 +160,9 @@ export default function Favorites() {
                   favorited
                 />
               )
-            }
-
-            return (
-              <BidCard
-                key={key}
-                item={normalized}
-                onClick={handleCardClick}
-                onFavoriteToggle={handleFavoriteToggle}
-                favorited
-              />
-            )
-          })
-        )}
+            })
+          )}
+        </View>
       </View>
     </View>
   )

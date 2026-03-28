@@ -5,7 +5,10 @@ export default function SecondaryTabs({ tabs, value, onChange }) {
   if (!tabs || tabs.length === 0) return null
   return (
     <View className="secondary-tabs">
-      <View className="secondary-tabs__list">
+      <View
+        className="secondary-tabs__list"
+        style={{ gridTemplateColumns: `repeat(${tabs.length}, minmax(0, 1fr))` }}
+      >
         {tabs.map((tab) => {
           const active = tab.id === value
           return (

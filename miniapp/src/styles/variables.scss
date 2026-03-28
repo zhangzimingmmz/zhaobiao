@@ -17,12 +17,12 @@ $color-caption: #86909C;
 $color-muted: #A9B1BE;
 $color-border: #E5E7EB;
 $color-border-strong: #D6DCE5;
-$color-bg: #F4F7FB;
-$color-bg-soft: #FAFBFD;
+$color-bg: #F5F7FB;
+$color-bg-soft: #FBFCFE;
 $color-surface: #FFFFFF;
-$color-surface-alt: #F8FAFD;
-$color-shell: #EDF3FF;
-$color-shell-deep: #DDE9FF;
+$color-surface-alt: #F7F9FD;
+$color-shell: #F1F5FF;
+$color-shell-deep: #E2EBFF;
 $color-white: #FFFFFF;
 
 /* 功能色 */
@@ -49,10 +49,10 @@ $font-xs: 24rpx;    /* 12px */
 $font-2xs: 22rpx;   /* 11px */
 
 /* 圆角 */
-$radius-md: 12rpx;
-$radius-lg: 16rpx;
-$radius-xl: 24rpx;
-$radius-2xl: 32rpx;
+$radius-md: 10rpx;
+$radius-lg: 14rpx;
+$radius-xl: 20rpx;
+$radius-2xl: 28rpx;
 $radius-pill: 999rpx;
 
 /* 间距 */
@@ -65,6 +65,6 @@ $space-xl: 40rpx;
 $space-2xl: 48rpx;
 
 /* 阴影 */
-$shadow-soft: 0 16rpx 36rpx rgba(18, 51, 107, 0.08);
-$shadow-card: 0 20rpx 48rpx rgba(18, 51, 107, 0.1);
-$shadow-float: 0 24rpx 60rpx rgba(11, 87, 208, 0.14);
+$shadow-soft: 0 8rpx 24rpx rgba(18, 51, 107, 0.05);
+$shadow-card: 0 12rpx 28rpx rgba(18, 51, 107, 0.06);
+$shadow-float: 0 16rpx 36rpx rgba(11, 87, 208, 0.08);

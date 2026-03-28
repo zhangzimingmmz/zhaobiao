@@ -22,4 +22,6 @@ data/
 miniapp/dist/
 miniapp/.swc/
 admin-frontend/dist/
+notices.db
+tmp/
 None

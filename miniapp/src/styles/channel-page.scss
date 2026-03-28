@@ -1,0 +1,56 @@
+@import './variables.scss';
+
+.channel-page {
+  min-height: 100vh;
+  background: $color-bg;
+
+  .top-bar--secondary {
+    border-bottom: 1rpx solid rgba(18, 51, 107, 0.04);
+  }
+
+  .top-bar__inner--secondary {
+    padding-left: 16rpx;
+  }
+
+  .top-bar__title--secondary {
+    max-width: calc(100% - 260rpx);
+    font-size: 32rpx;
+  }
+
+  .top-bar__back {
+    padding: 12rpx 8rpx 12rpx 0;
+  }
+}
+
+.channel-page__body {
+  padding: 12rpx 18rpx 26rpx;
+}
+
+.channel-page__control-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10rpx;
+  padding: 12rpx;
+  border-radius: 20rpx;
+  background: rgba(241, 245, 255, 0.82);
+  border: 1rpx solid rgba(11, 87, 208, 0.05);
+  box-shadow: 0 4rpx 12rpx rgba(18, 51, 107, 0.03);
+}
+
+.channel-page__list {
+  padding-top: 12rpx;
+}
+
+.channel-page__end {
+  padding: 14rpx 20rpx 4rpx;
+  text-align: center;
+}
+
+.channel-page__load-more {
+  margin-top: 2rpx;
+  padding: 14rpx;
+  text-align: center;
+  border-radius: $radius-lg;
+  background: $color-white;
+  border: 1rpx solid rgba(18, 51, 107, 0.06);
+}

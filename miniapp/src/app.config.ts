@@ -1,6 +1,10 @@
 export default {
   pages: [
+    'pages/launch/index',
     'pages/index/index',
+    'pages/construction/index',
+    'pages/government/index',
+    'pages/information/index',
     'pages/favorites/index',
     'pages/profile/index',
     'pages/detail/index',

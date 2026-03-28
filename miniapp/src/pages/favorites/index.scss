@@ -1,35 +1,19 @@
 @import '../../styles/variables.scss';
 
 .favorites-page {
+  &__section {
+    margin: 12rpx 20rpx 0;
+    padding: 10rpx;
+    border-radius: 20rpx;
+    background: rgba(255, 255, 255, 0.72);
+    border: 1rpx solid rgba(11, 87, 208, 0.06);
+  }
+
+  &__switch {
+    padding-bottom: 8rpx;
+  }
+
   &__content {
-    padding: 24rpx 32rpx 32rpx;
-  }
-
-  &__banner {
-    margin-bottom: 24rpx;
-    padding: 32rpx;
-    background: $color-white;
-    border-radius: $radius-lg;
-    border: 1rpx solid $color-border;
-  }
-
-  &__banner-title {
-    display: block;
-    font-size: $font-base;
-    color: $color-title;
-    font-weight: 600;
-    margin-bottom: 16rpx;
-  }
-
-  &__banner-desc {
-    display: block;
-    font-size: $font-sm;
-    color: $color-body;
-    line-height: 1.7;
-    margin-bottom: 20rpx;
-  }
-
-  &__banner-action {
-    margin-top: 16rpx;
+    padding-top: 6rpx;
   }
 }

@@ -15,12 +15,13 @@
   }
 
   &--tab {
-    background: linear-gradient(180deg, $color-shell 0%, $color-bg 100%);
+    background: rgba(255, 255, 255, 0.96);
     color: $color-title;
+    border-bottom: 1rpx solid rgba(18, 51, 107, 0.06);
   }
 
   &__inner--tab {
-    padding: 0 32rpx;
+    padding: 0 28rpx;
     align-items: center;
   }
 
@@ -30,10 +31,21 @@
   }
 
   &__title--tab {
-    font-size: 56rpx;
+    font-size: 40rpx;
     font-weight: 700;
     color: $color-title;
-    line-height: 1.12;
+    line-height: 1.08;
+  }
+
+  &__title--tab-channel {
+    font-size: 32rpx;
+    font-weight: 700;
+  }
+
+  &--tab-channel {
+    .top-bar__inner--tab {
+      align-items: center;
+    }
   }
 
   &--secondary {
@@ -43,7 +55,7 @@
   }
 
   &__inner--secondary {
-    padding-left: 24rpx;
+    padding-left: 20rpx;
   }
 
   &__side {
@@ -63,8 +75,8 @@
     left: 50%;
     transform: translateX(-50%);
     max-width: calc(100% - 280rpx);
-    font-size: $font-base;
-    font-weight: 600;
+    font-size: 34rpx;
+    font-weight: 700;
     color: $color-title;
     white-space: nowrap;
     overflow: hidden;
@@ -74,7 +86,12 @@
   &__back {
     display: flex;
     align-items: center;
-    padding: 16rpx 12rpx 16rpx 0;
+    padding: 14rpx 10rpx 14rpx 0;
+  }
+
+  &__back--tab {
+    margin-right: 10rpx;
+    padding: 12rpx 10rpx 12rpx 0;
   }
 
   &__back-text {
@@ -83,13 +100,13 @@
   }
 
   &__right {
-    width: 56rpx;
-    height: 56rpx;
+    width: 52rpx;
+    height: 52rpx;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 20rpx;
-    background: rgba(255, 255, 255, 0.7);
+    border-radius: 18rpx;
+    background: rgba(242, 247, 255, 0.9);
   }
 
   &__right--active {

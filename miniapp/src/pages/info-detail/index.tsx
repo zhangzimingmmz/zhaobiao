@@ -3,13 +3,14 @@ import { View, Text, ScrollView, RichText } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { AtButton } from 'taro-ui'
 import TopBar from '../../components/TopBar'
-import { config } from '../../config'
 import { api } from '../../services/api'
 import { openArticleOriginal } from '../../utils/articlePresentation'
 import { formatDate } from '../../utils/formatDate'
+import { useProtectedPage } from '../../hooks/useProtectedPage'
 import './index.scss'
 
 export default function InfoDetail() {
+  const isAuthorized = useProtectedPage('请先登录后查看详情')
   const [detail, setDetail] = useState(null)
   const [loading, setLoading] = useState(true)
   const [favorited, setFavorited] = useState(false)
@@ -20,6 +21,12 @@ export default function InfoDetail() {
   const probeUrl = decodeURIComponent(Taro.getCurrentInstance().router?.params?.url || '')
 
   useEffect(() => {
+    if (!isAuthorized) {
+      setLoading(false)
+      setDetail(null)
+      return
+    }
+
     if (probe === '1') {
       setDetail({
         id: '__h5_probe__',
@@ -27,7 +34,7 @@ export default function InfoDetail() {
         description: probeSummary || '用于验证个人主体小程序是否能通过 WebView 打开自有 H5 页面。',
         content: '<p>这是一条测试消息。请点击上方“查看原文”，验证小程序是否能够打开自有 H5 探针页。</p>',
         publishTime: new Date().toISOString(),
-        originUrl: probeUrl || `${config.baseUrl}/h5-probe.html`,
+        originUrl: probeUrl,
         sourceSiteName: 'Probe',
         isProbe: true,
       })
@@ -74,7 +81,7 @@ export default function InfoDetail() {
       })
       .catch(() => setDetail(null))
       .finally(() => setLoading(false))
-  }, [id])
+  }, [id, isAuthorized])
 
   const handleViewOriginal = () => {
     if (!detail || !detail.originUrl) return
@@ -112,6 +119,10 @@ export default function InfoDetail() {
         Taro.showToast({ title: res.data?.message || '操作失败，请重试', icon: 'none' })
       })
       .catch(() => Taro.showToast({ title: '操作失败，请重试', icon: 'none' }))
+  }
+
+  if (!isAuthorized) {
+    return null
   }
 
   if (loading) {

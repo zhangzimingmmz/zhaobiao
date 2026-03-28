@@ -1,0 +1,83 @@
+@import '../../styles/variables.scss';
+
+.bid-preview-card {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 0;
+  padding: 12rpx 14rpx;
+  border-radius: 18rpx;
+  background: rgba(249, 251, 255, 0.96);
+  border: 1rpx solid rgba(11, 87, 208, 0.06);
+  box-shadow: none;
+
+  &__title {
+    font-size: 22rpx;
+    color: $color-title;
+    font-weight: 700;
+    line-height: 1.4;
+    margin-bottom: 8rpx;
+  }
+
+  &__meta-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12rpx;
+    min-width: 0;
+  }
+
+  &__meta-main {
+    display: flex;
+    align-items: center;
+    gap: 8rpx;
+    min-width: 0;
+    flex: 1;
+  }
+
+  &__tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 4rpx 9rpx;
+    border-radius: $radius-pill;
+    background: $color-primary-soft;
+    color: $color-primary-deep;
+    font-size: $font-2xs;
+    font-weight: 700;
+    letter-spacing: 0.3rpx;
+  }
+
+  &__fact {
+    display: flex;
+    align-items: center;
+    gap: 8rpx;
+    min-width: 0;
+    flex: 1;
+  }
+
+  &__fact-label {
+    flex-shrink: 0;
+    padding: 4rpx 9rpx;
+    border-radius: 12rpx;
+    background: rgba(11, 87, 208, 0.06);
+    font-size: $font-2xs;
+    color: $color-primary-deep;
+    font-weight: 700;
+  }
+
+  &__fact-value {
+    min-width: 0;
+    flex: 1;
+    font-size: $font-2xs;
+    color: $color-body;
+    line-height: 1.45;
+  }
+
+  &__date {
+    flex-shrink: 0;
+    font-size: $font-2xs;
+    color: $color-caption;
+    line-height: 1.45;
+  }
+}

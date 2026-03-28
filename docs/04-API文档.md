@@ -16,7 +16,7 @@
 | 认证与用户 | 验证码、登录、注册（企业认证）、审核状态查询 | 登录/注册后部分接口需 Bearer token |
 | 收藏 | 收藏/取消收藏、收藏列表 | 需登录 |
 | 字典 | 地区、采购方式、分类等 | 一般公开 |
-| 管理端 | 企业审核、企业目录、采集动作列表、采集运行记录、提交 run、文章管理 | 需管理员 token（如 Authorization: Bearer <ADMIN_TOKEN>） |
+| 管理端 | 企业管理（申请审核 + 企业档案）、采集动作列表、采集运行记录、提交 run、文章管理 | 需管理员 token（固定 `ADMIN_TOKEN` 或管理员 JWT） |
 | 文章 | 小程序获取已发布文章列表、详情、记录浏览 | 公开 |
 
 ---
@@ -45,7 +45,7 @@
 
 - **用户端**：登录后响应中带 JWT；请求时头 `Authorization: Bearer <token>`。
 - **收藏真值**：列表、详情、文章接口在带有效 token 时返回 `favorited`，收藏页通过 `GET /api/favorites` 读取账号级收藏。
-- **管理端**：使用固定管理员 token，头 `Authorization: Bearer <ADMIN_TOKEN>`。
+- **管理端**：支持固定管理员 token，或通过 `POST /api/admin/login` 获取带 `adminId`、`username`、`role` 的管理员 JWT。
 - **业务码**：HTTP 200 时，业务成功与否看 body 中 `code`（如 200 成功、401 未登录、403 无权限）或 `success`；错误信息在 `message` / `msg`。
 
 ---

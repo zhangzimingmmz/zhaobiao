@@ -4,6 +4,7 @@ const FAVORITES_TYPE_KEY = 'favorites_selected_type'
 
 const CATEGORY_TYPE_MAP = {
   '002001009': 'construction',
+  '002001010': 'construction',
   '002001001': 'construction',
   '002002001': 'government',
   '59': 'government',

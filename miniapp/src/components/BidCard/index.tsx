@@ -2,9 +2,21 @@ import { View, Text } from '@tarojs/components'
 import AppIcon from '../AppIcon'
 import './index.scss'
 
+function toShortDate(value) {
+  if (!value) return ''
+  const matched = String(value).match(/^(\d{4})-(\d{2})-(\d{2})$/)
+  if (matched) {
+    return `${matched[2]}-${matched[3]}`
+  }
+  return String(value)
+}
+
 export default function BidCard({ item, onClick, onFavoriteToggle, favorited }) {
   const showMeta =
     item.categoryLabel || item.natureLabel || item.methodLabel || item.budgetLabel
+  const showSupportRow = item.sourceName || item.publishLabel
+  const showSecondaryMeta = item.purchaser || item.regionName || item.deadlineLabel
+  const shortPublishLabel = toShortDate(item.publishLabel)
 
   const handleFavoriteClick = (e) => {
     e.stopPropagation()
@@ -19,7 +31,7 @@ export default function BidCard({ item, onClick, onFavoriteToggle, favorited }) 
           <View className="bid-card__favorite" onClick={handleFavoriteClick}>
             <AppIcon
               name={favorited ? 'heartfill' : 'heart'}
-              size={52}
+              size={36}
               color={favorited ? '#ff4d4f' : '#c9cdd4'}
             />
           </View>
@@ -35,30 +47,24 @@ export default function BidCard({ item, onClick, onFavoriteToggle, favorited }) 
         </View>
       )}
 
-      <View className="bid-card__facts">
-        {item.purchaser && (
-          <View className="bid-card__fact">
-            <Text className="bid-card__fact-label">主体</Text>
-            <Text className="bid-card__fact-value" numberOfLines={1}>{item.purchaser}</Text>
-          </View>
-        )}
+      {showSupportRow && (
+        <View className="bid-card__support">
+          {item.sourceName && (
+            <View className="bid-card__support-main">
+              <Text className="bid-card__support-value" numberOfLines={1}>{item.sourceName}</Text>
+            </View>
+          )}
+          {shortPublishLabel && <Text className="bid-card__support-date">{shortPublishLabel}</Text>}
+        </View>
+      )}
 
-        {item.sourceName && (
-          <View className="bid-card__fact">
-            <Text className="bid-card__fact-label">来源</Text>
-            <Text className="bid-card__fact-value" numberOfLines={1}>{item.sourceName}</Text>
-          </View>
-        )}
-      </View>
-
-      <View className="bid-card__meta-list">
-        {item.regionName && <Text className="bid-card__meta-line">地区：{item.regionName}</Text>}
-        {item.deadlineLabel && <Text className="bid-card__meta-line">截止：{item.deadlineLabel}</Text>}
-      </View>
-
-      {item.publishLabel && (
+      {showSecondaryMeta && (
         <View className="bid-card__footer">
-          <Text className="bid-card__footer-text">发布：{item.publishLabel}</Text>
+          <View className="bid-card__meta-list">
+            {item.purchaser && <Text className="bid-card__meta-line" numberOfLines={1}>主体：{item.purchaser}</Text>}
+            {item.regionName && <Text className="bid-card__meta-line" numberOfLines={1}>地区：{item.regionName}</Text>}
+            {item.deadlineLabel && <Text className="bid-card__meta-line" numberOfLines={1}>截止：{item.deadlineLabel}</Text>}
+          </View>
         </View>
       )}
     </View>

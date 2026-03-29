@@ -23,8 +23,18 @@
 
   &__manual-trigger {
     flex: 0 0 auto;
-    padding-top: 8rpx;
-    font-size: 24rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 56rpx;
+    padding: 8rpx 20rpx;
+    border-radius: 999rpx;
+    border: 2rpx solid rgba(22, 119, 255, 0.16);
+    background: rgba(22, 119, 255, 0.08);
+  }
+
+  &__manual-trigger-text {
+    font-size: 26rpx;
     line-height: 1.4;
     color: #4e92e8;
     font-weight: 600;

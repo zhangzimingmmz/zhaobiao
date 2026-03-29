@@ -3,6 +3,7 @@ import { View, Text } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { AtInput, AtButton, AtTextarea } from 'taro-ui'
 import TopBar from '../../components/TopBar'
+import AgreementConsent from '../../components/AgreementConsent'
 import { api } from '../../services/api'
 import { getRegistrationContext, saveRegistrationContext } from '../../utils/registration'
 import './index.scss'
@@ -28,6 +29,7 @@ export default function Register() {
   const [businessScope, setBusinessScope] = useState('')
   const [businessScopeCursor, setBusinessScopeCursor] = useState(0)
   const [businessAddress, setBusinessAddress] = useState('')
+  const [agreementAccepted, setAgreementAccepted] = useState(false)
   const [loading, setLoading] = useState(false)
   const [isResubmit, setIsResubmit] = useState(false)
 
@@ -75,6 +77,10 @@ export default function Register() {
   const handleSubmit = () => {
     if (!username || !password || !mobile || !idCard || !creditCode || !legalPersonName || !businessAddress) {
       Taro.showToast({ title: '请完整填写必填信息', icon: 'none' })
+      return
+    }
+    if (!agreementAccepted) {
+      Taro.showToast({ title: '请先勾选用户协议和隐私政策', icon: 'none' })
       return
     }
     if (password.length < 6 || password.length > 128) {
@@ -275,6 +281,11 @@ export default function Register() {
                   className="auth-form__textarea register-page__textarea"
                 />
               </View>
+              <AgreementConsent
+                checked={agreementAccepted}
+                onToggle={() => setAgreementAccepted((value) => !value)}
+                prefix={isResubmit ? '重新提交前请阅读并同意' : '我已阅读并同意'}
+              />
               <AtButton type="primary" full onClick={handleSubmit} loading={loading} className="register-page__submit">
                 {isResubmit ? '重新提交审核' : '提交注册审核'}
               </AtButton>

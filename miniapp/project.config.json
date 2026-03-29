@@ -2,7 +2,7 @@
   "miniprogramRoot": "dist/",
   "projectname": "zhaobiao-miniapp",
   "description": "金堂招讯通微信小程序",
-  "appid": "wx7d37a098960e712e",
+  "appid": "wxe5f7c075d9dabbf3",
   "setting": {
     "urlCheck": true,
     "es6": true,

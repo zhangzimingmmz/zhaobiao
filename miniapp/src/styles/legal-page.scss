@@ -1,0 +1,51 @@
+@import './variables.scss';
+
+.legal-page {
+  min-height: 100vh;
+
+  &__scroll {
+    height: calc(100vh - var(--top-bar-height, 96px));
+  }
+
+  &__card {
+    margin: 16rpx 24rpx 24rpx;
+    padding: 28rpx 24rpx;
+    gap: 22rpx;
+  }
+
+  &__title {
+    display: block;
+    font-size: 38rpx;
+    line-height: 1.35;
+    font-weight: 700;
+    color: $color-title;
+  }
+
+  &__intro {
+    display: block;
+    font-size: 26rpx;
+    line-height: 1.7;
+    color: $color-caption;
+  }
+
+  &__section {
+    display: flex;
+    flex-direction: column;
+    gap: 10rpx;
+  }
+
+  &__section-title {
+    display: block;
+    font-size: 30rpx;
+    line-height: 1.5;
+    font-weight: 700;
+    color: $color-title;
+  }
+
+  &__section-text {
+    display: block;
+    font-size: 28rpx;
+    line-height: 1.8;
+    color: $color-body;
+  }
+}

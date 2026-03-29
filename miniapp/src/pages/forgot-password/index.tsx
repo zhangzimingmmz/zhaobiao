@@ -3,6 +3,7 @@ import { View, Text } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { AtButton, AtInput } from 'taro-ui'
 import TopBar from '../../components/TopBar'
+import AgreementConsent from '../../components/AgreementConsent'
 import { api } from '../../services/api'
 import { normalizeSupportContacts, presentSupportContacts } from '../../utils/contact'
 import './index.scss'
@@ -23,6 +24,7 @@ export default function ForgotPassword() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [confirmPasswordCursor, setConfirmPasswordCursor] = useState(0)
   const [supportContacts, setSupportContacts] = useState([])
+  const [agreementAccepted, setAgreementAccepted] = useState(false)
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
@@ -53,6 +55,10 @@ export default function ForgotPassword() {
   const handleSubmit = () => {
     if (!username || !mobile || !creditCode || !idCard || !newPassword || !confirmPassword) {
       Taro.showToast({ title: '请完整填写找回信息', icon: 'none' })
+      return
+    }
+    if (!agreementAccepted) {
+      Taro.showToast({ title: '请先勾选用户协议和隐私政策', icon: 'none' })
       return
     }
     if (!/^1\d{10}$/.test(mobile)) {
@@ -108,9 +114,9 @@ export default function ForgotPassword() {
                 一次性填写注册资料完成身份校验。若不方便自助操作，可使用人工协助入口联系运营人员。
               </Text>
             </View>
-            <Text className="forgot-password-page__manual-trigger" onClick={handleManualHelp}>
-              人工协助
-            </Text>
+            <View className="forgot-password-page__manual-trigger" onClick={handleManualHelp}>
+              <Text className="forgot-password-page__manual-trigger-text">人工协助</Text>
+            </View>
           </View>
 
           <View className="auth-form forgot-password-page__form">
@@ -197,6 +203,10 @@ export default function ForgotPassword() {
                 onChange={syncInput(setConfirmPassword, setConfirmPasswordCursor)}
               />
             </View>
+            <AgreementConsent
+              checked={agreementAccepted}
+              onToggle={() => setAgreementAccepted((value) => !value)}
+            />
             <AtButton type="primary" full onClick={handleSubmit} loading={loading}>
               验证并重置密码
             </AtButton>

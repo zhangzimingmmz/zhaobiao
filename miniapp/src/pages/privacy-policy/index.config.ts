@@ -1,4 +1,4 @@
 export default {
-  navigationBarTitleText: '原文',
+  navigationBarTitleText: '隐私政策',
   navigationStyle: 'custom',
 }

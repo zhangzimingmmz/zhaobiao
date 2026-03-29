@@ -48,18 +48,18 @@ export function presentSupportContacts(contacts, options = {}) {
     return
   }
 
-  Taro.showActionSheet({
+  void Taro.showActionSheet({
     alertText: multiTitle,
     itemList: contacts.map((item) => `${item.name} ${item.phone}`),
-    success: (result) => {
+  })
+    .then((result) => {
       const selected = contacts[result.tapIndex]
       if (!selected) return
       Taro.makePhoneCall({ phoneNumber: selected.phone.replace(/\s+/g, '') })
-    },
-    fail: (err) => {
+    })
+    .catch((err) => {
       const errMsg = String(err?.errMsg || '')
       if (errMsg.includes('cancel')) return
       Taro.showToast({ title: '客服列表打开失败，请稍后重试', icon: 'none' })
-    },
-  })
+    })
 }

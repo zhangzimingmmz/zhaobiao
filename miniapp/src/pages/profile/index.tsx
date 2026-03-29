@@ -101,6 +101,7 @@ export default function Profile() {
           setAuditData(null)
           setAuditStatus('')
           setNextAction('')
+          Taro.reLaunch({ url: '/pages/login/index' })
         }
       },
     })

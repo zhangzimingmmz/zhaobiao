@@ -33,6 +33,10 @@ const ICONS = {
     '<circle cx="12" cy="12" r="8"/><path d="M12 8v5l3 2"/>',
   filetext:
     '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h4"/>',
+  square:
+    '<rect x="5" y="5" width="14" height="14" rx="3"/>',
+  checksquarefill:
+    '<rect fill="currentColor" x="4" y="4" width="16" height="16" rx="4"/><path d="m8.2 12.2 2.5 2.5 5.1-5.4" stroke="#FFFFFF" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>',
   x:
     '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
 }
@@ -59,7 +63,7 @@ export default function AppIcon(props) {
     color = '#86909C',
   } = props
 
-  const useFill = name === 'heartfill'
+  const useFill = name === 'heartfill' || name === 'checksquarefill'
   return (
     <Image
       src={toDataUri(ICONS[name] || ICONS.filetext, color, useFill)}

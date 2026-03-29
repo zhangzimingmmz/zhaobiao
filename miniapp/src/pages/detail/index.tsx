@@ -5,6 +5,11 @@ import { AtButton } from 'taro-ui'
 import TopBar from '../../components/TopBar'
 import { api } from '../../services/api'
 import { formatDate, formatDateTime } from '../../utils/formatDate'
+import {
+  canOpenOriginalInMiniapp,
+  copyOriginalLink,
+  openArticleOriginal,
+} from '../../utils/articlePresentation'
 import { useProtectedPage } from '../../hooks/useProtectedPage'
 import './index.scss'
 
@@ -70,12 +75,13 @@ export default function Detail() {
   }, [id, isAuthorized])
 
   const handleViewOriginal = () => {
-    if (detail && detail.originUrl) {
-      Taro.setClipboardData({
-        data: detail.originUrl,
-        success: () => Taro.showToast({ title: '原文链接已复制，请在浏览器中打开', icon: 'none' }),
-      })
-    }
+    if (!detail?.originUrl) return
+    openArticleOriginal(detail.originUrl)
+  }
+
+  const handleCopyOriginal = () => {
+    if (!detail?.originUrl) return
+    copyOriginalLink(detail.originUrl)
   }
 
   const handleFavoriteToggle = () => {
@@ -156,6 +162,7 @@ export default function Detail() {
     : []
   const attachments = Array.isArray(detail?.attachments) ? detail.attachments : []
   const pageTitle = resolveDetailPageTitle(detail)
+  const canOpenOriginal = canOpenOriginalInMiniapp(detail?.originUrl)
 
   if (!isAuthorized) {
     return null
@@ -189,19 +196,45 @@ export default function Detail() {
       />
       <ScrollView scrollY className="detail-page__scroll">
         <View className="secondary-card detail-card">
-          {detail.categoryName && <Text className="detail-card__tag">{detail.categoryName}</Text>}
-          <Text className="detail-card__title">{detail.title}</Text>
-          {detail.publishTime && (
-            <Text className="detail-card__time">发布时间：{formatDate(detail.publishTime)}</Text>
+          <View className="detail-card__headline">
+            {detail.categoryName && <Text className="detail-card__tag">{detail.categoryName}</Text>}
+            <Text className="detail-card__title">{detail.title}</Text>
+          </View>
+          {(detail.publishTime || detail.sourceSiteName) && (
+            <View className="detail-card__meta">
+              {detail.publishTime && (
+                <Text className="detail-card__meta-text">发布时间：{formatDate(detail.publishTime)}</Text>
+              )}
+              {detail.publishTime && detail.sourceSiteName && (
+                <Text className="detail-card__meta-separator">·</Text>
+              )}
+              {detail.sourceSiteName && (
+                <Text className="detail-card__meta-text">来源：{detail.sourceSiteName}</Text>
+              )}
+            </View>
           )}
           <View className="detail-card__actions">
             {detail.originUrl && (
-              <AtButton type="primary" full onClick={handleViewOriginal} className="detail-card__action">
-                查看原文
-              </AtButton>
-            )}
-            {!detail.originUrl && detail.sourceSiteName && (
-              <Text className="detail-card__source">来源：{detail.sourceSiteName}</Text>
+              <View className="detail-card__actions-group">
+                <View className="detail-card__actions-row">
+                  <AtButton
+                    type="primary"
+                    full
+                    onClick={canOpenOriginal ? handleViewOriginal : handleCopyOriginal}
+                    className="detail-card__action detail-card__action--primary"
+                  >
+                    {canOpenOriginal ? '打开原文' : '复制链接'}
+                  </AtButton>
+                  {canOpenOriginal && (
+                    <View className="detail-card__secondary-action" onClick={handleCopyOriginal}>
+                      <Text className="detail-card__secondary-action-text">复制链接</Text>
+                    </View>
+                  )}
+                </View>
+                {!canOpenOriginal && (
+                  <Text className="detail-card__hint">该来源暂不支持小程序内打开，请复制后在浏览器查看</Text>
+                )}
+              </View>
             )}
           </View>
         </View>

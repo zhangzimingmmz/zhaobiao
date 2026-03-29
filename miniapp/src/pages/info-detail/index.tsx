@@ -4,7 +4,11 @@ import Taro from '@tarojs/taro'
 import { AtButton } from 'taro-ui'
 import TopBar from '../../components/TopBar'
 import { api } from '../../services/api'
-import { openArticleOriginal } from '../../utils/articlePresentation'
+import {
+  canOpenOriginalInMiniapp,
+  copyOriginalLink,
+  openArticleOriginal,
+} from '../../utils/articlePresentation'
 import { formatDate } from '../../utils/formatDate'
 import { useProtectedPage } from '../../hooks/useProtectedPage'
 import './index.scss'
@@ -95,6 +99,11 @@ export default function InfoDetail() {
     openArticleOriginal(detail.originUrl)
   }
 
+  const handleCopyOriginal = () => {
+    if (!detail?.originUrl) return
+    copyOriginalLink(detail.originUrl)
+  }
+
   const handleShare = () => {
     if (!detail) return
 
@@ -129,6 +138,7 @@ export default function InfoDetail() {
   }
 
   const pageTitle = resolveInfoDetailTitle(detail)
+  const canOpenOriginal = canOpenOriginalInMiniapp(detail?.originUrl)
 
   if (!isAuthorized) {
     return null
@@ -164,18 +174,45 @@ export default function InfoDetail() {
       />
       <ScrollView scrollY className="info-detail-page__scroll">
         <View className="secondary-card info-detail__head">
-          <Text className="info-detail__title">{detail.title}</Text>
-          {detail.publishTime && (
-            <Text className="info-detail__time">发布时间：{formatDate(detail.publishTime)}</Text>
+          <View className="info-detail__headline">
+            {detail.categoryName && <Text className="info-detail__tag">{detail.categoryName}</Text>}
+            <Text className="info-detail__title">{detail.title}</Text>
+          </View>
+          {(detail.publishTime || detail.sourceSiteName) && (
+            <View className="info-detail__meta">
+              {detail.publishTime && (
+                <Text className="info-detail__meta-text">发布时间：{formatDate(detail.publishTime)}</Text>
+              )}
+              {detail.publishTime && detail.sourceSiteName && (
+                <Text className="info-detail__meta-separator">·</Text>
+              )}
+              {detail.sourceSiteName && (
+                <Text className="info-detail__meta-text">来源：{detail.sourceSiteName}</Text>
+              )}
+            </View>
           )}
           <View className="info-detail__head-actions">
             {detail.originUrl && (
-              <AtButton type="primary" full onClick={handleViewOriginal} className="info-detail__head-action">
-                查看原文
-              </AtButton>
-            )}
-            {!detail.originUrl && detail.sourceSiteName && (
-              <Text className="info-detail__head-source">来源：{detail.sourceSiteName}</Text>
+              <View className="info-detail__head-actions-group">
+                <View className="info-detail__head-actions-row">
+                  <AtButton
+                    type="primary"
+                    full
+                    onClick={canOpenOriginal ? handleViewOriginal : handleCopyOriginal}
+                    className="info-detail__head-action"
+                  >
+                    {canOpenOriginal ? '打开原文' : '复制链接'}
+                  </AtButton>
+                  {canOpenOriginal && (
+                    <View className="info-detail__head-secondary" onClick={handleCopyOriginal}>
+                      <Text className="info-detail__head-secondary-text">复制链接</Text>
+                    </View>
+                  )}
+                </View>
+                {!canOpenOriginal && (
+                  <Text className="info-detail__head-hint">该来源暂不支持小程序内打开，请复制后在浏览器查看</Text>
+                )}
+              </View>
             )}
           </View>
         </View>

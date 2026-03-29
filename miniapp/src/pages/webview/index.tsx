@@ -24,7 +24,7 @@ export default function WebViewPage() {
   if (!articleUrl) {
     return (
       <View className="page page--secondary webview-page">
-        <TopBar title="文章详情" showBack variant="secondary" />
+        <TopBar title="原文" showBack variant="secondary" />
         <View className="webview-page__body">
           <View className="error-state">
             <View className="error-text">文章链接无效</View>
@@ -36,7 +36,7 @@ export default function WebViewPage() {
 
   return (
     <View className="page page--secondary webview-page">
-      <TopBar title="文章详情" showBack variant="secondary" />
+      <TopBar title="原文" showBack variant="secondary" />
       <View className="webview-page__body">
       {loading && (
         <View className="loading-state">

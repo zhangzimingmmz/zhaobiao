@@ -14,6 +14,8 @@ export default {
     'pages/forgot-password/index',
     'pages/register/index',
     'pages/audit-status/index',
+    'pages/user-agreement/index',
+    'pages/privacy-policy/index',
   ],
   window: {
     backgroundTextStyle: 'light',

@@ -4,6 +4,7 @@ import Taro from '@tarojs/taro'
 import { AtInput, AtButton } from 'taro-ui'
 import TopBar from '../../components/TopBar'
 import AuthBrand from '../../components/AuthBrand'
+import AgreementConsent from '../../components/AgreementConsent'
 import { api } from '../../services/api'
 import { saveRegistrationContext } from '../../utils/registration'
 import { hasAuthToken, HOME_PAGE_URL } from '../../utils/auth'
@@ -37,6 +38,7 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [passwordCursor, setPasswordCursor] = useState(0)
   const [showPassword, setShowPassword] = useState(false)
+  const [agreementAccepted, setAgreementAccepted] = useState(false)
   const [loading, setLoading] = useState(false)
   const canGoBack = typeof getCurrentPages === 'function' ? getCurrentPages().length > 1 : false
 
@@ -55,6 +57,10 @@ export default function Login() {
   const handleLogin = () => {
     if (!username || !password) {
       Taro.showToast({ title: '请填写登录名和密码', icon: 'none' })
+      return
+    }
+    if (!agreementAccepted) {
+      Taro.showToast({ title: '请先勾选用户协议和隐私政策', icon: 'none' })
       return
     }
 
@@ -152,26 +158,26 @@ export default function Login() {
                   </View>
                 </View>
               </View>
+              <AgreementConsent
+                checked={agreementAccepted}
+                onToggle={() => setAgreementAccepted((value) => !value)}
+              />
               <AtButton type="primary" full onClick={handleLogin} loading={loading} className="login-page__submit">
                 登录
               </AtButton>
             </View>
             <View className="login-page__form-foot">
-              <View
-                className="login-page__forgot"
-                onClick={() => Taro.redirectTo({ url: '/pages/forgot-password/index' })}
-              >
-                忘记密码？
-              </View>
-              <View className="login-page__register" onClick={() => Taro.redirectTo({ url: '/pages/register/index' })}>
-                <Text className="login-page__register-prefix">还没有账号？</Text>
-                <Text className="login-page__register-action">去注册</Text>
-              </View>
-              <View className="login-page__agreement">
-                <Text className="login-page__agreement-text">登录即表示同意</Text>
-                <Text className="login-page__agreement-link">《用户协议》</Text>
-                <Text className="login-page__agreement-text"> 与 </Text>
-                <Text className="login-page__agreement-link">《隐私政策》</Text>
+              <View className="login-page__actions-row">
+                <View className="login-page__register" onClick={() => Taro.redirectTo({ url: '/pages/register/index' })}>
+                  <Text className="login-page__register-prefix">还没有账号？</Text>
+                  <Text className="login-page__action-link">去注册</Text>
+                </View>
+                <View
+                  className="login-page__forgot"
+                  onClick={() => Taro.redirectTo({ url: '/pages/forgot-password/index' })}
+                >
+                  <Text className="login-page__action-link">忘记密码</Text>
+                </View>
               </View>
             </View>
           </View>

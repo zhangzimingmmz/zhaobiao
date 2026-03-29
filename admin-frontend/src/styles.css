@@ -79,7 +79,7 @@ button {
 .login-header {
   text-align: center;
   display: grid;
-  gap: 10px;
+  gap: 12px;
 }
 
 .login-card h1 {
@@ -92,11 +92,20 @@ button {
 }
 
 .login-card .subtitle {
-  margin: 0;
-  font-size: 18px;
-  color: #8c8c8c;
-  font-weight: 500;
+  margin: 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 0 18px;
+  border-radius: 999px;
+  font-size: 22px;
+  color: #4f5fbf;
+  font-weight: 700;
+  letter-spacing: 0.5px;
   text-align: center;
+  background: rgba(102, 126, 234, 0.08);
+  border: 1px solid rgba(102, 126, 234, 0.14);
 }
 
 .login-card .ant-form {

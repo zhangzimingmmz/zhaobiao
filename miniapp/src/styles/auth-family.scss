@@ -34,7 +34,7 @@
     justify-content: center;
     align-items: center;
     min-height: 0;
-    padding: 20rpx 24rpx 16rpx;
+    padding: 14rpx 14rpx 12rpx;
     border-radius: 30rpx;
     background:
       radial-gradient(circle at 18% 18%, rgba(95, 180, 255, 0.14), transparent 34%),
@@ -44,178 +44,42 @@
     box-shadow: 0 4rpx 14rpx rgba(18, 51, 107, 0.025);
   }
 
-  &__brand--main {
-    min-height: 198rpx;
-
-    .auth-page__brand-visual {
-      height: 104rpx;
-    }
-
-    .auth-page__brand-mark {
-      top: 6rpx;
-      width: 224rpx;
-      height: 92rpx;
-    }
-
-    .auth-page__brand-mark-arch {
-      left: 100rpx;
-      width: 28rpx;
-      height: 80rpx;
-    }
-
-    .auth-page__brand-mark-road {
-      left: 24rpx;
-      bottom: 12rpx;
-      height: 16rpx;
-      box-shadow: 0 -28rpx 0 -23rpx rgba(83, 164, 235, 0.92);
-    }
-
-    .auth-page__brand-title {
-      font-size: 56rpx;
-      letter-spacing: 2rpx;
-    }
-  }
-
-  &__brand--medium {
-    min-height: 162rpx;
-
-    .auth-page__brand-visual {
-      height: 88rpx;
-      margin-bottom: 8rpx;
-    }
-
-    .auth-page__brand-orb--left {
-      width: 112rpx;
-      height: 112rpx;
-    }
-
-    .auth-page__brand-orb--right {
-      width: 108rpx;
-      height: 108rpx;
-    }
-
-    .auth-page__brand-mark {
-      top: 8rpx;
-      width: 196rpx;
-      height: 78rpx;
-    }
-
-    .auth-page__brand-mark-arch {
-      left: 86rpx;
-      width: 24rpx;
-      height: 68rpx;
-    }
-
-    .auth-page__brand-mark-road {
-      left: 22rpx;
-      bottom: 10rpx;
-      height: 14rpx;
-      box-shadow: 0 -24rpx 0 -20rpx rgba(83, 164, 235, 0.92);
-    }
-
-    .auth-page__brand-title {
-      font-size: 48rpx;
-      letter-spacing: 1rpx;
-    }
-  }
-
+  &__brand--main,
+  &__brand--medium,
   &__brand--light {
-    min-height: 128rpx;
-    padding-top: 18rpx;
-    padding-bottom: 14rpx;
-
-    .auth-page__brand-visual {
-      height: 74rpx;
-      margin-bottom: 6rpx;
-    }
-
-    .auth-page__brand-orb--left {
-      width: 92rpx;
-      height: 92rpx;
-    }
-
-    .auth-page__brand-orb--right {
-      width: 88rpx;
-      height: 88rpx;
-    }
-
-    .auth-page__brand-mark {
-      top: 6rpx;
-      width: 166rpx;
-      height: 64rpx;
-    }
-
-    .auth-page__brand-mark-arch {
-      left: 74rpx;
-      width: 22rpx;
-      height: 56rpx;
-    }
-
-    .auth-page__brand-mark-road {
-      left: 18rpx;
-      bottom: 8rpx;
-      height: 12rpx;
-      box-shadow: 0 -20rpx 0 -17rpx rgba(83, 164, 235, 0.92);
-    }
-
-    .auth-page__brand-title {
-      font-size: 42rpx;
-      letter-spacing: 1rpx;
-    }
+    min-height: 382rpx;
   }
 
-  &__brand-visual {
+  &__brand-image-wrap {
     position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     width: 100%;
+    height: 340rpx;
     overflow: hidden;
+    border-radius: 24rpx;
   }
 
-  &__brand-orb {
-    position: absolute;
-    border-radius: $radius-pill;
-    filter: blur(4rpx);
-    opacity: 0.7;
+  &__brand-image {
+    width: 100%;
+    height: 100%;
   }
 
-  &__brand-orb--left {
-    top: -8rpx;
-    left: 18rpx;
-    background: rgba(107, 196, 255, 0.28);
-  }
-
-  &__brand-orb--right {
-    top: 14rpx;
-    right: 34rpx;
-    background: rgba(158, 235, 207, 0.24);
-  }
-
-  &__brand-mark {
+  &__brand-accent {
     position: absolute;
     left: 50%;
-    transform: translateX(-50%);
+    bottom: 70rpx;
+    width: 126rpx;
+    height: 96rpx;
+    transform: translateX(-8%);
+    pointer-events: none;
   }
 
-  &__brand-mark-arch {
-    position: absolute;
-    top: 0;
-    border-radius: $radius-pill $radius-pill 14rpx 14rpx;
-    background: linear-gradient(180deg, #53a4eb 0%, #2e7fdc 100%);
-  }
-
-  &__brand-mark-road {
-    position: absolute;
-    right: 0;
-    border-radius: $radius-pill;
-    background: linear-gradient(90deg, rgba(83, 164, 235, 0.9) 0%, rgba(109, 224, 197, 0.88) 100%);
-    transform: skewX(-18deg);
-  }
-
-  &__brand-title {
-    display: block;
-    text-align: center;
-    line-height: 1.08;
-    font-weight: 700;
-    color: $color-title;
+  &__brand-accent-image {
+    width: 100%;
+    height: 100%;
+    filter: drop-shadow(0 8rpx 18rpx rgba(255, 255, 255, 0.18));
   }
 
   &__card {

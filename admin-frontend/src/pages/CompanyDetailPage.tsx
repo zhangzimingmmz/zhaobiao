@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Card, Descriptions, Button, Form, Input, Modal, message } from "antd";
-import { deleteTestCompanyData, getCompanyDetail, updateCompanyDetail } from "../lib/api";
+import { deleteTestCompanyData, getCompanyDetail, resetCompanyUserPassword, updateCompanyDetail } from "../lib/api";
 import type { ReviewDetail } from "../lib/types";
 import { ApiUnavailableState, ErrorState, LoadingState } from "../components/States";
 import { reviewStatusBadgeClass, reviewStatusLabel } from "../lib/statusLabels";
@@ -19,6 +19,7 @@ export function CompanyDetailPage({
   const [item, setItem] = useState<ReviewDetail | null>(null);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [resettingPassword, setResettingPassword] = useState(false);
   const [form] = Form.useForm();
 
   async function load() {
@@ -98,6 +99,59 @@ export function CompanyDetailPage({
     });
   }
 
+  function handleResetPassword() {
+    let password = "";
+    let confirmPassword = "";
+    Modal.confirm({
+      title: "重置登录密码",
+      content: (
+        <div style={{ display: "grid", gap: 12 }}>
+          <div>请先通过电话或人工方式完成身份核验，再为该企业账号设置新密码。</div>
+          <Input.Password
+            placeholder="请输入新密码（6-128 位）"
+            onChange={(event) => {
+              password = event.target.value;
+            }}
+          />
+          <Input.Password
+            placeholder="请再次输入新密码"
+            onChange={(event) => {
+              confirmPassword = event.target.value;
+            }}
+          />
+        </div>
+      ),
+      okText: "确认重置",
+      okButtonProps: { danger: true, loading: resettingPassword },
+      onOk: async () => {
+        if (!password) {
+          message.error("请输入新密码");
+          throw new Error("请输入新密码");
+        }
+        if (password.length < 6 || password.length > 128) {
+          message.error("密码长度需在 6-128 位之间");
+          throw new Error("密码长度需在 6-128 位之间");
+        }
+        if (password !== confirmPassword) {
+          message.error("两次输入的密码不一致");
+          throw new Error("两次输入的密码不一致");
+        }
+
+        try {
+          setResettingPassword(true);
+          await resetCompanyUserPassword(id, password);
+          message.success("登录密码已重置");
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : "重置密码失败";
+          message.error(msg);
+          throw err;
+        } finally {
+          setResettingPassword(false);
+        }
+      },
+    });
+  }
+
   if (loading) return <LoadingState />;
   if (error && !item) return <ErrorState error={error} />;
   if (!item) return null;
@@ -112,6 +166,9 @@ export function CompanyDetailPage({
             <Button type="link" onClick={() => navigate("/enterprise/companies")}>
               返回企业档案
             </Button>
+            {isSuperAdmin() ? (
+              <Button onClick={handleResetPassword}>重置密码</Button>
+            ) : null}
             {isSuperAdmin() ? (
               <Button onClick={() => setEditing(true)}>编辑档案</Button>
             ) : null}

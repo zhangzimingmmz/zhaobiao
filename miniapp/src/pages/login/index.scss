@@ -18,8 +18,48 @@
     gap: 20rpx;
   }
 
+  &__input-wrap {
+    position: relative;
+
+    .at-input {
+      padding-right: 96rpx;
+    }
+  }
+
+  &__input-icon {
+    position: absolute;
+    top: 50%;
+    right: 24rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 56rpx;
+    height: 56rpx;
+    transform: translateY(-50%);
+    z-index: 2;
+  }
+
+  &__input-icon--static {
+    pointer-events: none;
+  }
+
+  &__input-icon-image {
+    width: 44rpx;
+    height: 44rpx;
+    opacity: 0.95;
+  }
+
   &__form-foot {
     margin-top: 22rpx;
+  }
+
+  &__forgot {
+    text-align: right;
+    margin-bottom: 10rpx;
+    font-size: 24rpx;
+    line-height: 1.5;
+    color: #4e92e8;
+    font-weight: 600;
   }
 
   &__submit {

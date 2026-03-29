@@ -19,6 +19,9 @@ export const api = {
   register(data) {
     return post('/api/auth/register', data)
   },
+  forgotPasswordReset(data) {
+    return post('/api/auth/forgot-password/reset', data)
+  },
   auditStatus(params) {
     return get('/api/auth/audit-status', params)
   },

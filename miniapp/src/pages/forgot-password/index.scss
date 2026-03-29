@@ -1,0 +1,36 @@
+@import '../../styles/auth-family.scss';
+
+.forgot-password-page {
+  &__body {
+    gap: 0;
+    padding-top: 16rpx;
+  }
+
+  &__card {
+    gap: 22rpx;
+  }
+
+  &__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20rpx;
+  }
+
+  &__intro {
+    flex: 1 1 auto;
+  }
+
+  &__manual-trigger {
+    flex: 0 0 auto;
+    padding-top: 8rpx;
+    font-size: 24rpx;
+    line-height: 1.4;
+    color: #4e92e8;
+    font-weight: 600;
+  }
+
+  &__form {
+    gap: 22rpx;
+  }
+}

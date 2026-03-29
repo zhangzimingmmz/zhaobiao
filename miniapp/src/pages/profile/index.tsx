@@ -6,6 +6,7 @@ import TopBar from '../../components/TopBar'
 import AvatarInitials from '../../components/AvatarInitials'
 import AppIcon from '../../components/AppIcon'
 import { api } from '../../services/api'
+import { normalizeSupportContacts, presentSupportContacts } from '../../utils/contact'
 import { getRegistrationContext, saveRegistrationContext } from '../../utils/registration'
 import { formatDateTime } from '../../utils/formatDate'
 import './index.scss'
@@ -79,20 +80,10 @@ export default function Profile() {
   const handleContact = async () => {
     try {
       const res = await api.getContactSettings()
-      const supportPhone = res.data?.data?.supportPhone?.trim?.() || ''
-      if (!supportPhone) {
-        Taro.showToast({ title: '暂未设置客服电话', icon: 'none' })
-        return
-      }
-      Taro.showModal({
-        title: '联系客服',
-        content: `客服电话：${supportPhone}`,
-        confirmText: '拨打',
-        success: (modalRes) => {
-          if (modalRes.confirm) {
-            Taro.makePhoneCall({ phoneNumber: supportPhone })
-          }
-        },
+      presentSupportContacts(normalizeSupportContacts(res.data?.data), {
+        emptyMessage: '暂未设置客服电话',
+        singleTitle: '联系客服',
+        multiTitle: '请选择客服',
       })
     } catch {
       Taro.showToast({ title: '获取客服电话失败', icon: 'none' })

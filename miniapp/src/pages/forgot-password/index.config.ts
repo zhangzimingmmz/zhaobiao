@@ -1,4 +1,4 @@
 export default {
-  navigationBarTitleText: '文章详情',
+  navigationBarTitleText: '忘记密码',
   navigationStyle: 'custom',
 }

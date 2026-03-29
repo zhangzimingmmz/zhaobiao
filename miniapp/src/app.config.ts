@@ -11,6 +11,7 @@ export default {
     'pages/info-detail/index',
     'pages/webview/index',
     'pages/login/index',
+    'pages/forgot-password/index',
     'pages/register/index',
     'pages/audit-status/index',
   ],

@@ -9,6 +9,13 @@ import { formatDate } from '../../utils/formatDate'
 import { useProtectedPage } from '../../hooks/useProtectedPage'
 import './index.scss'
 
+function resolveInfoDetailTitle(detailData) {
+  if (detailData?.categoryName) return detailData.categoryName
+  if (detailData?.isProbe) return '测试详情'
+  if (detailData?.originUrl) return '文章详情'
+  return '信息详情'
+}
+
 export default function InfoDetail() {
   const isAuthorized = useProtectedPage('请先登录后查看详情')
   const [detail, setDetail] = useState(null)
@@ -121,6 +128,8 @@ export default function InfoDetail() {
       .catch(() => Taro.showToast({ title: '操作失败，请重试', icon: 'none' }))
   }
 
+  const pageTitle = resolveInfoDetailTitle(detail)
+
   if (!isAuthorized) {
     return null
   }
@@ -145,7 +154,7 @@ export default function InfoDetail() {
   return (
     <View className="page page--secondary info-detail-page">
       <TopBar
-        title="信息详情"
+        title={pageTitle}
         showBack
         right={detail.isProbe ? undefined : favorited ? 'favorite-active' : 'favorite'}
         variant="secondary"

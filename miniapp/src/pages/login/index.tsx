@@ -1,18 +1,42 @@
 import { useEffect, useState } from 'react'
-import { View, Text } from '@tarojs/components'
+import { View, Text, Image } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { AtInput, AtButton } from 'taro-ui'
 import TopBar from '../../components/TopBar'
+import AuthBrand from '../../components/AuthBrand'
 import { api } from '../../services/api'
 import { saveRegistrationContext } from '../../utils/registration'
 import { hasAuthToken, HOME_PAGE_URL } from '../../utils/auth'
 import './index.scss'
+
+const USER_ICON = `data:image/svg+xml;utf8,${encodeURIComponent(`
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <circle cx="32" cy="20" r="10" fill="#B5BFCD"/>
+  <path d="M16 48c0-8.8 7.2-16 16-16s16 7.2 16 16v2H16v-2Z" fill="#B5BFCD"/>
+</svg>
+`)}`
+
+const EYE_OFF_ICON = `data:image/svg+xml;utf8,${encodeURIComponent(`
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <path d="M8 32s8-14 24-14 24 14 24 14-8 14-24 14S8 32 8 32Z" fill="none" stroke="#B5BFCD" stroke-width="5" stroke-linejoin="round"/>
+  <circle cx="32" cy="32" r="7" fill="none" stroke="#B5BFCD" stroke-width="5"/>
+  <path d="M14 50 50 14" stroke="#B5BFCD" stroke-width="5" stroke-linecap="round"/>
+</svg>
+`)}`
+
+const EYE_ON_ICON = `data:image/svg+xml;utf8,${encodeURIComponent(`
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <path d="M8 32s8-14 24-14 24 14 24 14-8 14-24 14S8 32 8 32Z" fill="none" stroke="#4E92E8" stroke-width="5" stroke-linejoin="round"/>
+  <circle cx="32" cy="32" r="7" fill="none" stroke="#4E92E8" stroke-width="5"/>
+</svg>
+`)}`
 
 export default function Login() {
   const [username, setUsername] = useState('')
   const [usernameCursor, setUsernameCursor] = useState(0)
   const [password, setPassword] = useState('')
   const [passwordCursor, setPasswordCursor] = useState(0)
+  const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const canGoBack = typeof getCurrentPages === 'function' ? getCurrentPages().length > 1 : false
 
@@ -89,46 +113,56 @@ export default function Login() {
       <TopBar title="登录" showBack={canGoBack} variant="secondary" />
       <View className="secondary-page__body auth-page__body login-page__body">
         <View className="auth-page__band auth-page__band--brand login-page__band">
-          <View className="auth-page__brand auth-page__brand--main">
-            <View className="auth-page__brand-visual">
-              <View className="auth-page__brand-orb auth-page__brand-orb--left" />
-              <View className="auth-page__brand-orb auth-page__brand-orb--right" />
-              <View className="auth-page__brand-mark">
-                <View className="auth-page__brand-mark-arch" />
-                <View className="auth-page__brand-mark-road" />
-              </View>
-            </View>
-            <Text className="auth-page__brand-title">金堂招讯通</Text>
-          </View>
+          <AuthBrand />
         </View>
         <View className="auth-page__band auth-page__band--content login-page__band login-page__band--form">
           <View className="secondary-card form-card auth-page__card auth-page__card--primary login-page__form">
             <View className="auth-form login-page__form-main">
               <View className="auth-form__field login-page__field">
-                <AtInput
-                  name="username"
-                  type="text"
-                  placeholder="请输入登录名"
-                  value={username}
-                  cursor={usernameCursor}
-                  onChange={syncInput(setUsername, setUsernameCursor)}
-                />
+                <View className="login-page__input-wrap">
+                  <AtInput
+                    name="username"
+                    type="text"
+                    placeholder="请输入登录名"
+                    value={username}
+                    cursor={usernameCursor}
+                    onChange={syncInput(setUsername, setUsernameCursor)}
+                  />
+                  <View className="login-page__input-icon login-page__input-icon--static">
+                    <Image className="login-page__input-icon-image" mode="aspectFit" src={USER_ICON} />
+                  </View>
+                </View>
               </View>
               <View className="auth-form__field login-page__field">
-                <AtInput
-                  name="password"
-                  type="password"
-                  placeholder="请输入登录密码"
-                  value={password}
-                  cursor={passwordCursor}
-                  onChange={syncInput(setPassword, setPasswordCursor)}
-                />
+                <View className="login-page__input-wrap">
+                  <AtInput
+                    name="password"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="请输入登录密码"
+                    value={password}
+                    cursor={passwordCursor}
+                    onChange={syncInput(setPassword, setPasswordCursor)}
+                  />
+                  <View className="login-page__input-icon" onClick={() => setShowPassword((value) => !value)}>
+                    <Image
+                      className="login-page__input-icon-image"
+                      mode="aspectFit"
+                      src={showPassword ? EYE_ON_ICON : EYE_OFF_ICON}
+                    />
+                  </View>
+                </View>
               </View>
               <AtButton type="primary" full onClick={handleLogin} loading={loading} className="login-page__submit">
                 登录
               </AtButton>
             </View>
             <View className="login-page__form-foot">
+              <View
+                className="login-page__forgot"
+                onClick={() => Taro.redirectTo({ url: '/pages/forgot-password/index' })}
+              >
+                忘记密码？
+              </View>
               <View className="login-page__register" onClick={() => Taro.redirectTo({ url: '/pages/register/index' })}>
                 <Text className="login-page__register-prefix">还没有账号？</Text>
                 <Text className="login-page__register-action">去注册</Text>

@@ -74,19 +74,6 @@ export default function AuditStatus() {
     <View className="page page--secondary auth-page audit-status-page">
       <TopBar title="审核状态" showBack variant="secondary" />
       <View className="secondary-page__body auth-page__body audit-status-page__body">
-        <View className="auth-page__band auth-page__band--brand">
-          <View className="auth-page__brand auth-page__brand--light">
-            <View className="auth-page__brand-visual">
-              <View className="auth-page__brand-orb auth-page__brand-orb--left" />
-              <View className="auth-page__brand-orb auth-page__brand-orb--right" />
-              <View className="auth-page__brand-mark">
-                <View className="auth-page__brand-mark-arch" />
-                <View className="auth-page__brand-mark-road" />
-              </View>
-            </View>
-            <Text className="auth-page__brand-title">金堂招讯通</Text>
-          </View>
-        </View>
         <View className="auth-page__band auth-page__band--content">
           <View className={'secondary-card auth-page__card auth-page__card--primary audit-status-page__card audit-status-page__card--' + status}>
             <View className="auth-page__section audit-status-page__header">

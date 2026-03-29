@@ -17,6 +17,8 @@ export default function Register() {
   const [passwordCursor, setPasswordCursor] = useState(0)
   const [mobile, setMobile] = useState('')
   const [mobileCursor, setMobileCursor] = useState(0)
+  const [idCard, setIdCard] = useState('')
+  const [idCardCursor, setIdCardCursor] = useState(0)
   const [creditCode, setCreditCode] = useState('')
   const [creditCodeCursor, setCreditCodeCursor] = useState(0)
   const [legalPersonName, setLegalPersonName] = useState('')
@@ -71,12 +73,20 @@ export default function Register() {
   }, [])
 
   const handleSubmit = () => {
-    if (!username || !password || !mobile || !creditCode || !legalPersonName || !businessAddress) {
+    if (!username || !password || !mobile || !idCard || !creditCode || !legalPersonName || !businessAddress) {
       Taro.showToast({ title: '请完整填写必填信息', icon: 'none' })
+      return
+    }
+    if (password.length < 6 || password.length > 128) {
+      Taro.showToast({ title: '密码长度需在6-128位之间', icon: 'none' })
       return
     }
     if (!/^1\d{10}$/.test(mobile)) {
       Taro.showToast({ title: '请输入正确手机号', icon: 'none' })
+      return
+    }
+    if (!/^\d{17}[\dXx]$/.test(idCard)) {
+      Taro.showToast({ title: '请输入18位身份证号', icon: 'none' })
       return
     }
     if (!/^[0-9A-Z]{18}$/.test(creditCode)) {
@@ -93,6 +103,7 @@ export default function Register() {
       username,
       password,
       mobile,
+      idCard: idCard.toUpperCase(),
       creditCode,
       legalPersonName,
       legalPersonPhone: legalPersonPhone || undefined,
@@ -132,19 +143,6 @@ export default function Register() {
     <View className="page page--secondary auth-page register-page">
       <TopBar title="企业注册" showBack variant="secondary" />
       <View className="secondary-page__body auth-page__body register-page__body">
-        <View className="auth-page__band auth-page__band--brand">
-          <View className="auth-page__brand auth-page__brand--medium">
-            <View className="auth-page__brand-visual">
-              <View className="auth-page__brand-orb auth-page__brand-orb--left" />
-              <View className="auth-page__brand-orb auth-page__brand-orb--right" />
-              <View className="auth-page__brand-mark">
-                <View className="auth-page__brand-mark-arch" />
-                <View className="auth-page__brand-mark-road" />
-              </View>
-            </View>
-            <Text className="auth-page__brand-title">金堂招讯通</Text>
-          </View>
-        </View>
         <View className="auth-page__band auth-page__band--content">
           <View className="secondary-card form-card auth-page__card auth-page__card--primary register-page__card">
             <View className="auth-page__section register-page__header">
@@ -199,6 +197,20 @@ export default function Register() {
                   value={mobile}
                   cursor={mobileCursor}
                   onChange={syncInput(setMobile, setMobileCursor)}
+                />
+              </View>
+              <View className="auth-form__field register-page__field">
+                <Text className="auth-form__label register-page__label">
+                  <Text className="auth-form__required">{REQUIRED_MARK}</Text>
+                  注册人身份证号
+                </Text>
+                <AtInput
+                  name="idCard"
+                  placeholder="请输入18位身份证号"
+                  value={idCard}
+                  cursor={idCardCursor}
+                  onChange={syncInput(setIdCard, setIdCardCursor)}
+                  maxLength={18}
                 />
               </View>
               <View className="auth-form__field register-page__field">

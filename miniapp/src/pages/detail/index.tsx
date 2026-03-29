@@ -30,6 +30,12 @@ function inferFileType(attachment) {
   return undefined
 }
 
+function resolveDetailPageTitle(detailData) {
+  if (detailData?.categoryName) return detailData.categoryName
+  if (detailData?.sourceSiteName) return `${detailData.sourceSiteName}详情`
+  return '公告详情'
+}
+
 export default function Detail() {
   const isAuthorized = useProtectedPage('请先登录后查看详情')
   const [detail, setDetail] = useState(null)
@@ -149,6 +155,7 @@ export default function Detail() {
       ])
     : []
   const attachments = Array.isArray(detail?.attachments) ? detail.attachments : []
+  const pageTitle = resolveDetailPageTitle(detail)
 
   if (!isAuthorized) {
     return null
@@ -157,7 +164,7 @@ export default function Detail() {
   if (loading) {
     return (
       <View className="page page--secondary detail-page">
-        <TopBar title="招投标详情" showBack right="favorite" variant="secondary" />
+        <TopBar title="公告详情" showBack right="favorite" variant="secondary" />
         <View className="detail-page__loading"><Text>加载中...</Text></View>
       </View>
     )
@@ -165,7 +172,7 @@ export default function Detail() {
   if (!detail) {
     return (
       <View className="page page--secondary detail-page">
-        <TopBar title="招投标详情" showBack variant="secondary" />
+        <TopBar title="公告详情" showBack variant="secondary" />
         <View className="detail-page__empty"><Text>暂无详情</Text></View>
       </View>
     )
@@ -174,7 +181,7 @@ export default function Detail() {
   return (
     <View className="page page--secondary detail-page">
       <TopBar
-        title="招投标详情"
+        title={pageTitle}
         showBack
         right={favorited ? 'favorite-active' : 'favorite'}
         variant="secondary"

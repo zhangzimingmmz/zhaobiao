@@ -1,6 +1,7 @@
 import { View, WebView, Text } from '@tarojs/components'
-import Taro, { useRouter } from '@tarojs/taro'
+import { useRouter } from '@tarojs/taro'
 import { useState } from 'react'
+import TopBar from '../../components/TopBar'
 import './index.scss'
 
 export default function WebViewPage() {
@@ -22,27 +23,29 @@ export default function WebViewPage() {
 
   if (!articleUrl) {
     return (
-      <View className='webview-page'>
-        <View className='error-state'>
-          <View className='error-text'>文章链接无效</View>
+      <View className="page page--secondary webview-page">
+        <TopBar title="文章详情" showBack variant="secondary" />
+        <View className="webview-page__body">
+          <View className="error-state">
+            <View className="error-text">文章链接无效</View>
+          </View>
         </View>
       </View>
     )
   }
 
   return (
-    <View className='webview-page'>
-      <View className='webview-page__header' onClick={() => Taro.navigateBack()}>
-        <Text className='webview-page__back'>← 返回</Text>
-      </View>
+    <View className="page page--secondary webview-page">
+      <TopBar title="文章详情" showBack variant="secondary" />
+      <View className="webview-page__body">
       {loading && (
-        <View className='loading-state'>
-          <View className='loading-text'>加载中...</View>
+        <View className="loading-state">
+          <View className="loading-text">加载中...</View>
         </View>
       )}
       {error && (
-        <View className='error-state'>
-          <View className='error-text'>加载失败，请稍后重试</View>
+        <View className="error-state">
+          <View className="error-text">加载失败，请稍后重试</View>
         </View>
       )}
       <WebView
@@ -51,6 +54,7 @@ export default function WebViewPage() {
         onError={handleError}
         className="webview-page__iframe"
       />
+      </View>
     </View>
   )
 }

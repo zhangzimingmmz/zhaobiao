@@ -35,8 +35,7 @@ export function LoginPage({ onSuccess }: LoginPageProps) {
     <div className="login-screen">
       <div className="login-card">
         <div className="login-header">
-          <div className="login-icon">招</div>
-          <h1>金堂招讯通</h1>
+          <h1>金堂招讯通小程序</h1>
           <p className="subtitle">运营管理后台</p>
         </div>
         <Form

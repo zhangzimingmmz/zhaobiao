@@ -17,7 +17,6 @@ type ArticleEditorPageProps = {
 };
 
 const CATEGORY_OPTIONS = [
-  { value: "", label: "请选择" },
   { value: "company_news", label: "工作动态" },
   { value: "policy", label: "政策法规" },
   { value: "other", label: "其他" },
@@ -214,8 +213,16 @@ export function ArticleEditorPage({ id, navigate }: ArticleEditorPageProps) {
           }
         </Form.Item>
 
-        <Form.Item name="category" label="分类">
-          <Select options={CATEGORY_OPTIONS} disabled={submitting} />
+        <Form.Item
+          name="category"
+          label="分类"
+          rules={[{ required: true, message: "请选择分类" }]}
+        >
+          <Select
+            options={CATEGORY_OPTIONS}
+            placeholder="请选择"
+            disabled={submitting}
+          />
         </Form.Item>
 
         <Form.Item name="sortOrder" label="排序权重" initialValue={0}>

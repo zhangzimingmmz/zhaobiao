@@ -4,6 +4,8 @@
 from __future__ import annotations
 
 import base64
+import hashlib
+import json
 import os
 import re
 import sys
@@ -145,6 +147,8 @@ CREATE TABLE IF NOT EXISTS users (
     mobile         TEXT NOT NULL UNIQUE,
     username       TEXT,
     password_hash  TEXT,
+    id_card_hash   TEXT,
+    id_card_last4  TEXT,
     account_status TEXT NOT NULL DEFAULT 'pending',
     created_at     TEXT NOT NULL,
     updated_at     TEXT
@@ -235,6 +239,8 @@ def _init_db() -> None:
         conn.executescript(_INIT_DDL)
         _ensure_column(conn, "users", "username", "TEXT")
         _ensure_column(conn, "users", "password_hash", "TEXT")
+        _ensure_column(conn, "users", "id_card_hash", "TEXT")
+        _ensure_column(conn, "users", "id_card_last4", "TEXT")
         _ensure_column(conn, "users", "account_status", "TEXT NOT NULL DEFAULT 'pending'")
         _ensure_column(conn, "users", "updated_at", "TEXT")
         _ensure_column(conn, "enterprise_applications", "legal_person_name", "TEXT")
@@ -539,6 +545,24 @@ def get_admin_user(authorization: Optional[str] = Header(None)) -> dict:
 
 def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
+
+
+def _normalize_user_password(value: str) -> str:
+    password = (value or "").strip()
+    if len(password) < 6 or len(password) > 128:
+        raise ValueError("密码长度需在 6-128 位之间")
+    return password
+
+
+def _normalize_id_card(value: str) -> str:
+    id_card = (value or "").strip().upper()
+    if not re.fullmatch(r"\d{17}[\dX]", id_card):
+        raise ValueError("身份证号格式不正确")
+    return id_card
+
+
+def _hash_id_card(value: str) -> str:
+    return hashlib.sha256(value.encode("utf-8")).hexdigest()
 
 
 def _admin_username_by_id(admin_id: Optional[str]) -> Optional[str]:
@@ -1391,6 +1415,7 @@ class RegisterRequest(BaseModel):
     username: str
     password: str
     mobile: str
+    idCard: str
     creditCode: str
     legalPersonName: str
     legalPersonPhone: Optional[str] = None
@@ -1411,10 +1436,16 @@ def register(req: RegisterRequest):
     username = req.username.strip()
     if not username:
         return {"code": 400, "message": "参数错误：username 不能为空"}
-    if not req.password:
-        return {"code": 400, "message": "参数错误：password 不能为空"}
+    try:
+        password = _normalize_user_password(req.password)
+    except ValueError as err:
+        return {"code": 400, "message": str(err)}
     if not re.fullmatch(r"\d{11}", req.mobile):
         return {"code": 400, "message": "手机号格式不正确"}
+    try:
+        id_card = _normalize_id_card(req.idCard)
+    except ValueError as err:
+        return {"code": 400, "message": str(err)}
     if not req.creditCode:
         return {"code": 400, "message": "参数错误：creditCode 不能为空"}
     if len(req.creditCode) != 18:
@@ -1425,6 +1456,8 @@ def register(req: RegisterRequest):
         return {"code": 400, "message": "法人电话号码格式不正确"}
     if not req.businessAddress:
         return {"code": 400, "message": "参数错误：businessAddress 不能为空"}
+    id_card_hash = _hash_id_card(id_card)
+    id_card_last4 = id_card[-4:]
 
     conn = _get_conn()
     try:
@@ -1463,12 +1496,15 @@ def register(req: RegisterRequest):
             if existing_status == "rejected" and existing:
                 conn.execute(
                     """UPDATE users
-                       SET username = ?, mobile = ?, password_hash = ?, account_status = 'pending', updated_at = ?
+                       SET username = ?, mobile = ?, password_hash = ?, id_card_hash = ?, id_card_last4 = ?,
+                           account_status = 'pending', updated_at = ?
                        WHERE id = ?""",
                     (
                         username,
                         req.mobile,
-                        hash_password(req.password),
+                        hash_password(password),
+                        id_card_hash,
+                        id_card_last4,
                         now,
                         existing_user["id"],
                     ),
@@ -1509,9 +1545,10 @@ def register(req: RegisterRequest):
         user_id = str(uuid.uuid4())
         app_id = str(uuid.uuid4())
         conn.execute(
-            """INSERT INTO users(id, mobile, username, password_hash, account_status, created_at, updated_at)
-               VALUES(?, ?, ?, ?, 'pending', ?, ?)""",
-            (user_id, req.mobile, username, hash_password(req.password), now, now),
+            """INSERT INTO users(id, mobile, username, password_hash, id_card_hash, id_card_last4,
+                                 account_status, created_at, updated_at)
+               VALUES(?, ?, ?, ?, ?, ?, 'pending', ?, ?)""",
+            (user_id, req.mobile, username, hash_password(password), id_card_hash, id_card_last4, now, now),
         )
         conn.execute(
             """INSERT INTO enterprise_applications
@@ -1543,6 +1580,70 @@ def register(req: RegisterRequest):
                 "applicationId": app_id,
                 "status": "pending",
                 "username": username,
+            },
+        }
+    finally:
+        conn.close()
+
+
+class ForgotPasswordResetRequest(BaseModel):
+    username: str
+    mobile: str
+    creditCode: str
+    idCard: str
+    newPassword: str
+
+
+@app.post("/api/auth/forgot-password/reset")
+def forgot_password_reset(req: ForgotPasswordResetRequest):
+    username = (req.username or "").strip()
+    if not username:
+        return {"code": 400, "message": "参数错误：username 不能为空"}
+    if not re.fullmatch(r"\d{11}", req.mobile or ""):
+        return {"code": 400, "message": "手机号格式不正确"}
+    credit_code = (req.creditCode or "").strip()
+    if len(credit_code) != 18:
+        return {"code": 400, "message": "统一社会信用代码格式不正确"}
+    try:
+        id_card = _normalize_id_card(req.idCard)
+        password = _normalize_user_password(req.newPassword)
+    except ValueError as err:
+        return {"code": 400, "message": str(err)}
+
+    conn = _get_conn()
+    try:
+        row = conn.execute(
+            """SELECT u.id, u.username, u.mobile, u.id_card_hash,
+                      ea.id AS application_id, ea.credit_code
+               FROM users u
+               JOIN enterprise_applications ea
+                 ON ea.id = (
+                    SELECT ea2.id
+                    FROM enterprise_applications ea2
+                    WHERE ea2.user_id = u.id
+                    ORDER BY ea2.created_at DESC
+                    LIMIT 1
+                 )
+               WHERE u.username = ? AND u.mobile = ? AND ea.credit_code = ?
+               LIMIT 1""",
+            (username, req.mobile, credit_code),
+        ).fetchone()
+        if not row or not row["id_card_hash"] or row["id_card_hash"] != _hash_id_card(id_card):
+            return {"code": 400, "message": "身份校验未通过，请核对信息或联系运营人员重置密码"}
+
+        now = _now_iso()
+        conn.execute(
+            "UPDATE users SET password_hash = ?, updated_at = ? WHERE id = ?",
+            (hash_password(password), now, row["id"]),
+        )
+        conn.commit()
+        return {
+            "code": 200,
+            "data": {
+                "userId": row["id"],
+                "applicationId": row["application_id"],
+                "username": row["username"],
+                "mobile": row["mobile"],
             },
         }
     finally:
@@ -2016,6 +2117,57 @@ class DeleteTestCompanyRequest(BaseModel):
     confirmCreditCode: str
 
 
+class AdminCompanyResetPasswordRequest(BaseModel):
+    password: str
+
+
+@app.post("/api/admin/companies/{application_id}/reset-password")
+def admin_company_reset_password(
+    application_id: str,
+    req: AdminCompanyResetPasswordRequest,
+    authorization: Optional[str] = Header(None),
+):
+    """超级管理员重置企业用户登录密码。"""
+    admin = get_admin_user(authorization)
+    _require_super_admin(admin)
+
+    try:
+        password = _normalize_user_password(req.password)
+    except ValueError as err:
+        return {"code": 400, "message": str(err)}
+
+    now = _now_iso()
+    conn = _get_conn()
+    try:
+        row = conn.execute(
+            """SELECT ea.id, ea.user_id, u.username
+               FROM enterprise_applications ea
+               LEFT JOIN users u ON ea.user_id = u.id
+               WHERE ea.id = ? LIMIT 1""",
+            (application_id,),
+        ).fetchone()
+        if not row or not row["user_id"]:
+            return {"code": 404, "message": "企业账号不存在"}
+
+        conn.execute(
+            "UPDATE users SET password_hash = ?, updated_at = ? WHERE id = ?",
+            (hash_password(password), now, row["user_id"]),
+        )
+        conn.commit()
+        return {
+            "code": 200,
+            "data": {
+                "applicationId": application_id,
+                "userId": row["user_id"],
+                "username": row["username"],
+                "resetBy": admin.get("adminId"),
+                "resetByName": admin.get("username"),
+            },
+        }
+    finally:
+        conn.close()
+
+
 @app.post("/api/admin/companies/{application_id}/delete-test-data")
 def admin_delete_test_company(
     application_id: str,
@@ -2143,8 +2295,14 @@ class ValidateUrlRequest(BaseModel):
     url: str
 
 
+class SupportContactItem(BaseModel):
+    name: str
+    phone: str
+
+
 class SupportPhoneUpdateRequest(BaseModel):
     supportPhone: str = Field(default="")
+    supportContacts: Optional[list[SupportContactItem]] = None
 
 
 def _normalize_support_phone(value: Optional[str]) -> str:
@@ -2158,6 +2316,65 @@ def _normalize_support_phone(value: Optional[str]) -> str:
     return phone
 
 
+def _normalize_support_contact_name(value: Optional[str]) -> str:
+    name = (value or "").strip()
+    if not name:
+        raise HTTPException(status_code=400, detail="客服名称不能为空")
+    if len(name) > 16:
+        raise HTTPException(status_code=400, detail="客服名称长度不能超过 16 位")
+    return name
+
+
+def _normalize_support_contacts(items: list[SupportContactItem]) -> list[dict[str, str]]:
+    contacts: list[dict[str, str]] = []
+    seen_phones: set[str] = set()
+    for item in items:
+        name = _normalize_support_contact_name(item.name)
+        phone = _normalize_support_phone(item.phone)
+        if phone in seen_phones:
+            raise HTTPException(status_code=400, detail="客服电话号码不能重复")
+        seen_phones.add(phone)
+        contacts.append({"name": name, "phone": phone})
+    return contacts
+
+
+def _load_support_contacts(raw_contacts: Optional[str], raw_phone: Optional[str]) -> list[dict[str, str]]:
+    contacts: list[dict[str, str]] = []
+    raw_contacts = (raw_contacts or "").strip()
+    if raw_contacts:
+        try:
+            parsed = json.loads(raw_contacts)
+        except json.JSONDecodeError:
+            parsed = None
+        if isinstance(parsed, list):
+            for item in parsed:
+                if not isinstance(item, dict):
+                    continue
+                name = str(item.get("name") or "").strip()
+                phone = str(item.get("phone") or "").strip()
+                if not name or not phone:
+                    continue
+                contacts.append({"name": name, "phone": phone})
+    if contacts:
+        return contacts
+
+    fallback_phone = (raw_phone or "").strip()
+    if fallback_phone:
+        return [{"name": "客服电话", "phone": fallback_phone}]
+    return []
+
+
+def _build_contact_settings_payload(conn: sqlite3.Connection) -> dict[str, Any]:
+    contacts = _load_support_contacts(
+        _get_app_setting(conn, "support_contacts"),
+        _get_app_setting(conn, "support_phone"),
+    )
+    return {
+        "supportPhone": contacts[0]["phone"] if contacts else "",
+        "supportContacts": contacts,
+    }
+
+
 @app.get("/api/admin/app-settings/contact")
 def get_admin_contact_settings(authorization: Optional[str] = Header(None)):
     """管理员查看客服电话配置。"""
@@ -2166,9 +2383,7 @@ def get_admin_contact_settings(authorization: Optional[str] = Header(None)):
     try:
         return {
             "code": 200,
-            "data": {
-                "supportPhone": _get_app_setting(conn, "support_phone"),
-            },
+            "data": _build_contact_settings_payload(conn),
         }
     finally:
         conn.close()
@@ -2181,12 +2396,22 @@ def update_admin_contact_settings(
 ):
     """管理员更新客服电话配置。"""
     get_admin_user(authorization)
-    phone = _normalize_support_phone(req.supportPhone)
+    if req.supportContacts is None:
+        phone = _normalize_support_phone(req.supportPhone)
+        contacts = [{"name": "客服电话", "phone": phone}] if phone else []
+    else:
+        contacts = _normalize_support_contacts(req.supportContacts)
+        phone = contacts[0]["phone"] if contacts else ""
     conn = _get_conn()
     try:
+        _set_app_setting(
+            conn,
+            "support_contacts",
+            json.dumps(contacts, ensure_ascii=False) if contacts else "",
+        )
         _set_app_setting(conn, "support_phone", phone)
         conn.commit()
-        return {"code": 200, "data": {"supportPhone": phone}}
+        return {"code": 200, "data": {"supportPhone": phone, "supportContacts": contacts}}
     finally:
         conn.close()
 
@@ -2198,9 +2423,7 @@ def get_public_contact_settings():
     try:
         return {
             "code": 200,
-            "data": {
-                "supportPhone": _get_app_setting(conn, "support_phone"),
-            },
+            "data": _build_contact_settings_payload(conn),
         }
     finally:
         conn.close()

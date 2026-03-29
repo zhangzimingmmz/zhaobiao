@@ -72,16 +72,20 @@ export const apiBase = API_BASE;
 
 export type ContactSettings = {
   supportPhone: string;
+  supportContacts: Array<{
+    name: string;
+    phone: string;
+  }>;
 };
 
 export async function getContactSettings(): Promise<ContactSettings> {
   return apiRequest<ContactSettings>("/api/admin/app-settings/contact");
 }
 
-export async function updateContactSettings(supportPhone: string): Promise<ContactSettings> {
+export async function updateContactSettings(supportContacts: Array<{ name: string; phone: string }>): Promise<ContactSettings> {
   return apiRequest<ContactSettings>("/api/admin/app-settings/contact", {
     method: "PUT",
-    body: { supportPhone },
+    body: { supportContacts },
   });
 }
 
@@ -183,6 +187,25 @@ export async function deleteTestCompanyData(id: string, confirmCreditCode: strin
   }>(`/api/admin/companies/${id}/delete-test-data`, {
     method: "POST",
     body: { confirmCreditCode },
+  });
+}
+
+export async function resetCompanyUserPassword(id: string, password: string): Promise<{
+  applicationId: string;
+  userId: string;
+  username: string;
+  resetBy: string;
+  resetByName: string;
+}> {
+  return apiRequest<{
+    applicationId: string;
+    userId: string;
+    username: string;
+    resetBy: string;
+    resetByName: string;
+  }>(`/api/admin/companies/${id}/reset-password`, {
+    method: "POST",
+    body: { password },
   });
 }
 

@@ -39,6 +39,7 @@ export function LoginPage({ onSuccess }: LoginPageProps) {
           <p className="subtitle">运营管理后台</p>
         </div>
         <Form
+          className="login-form"
           form={form}
           layout="vertical"
           onFinish={handleFinish}
@@ -59,7 +60,7 @@ export function LoginPage({ onSuccess }: LoginPageProps) {
             <Input.Password />
           </Form.Item>
           <Form.Item>
-            <Button type="primary" htmlType="submit" block loading={submitting}>
+            <Button className="login-submit" type="primary" htmlType="submit" block loading={submitting}>
               {submitting ? "登录中..." : "登录"}
             </Button>
           </Form.Item>

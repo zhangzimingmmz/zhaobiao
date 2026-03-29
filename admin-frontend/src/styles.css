@@ -54,8 +54,8 @@ button {
 .login-card,
 .card {
   background: #fff;
-  border: none;
-  border-radius: 16px;
+  border: 1px solid rgba(102, 126, 234, 0.08);
+  border-radius: 20px;
   box-shadow: var(--shadow-md);
 }
 
@@ -70,16 +70,16 @@ button {
 
 .login-card {
   width: min(540px, 100%);
-  padding: 40px 44px 36px;
+  padding: 42px 44px 34px;
   display: grid;
-  gap: 24px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  gap: 28px;
+  box-shadow: 0 22px 58px rgba(63, 84, 160, 0.16);
 }
 
 .login-header {
   text-align: center;
   display: grid;
-  gap: 12px;
+  gap: 8px;
 }
 
 .login-card h1 {
@@ -92,29 +92,20 @@ button {
 }
 
 .login-card .subtitle {
-  margin: 0 auto;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 42px;
-  padding: 0 18px;
-  border-radius: 999px;
-  font-size: 22px;
-  color: #4f5fbf;
-  font-weight: 700;
-  letter-spacing: 0.5px;
+  margin: 0;
+  font-size: 18px;
+  color: #6b7280;
+  font-weight: 600;
   text-align: center;
-  background: rgba(102, 126, 234, 0.08);
-  border: 1px solid rgba(102, 126, 234, 0.14);
 }
 
 .login-card .ant-form {
   display: grid;
-  gap: 4px;
+  gap: 2px;
 }
 
 .login-card .ant-form-item {
-  margin-bottom: 22px;
+  margin-bottom: 20px;
 }
 
 .login-card .ant-form-item-label > label {
@@ -123,23 +114,65 @@ button {
   color: #182028;
 }
 
+.login-card .ant-form-item-label > label.ant-form-item-required::before {
+  display: none !important;
+}
+
+.login-card .ant-form-item-label > label.ant-form-item-required::after {
+  content: "*";
+  color: #ff4d4f;
+  font-size: 17px;
+  font-weight: 700;
+  margin-left: 6px;
+}
+
 .login-card .ant-input,
 .login-card .ant-input-affix-wrapper {
-  min-height: 58px;
-  padding-inline: 18px;
+  height: 52px;
+  padding-inline: 16px;
   font-size: 18px;
-  border-radius: 14px;
+  border-radius: 10px;
+  border-color: #dcdfe6;
+  box-shadow: none;
+}
+
+.login-card .ant-input:hover,
+.login-card .ant-input-affix-wrapper:hover {
+  border-color: #dcdfe6;
+}
+
+.login-card .ant-input:focus,
+.login-card .ant-input-affix-wrapper-focused {
+  border-color: #4f7df3;
+  box-shadow: 0 0 0 2px rgba(79, 125, 243, 0.12);
+}
+
+.login-card .ant-input-affix-wrapper .ant-input {
+  height: auto;
+  padding: 0;
+  border: none;
+  box-shadow: none !important;
+}
+
+.login-card .ant-input-affix-wrapper .ant-input:focus {
+  box-shadow: none;
 }
 
 .login-card .ant-input-password-icon {
-  font-size: 20px;
+  font-size: 18px;
+  color: #98a2b3;
 }
 
 .login-card .ant-btn {
-  height: 58px;
-  font-size: 22px;
+  height: 52px;
+  font-size: 21px;
   font-weight: 700;
-  border-radius: 14px;
+  border-radius: 10px;
+}
+
+.login-card .login-submit {
+  letter-spacing: 0.28em;
+  text-indent: 0.28em;
 }
 
 .eyebrow,

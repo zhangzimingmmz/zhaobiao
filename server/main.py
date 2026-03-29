@@ -1191,6 +1191,17 @@ def wx_verify_file(suffix: str):
     return FileResponse(path, media_type="text/plain")
 
 
+@app.get("/{filename}.txt")
+def wx_verify_raw_file(filename: str):
+    """兼容微信直接下发的原始校验文件名，例如 A2RlgkxLLP.txt。"""
+    if not re.match(r"^[A-Za-z0-9]+$", filename):
+        raise HTTPException(status_code=404, detail="not_found")
+    path = WX_VERIFY_DIR / f"{filename}.txt"
+    if not path.is_file():
+        raise HTTPException(status_code=404, detail="not_found")
+    return FileResponse(path, media_type="text/plain")
+
+
 # ────────────────────────────────────────────────────────────
 # 字典接口
 # ────────────────────────────────────────────────────────────

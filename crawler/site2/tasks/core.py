@@ -102,6 +102,17 @@ def process_window(
         consecutive_failures = 0
         records_to_upsert = []
 
+        # 优化：提前检查哪些记录已存在，跳过已存在的详情抓取
+        row_ids = [str(row.get("id")) for row in rows if row.get("id")]
+        existing_ids = storage.check_existing_ids(conn, config.SITE_ID, row_ids)
+        
+        # 分离新记录和已存在记录
+        new_rows = [row for row in rows if str(row.get("id")) not in existing_ids]
+        existing_rows = [row for row in rows if str(row.get("id")) in existing_ids]
+        
+        if existing_ids:
+            logger.info(f"{indent}Page {curr_page}: {len(existing_ids)} records already exist, skipping detail fetch")
+        
         sess = session.ensure_fresh(sess)
 
         def _fetch_one(row):
@@ -111,15 +122,26 @@ def process_window(
             except Exception:
                 return (row, {})
 
-        with ThreadPoolExecutor(max_workers=config.DETAIL_PARALLEL_WORKERS) as executor:
-            results = list(executor.map(_fetch_one, rows))
+        # 只抓取新记录的详情
+        results = []
+        if new_rows:
+            with ThreadPoolExecutor(max_workers=config.DETAIL_PARALLEL_WORKERS) as executor:
+                results = list(executor.map(_fetch_one, new_rows))
+        
+        # 已存在的记录只更新列表页信息（不抓取详情）
+        for row in existing_rows:
+            results.append((row, {}))
 
         for row, detail in results:
             row_id = row.get("id")
             if not row_id:
                 logger.warning(f"{indent}Skipping row without id: {row}")
                 continue
-            if not detail:
+            
+            # 如果记录已存在且没有详情，跳过重试（已存在的记录不需要重新抓取详情）
+            is_existing = str(row_id) in existing_ids
+            
+            if not detail and not is_existing:
                 detail_success = False
                 for attempt in range(config.MAX_RETRIES):
                     sess = session.ensure_fresh(sess)

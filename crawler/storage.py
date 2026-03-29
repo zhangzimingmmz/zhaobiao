@@ -162,6 +162,34 @@ def upsert_records(
     return len(rows)
 
 
+def check_existing_ids(
+    conn: sqlite3.Connection,
+    site: str,
+    ids: list[str],
+) -> set[str]:
+    """批量检查哪些 ID 已存在于数据库中。
+    
+    参数:
+        conn: 数据库连接
+        site: 站点标识
+        ids: 要检查的 ID 列表
+    
+    返回:
+        已存在的 ID 集合
+    """
+    if not ids:
+        return set()
+    
+    # 使用 IN 查询批量检查
+    placeholders = ",".join("?" * len(ids))
+    sql = f"SELECT id FROM notices WHERE site = ? AND id IN ({placeholders})"
+    params = [site] + list(ids)
+    
+    cursor = conn.execute(sql, params)
+    existing = {row["id"] for row in cursor.fetchall()}
+    return existing
+
+
 def get_connection(db_path: str | Path) -> sqlite3.Connection:
     """打开 SQLite 连接并确保 schema，调用方负责 close。"""
     conn = sqlite3.connect(str(db_path))

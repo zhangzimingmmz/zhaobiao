@@ -232,7 +232,7 @@ export default function Detail() {
                   )}
                 </View>
                 {!canOpenOriginal && (
-                  <Text className="detail-card__hint">该来源暂不支持小程序内打开，请复制后在浏览器查看</Text>
+                  <Text className="detail-card__hint">请复制后在浏览器查看</Text>
                 )}
               </View>
             )}

@@ -210,7 +210,7 @@ export default function InfoDetail() {
                   )}
                 </View>
                 {!canOpenOriginal && (
-                  <Text className="info-detail__head-hint">该来源暂不支持小程序内打开，请复制后在浏览器查看</Text>
+                  <Text className="info-detail__head-hint">请复制后在浏览器查看</Text>
                 )}
               </View>
             )}

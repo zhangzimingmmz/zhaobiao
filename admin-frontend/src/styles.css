@@ -67,6 +67,13 @@ button {
   font-size: 32px;
 }
 
+.login-card .subtitle {
+  margin: 0 0 8px;
+  font-size: 16px;
+  color: #8c8c8c;
+  font-weight: 500;
+}
+
 .eyebrow,
 .brand-subtitle,
 .card-label,

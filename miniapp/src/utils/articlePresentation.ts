@@ -19,9 +19,14 @@ function buildWebViewProxyUrl(url) {
 }
 
 export function canOpenOriginalInMiniapp(url) {
-  if (!url) return false
-  if (/^https:\/\/mp\.weixin\.qq\.com\//.test(url)) return true
-  return WEBVIEW_ALLOWED_HOSTS.has(resolveHostname(url))
+  // 暂时禁用小程序内打开原文功能
+  // 所有链接都使用复制模式，让用户在外部浏览器打开
+  return false
+  
+  // 原有逻辑保留，方便以后恢复：
+  // if (!url) return false
+  // if (/^https:\/\/mp\.weixin\.qq\.com\//.test(url)) return true
+  // return WEBVIEW_ALLOWED_HOSTS.has(resolveHostname(url))
 }
 
 export function copyOriginalLink(url, copyMessage = '原文链接已复制，请在浏览器中打开') {

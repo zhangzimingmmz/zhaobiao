@@ -42,6 +42,7 @@
 | 项目架构与需求清单 PRD | [docs/others/项目架构与需求清单PRD.md](docs/others/项目架构与需求清单PRD.md) | 需求与架构背景 |
 | 统一运营后台需求清单 | [docs/others/统一运营后台需求清单.md](docs/others/统一运营后台需求清单.md) | 运营后台需求 |
 | 数据库表设计 | [docs/others/数据库表设计.md](docs/others/数据库表设计.md) | 表结构详细说明（历史） |
+| Site2 IP 消耗优化说明 | [docs/others/site2-ip-optimization.md](docs/others/site2-ip-optimization.md) | Site2 爬虫代理 IP 优化方案与效果分析 |
 
 ### 2.3 架构决策（docs/adr/）
 

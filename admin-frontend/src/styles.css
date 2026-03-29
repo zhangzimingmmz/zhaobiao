@@ -57,21 +57,17 @@ button {
 
 .login-card {
   width: min(420px, 100%);
-  padding: 28px;
+  padding: 40px 32px;
   display: grid;
-  gap: 16px;
+  gap: 32px;
 }
 
 .login-card h1 {
-  margin: 8px 0;
-  font-size: 32px;
-}
-
-.login-card .subtitle {
-  margin: 0 0 8px;
-  font-size: 16px;
-  color: #8c8c8c;
-  font-weight: 500;
+  margin: 0;
+  font-size: 28px;
+  font-weight: 600;
+  color: #182028;
+  text-align: center;
 }
 
 .eyebrow,

@@ -63,10 +63,18 @@ button {
 }
 
 .login-card h1 {
-  margin: 0;
+  margin: 0 0 8px;
   font-size: 28px;
   font-weight: 600;
   color: #182028;
+  text-align: center;
+}
+
+.login-card .subtitle {
+  margin: 0;
+  font-size: 16px;
+  color: #8c8c8c;
+  font-weight: 400;
   text-align: center;
 }
 

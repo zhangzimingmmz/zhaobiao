@@ -19,16 +19,18 @@ export const createEnterpriseColumns = (
 
   const columns: ProColumns<ReviewItem>[] = [
     {
-      title: "登录名 / 注册手机号",
+      title: "登录名",
       dataIndex: "username",
-      key: "account",
-      render: (_, r) => (
-        <span>
-          {r.username || "-"}
-          <br />
-          <span style={{ color: "#8c8c8c", fontSize: 12 }}>{r.userMobile || "-"}</span>
-        </span>
-      ),
+      key: "username",
+      width: 140,
+      render: (v) => v || "-",
+    },
+    {
+      title: "注册手机号",
+      dataIndex: "userMobile",
+      key: "userMobile",
+      width: 140,
+      render: (v) => v || "-",
     },
     {
       title: "统一社会信用代码",
@@ -38,18 +40,18 @@ export const createEnterpriseColumns = (
       render: (v) => v || "-",
     },
     {
-      title: "法人姓名 / 法人手机号",
+      title: "法人姓名",
       dataIndex: "legalPersonName",
-      key: "legalPerson",
-      render: (_, r) => {
-        return (
-          <span>
-            {r.legalPersonName || "-"}
-            <br />
-            <span style={{ color: "#8c8c8c", fontSize: 12 }}>{r.legalPersonPhone || "-"}</span>
-          </span>
-        );
-      },
+      key: "legalPersonName",
+      width: 140,
+      render: (v) => v || "-",
+    },
+    {
+      title: "法人手机号",
+      dataIndex: "legalPersonPhone",
+      key: "legalPersonPhone",
+      width: 140,
+      render: (v) => v || "-",
     },
     {
       title: "状态",
@@ -71,6 +73,7 @@ export const createEnterpriseColumns = (
       title: "审核人",
       dataIndex: "auditedByName",
       key: "auditedByName",
+      width: 120,
       render: (_, r) => r.auditedByName || r.auditedBy || "-",
     },
   ];

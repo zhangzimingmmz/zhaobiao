@@ -1731,6 +1731,12 @@ def auth_me(authorization: Optional[str] = Header(None)):
 @app.get("/api/admin/reviews")
 def admin_review_list(
     status: Optional[str] = Query(None),
+    username: Optional[str] = Query(None),
+    userMobile: Optional[str] = Query(None),
+    creditCode: Optional[str] = Query(None),
+    legalPersonName: Optional[str] = Query(None),
+    legalPersonPhone: Optional[str] = Query(None),
+    auditedByName: Optional[str] = Query(None),
     page: int = Query(1, ge=1),
     pageSize: int = Query(10, ge=1, le=100),
     authorization: Optional[str] = Header(None),
@@ -1746,9 +1752,31 @@ def admin_review_list(
         if status:
             conditions.append("ea.status = ?")
             params.append(status)
+        if username:
+            conditions.append("u.username LIKE ?")
+            params.append(f"%{username.strip()}%")
+        if userMobile:
+            conditions.append("u.mobile LIKE ?")
+            params.append(f"%{userMobile.strip()}%")
+        if creditCode:
+            conditions.append("ea.credit_code LIKE ?")
+            params.append(f"%{creditCode.strip()}%")
+        if legalPersonName:
+            conditions.append("ea.legal_person_name LIKE ?")
+            params.append(f"%{legalPersonName.strip()}%")
+        if legalPersonPhone:
+            conditions.append("ea.legal_person_phone LIKE ?")
+            params.append(f"%{legalPersonPhone.strip()}%")
+        if auditedByName:
+            conditions.append("au.username LIKE ?")
+            params.append(f"%{auditedByName.strip()}%")
 
         where = " AND ".join(conditions)
-        count_sql = f"SELECT COUNT(*) FROM enterprise_applications ea WHERE {where}"
+        count_sql = f"""SELECT COUNT(*)
+                        FROM enterprise_applications ea
+                        LEFT JOIN users u ON ea.user_id = u.id
+                        LEFT JOIN admin_users au ON ea.audited_by = au.id
+                        WHERE {where}"""
         total = conn.execute(count_sql, params).fetchone()[0]
 
         offset = (page - 1) * pageSize
@@ -1974,6 +2002,12 @@ def admin_invalidate_review(
 @app.get("/api/admin/companies")
 def admin_company_list(
     status: Optional[str] = Query(None),
+    username: Optional[str] = Query(None),
+    userMobile: Optional[str] = Query(None),
+    creditCode: Optional[str] = Query(None),
+    legalPersonName: Optional[str] = Query(None),
+    legalPersonPhone: Optional[str] = Query(None),
+    auditedByName: Optional[str] = Query(None),
     page: int = Query(1, ge=1),
     pageSize: int = Query(10, ge=1, le=100),
     authorization: Optional[str] = Header(None),
@@ -1989,6 +2023,24 @@ def admin_company_list(
         if status:
             conditions.append("ea.status = ?")
             params.append(status)
+        if username:
+            conditions.append("u.username LIKE ?")
+            params.append(f"%{username.strip()}%")
+        if userMobile:
+            conditions.append("u.mobile LIKE ?")
+            params.append(f"%{userMobile.strip()}%")
+        if creditCode:
+            conditions.append("ea.credit_code LIKE ?")
+            params.append(f"%{creditCode.strip()}%")
+        if legalPersonName:
+            conditions.append("ea.legal_person_name LIKE ?")
+            params.append(f"%{legalPersonName.strip()}%")
+        if legalPersonPhone:
+            conditions.append("ea.legal_person_phone LIKE ?")
+            params.append(f"%{legalPersonPhone.strip()}%")
+        if auditedByName:
+            conditions.append("au.username LIKE ?")
+            params.append(f"%{auditedByName.strip()}%")
 
         where = " AND ".join(conditions)
         

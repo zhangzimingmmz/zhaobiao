@@ -66,11 +66,24 @@ export function EnterpriseTable({ view, navigate }: EnterpriseTableProps) {
       actionRef={actionRef}
       columns={columns}
       request={async (params) => {
-        const status = params.status;
         const page = params.current ?? 1;
         const pageSize = params.pageSize ?? 20;
         const query = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
-        if (status) query.set("status", String(status));
+        const searchKeys = [
+          "status",
+          "username",
+          "userMobile",
+          "creditCode",
+          "legalPersonName",
+          "legalPersonPhone",
+          "auditedByName",
+        ] as const;
+        for (const key of searchKeys) {
+          const value = params[key];
+          if (typeof value === "string" && value.trim()) {
+            query.set(key, value.trim());
+          }
+        }
         const path = isApplications ? "/api/admin/reviews" : "/api/admin/companies";
         const data = await apiRequest<ReviewsData | CompaniesData>(`${path}?${query.toString()}`);
         return { data: data.list, success: true, total: data.total };

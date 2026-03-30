@@ -178,15 +178,16 @@ button {
 }
 
 .enterprise-table .ant-pro-table-search {
-  margin-bottom: 18px;
+  margin-bottom: 16px;
 }
 
 .enterprise-table .ant-pro-query-filter {
-  padding-bottom: 2px;
+  padding: 4px 0 0;
 }
 
 .enterprise-table .ant-pro-query-filter .ant-row {
-  row-gap: 14px;
+  align-items: end;
+  row-gap: 12px;
 }
 
 .enterprise-table .ant-pro-query-filter .ant-col {
@@ -206,11 +207,12 @@ button {
   padding: 0;
   text-align: left;
   line-height: 1;
+  margin-bottom: 8px;
 }
 
 .enterprise-table .ant-pro-query-filter .ant-form-item-label > label {
   height: auto;
-  font-size: 15px;
+  font-size: 14px;
   line-height: 1.2;
   font-weight: 600;
   color: #182028;
@@ -236,7 +238,7 @@ button {
 .enterprise-table .ant-pro-query-filter .ant-input-affix-wrapper,
 .enterprise-table .ant-pro-query-filter .ant-picker,
 .enterprise-table .ant-pro-query-filter .ant-select-selector {
-  min-height: 44px;
+  min-height: 42px;
   border-radius: 10px !important;
 }
 
@@ -252,10 +254,16 @@ button {
 .enterprise-search-actions {
   display: flex;
   justify-content: flex-end;
-  align-items: center;
+  align-items: flex-end;
   gap: 12px;
-  min-height: 44px;
-  padding-top: 26px;
+  min-height: 42px;
+  padding-top: 30px;
+}
+
+.enterprise-search-actions .ant-btn {
+  min-width: 96px;
+  height: 42px;
+  border-radius: 10px;
 }
 
 .eyebrow,

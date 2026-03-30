@@ -1730,6 +1730,7 @@ def auth_me(authorization: Optional[str] = Header(None)):
 
 @app.get("/api/admin/reviews")
 def admin_review_list(
+    keyword: Optional[str] = Query(None),
     status: Optional[str] = Query(None),
     username: Optional[str] = Query(None),
     userMobile: Optional[str] = Query(None),
@@ -1752,6 +1753,32 @@ def admin_review_list(
         conditions = ["1=1"]
         params: list[Any] = []
         
+        if keyword:
+            keyword_text = keyword.strip()
+            if keyword_text:
+                like_keyword = f"%{keyword_text}%"
+                keyword_conditions = [
+                    "u.username LIKE ?",
+                    "u.mobile LIKE ?",
+                    "ea.credit_code LIKE ?",
+                    "ea.legal_person_name LIKE ?",
+                    "ea.legal_person_phone LIKE ?",
+                    "au.username LIKE ?",
+                ]
+                keyword_params: list[Any] = [
+                    like_keyword,
+                    like_keyword,
+                    like_keyword,
+                    like_keyword,
+                    like_keyword,
+                    like_keyword,
+                ]
+                normalized_keyword = re.sub(r"[^0-9Xx]", "", keyword_text)[-4:]
+                if normalized_keyword:
+                    keyword_conditions.append("u.id_card_last4 LIKE ?")
+                    keyword_params.append(f"%{normalized_keyword}%")
+                conditions.append(f"({' OR '.join(keyword_conditions)})")
+                params.extend(keyword_params)
         if status:
             conditions.append("ea.status = ?")
             params.append(status)
@@ -2015,6 +2042,7 @@ def admin_invalidate_review(
 
 @app.get("/api/admin/companies")
 def admin_company_list(
+    keyword: Optional[str] = Query(None),
     status: Optional[str] = Query(None),
     username: Optional[str] = Query(None),
     userMobile: Optional[str] = Query(None),
@@ -2037,6 +2065,32 @@ def admin_company_list(
         conditions = ["1=1"]
         params: list[Any] = []
         
+        if keyword:
+            keyword_text = keyword.strip()
+            if keyword_text:
+                like_keyword = f"%{keyword_text}%"
+                keyword_conditions = [
+                    "u.username LIKE ?",
+                    "u.mobile LIKE ?",
+                    "ea.credit_code LIKE ?",
+                    "ea.legal_person_name LIKE ?",
+                    "ea.legal_person_phone LIKE ?",
+                    "au.username LIKE ?",
+                ]
+                keyword_params: list[Any] = [
+                    like_keyword,
+                    like_keyword,
+                    like_keyword,
+                    like_keyword,
+                    like_keyword,
+                    like_keyword,
+                ]
+                normalized_keyword = re.sub(r"[^0-9Xx]", "", keyword_text)[-4:]
+                if normalized_keyword:
+                    keyword_conditions.append("u.id_card_last4 LIKE ?")
+                    keyword_params.append(f"%{normalized_keyword}%")
+                conditions.append(f"({' OR '.join(keyword_conditions)})")
+                params.extend(keyword_params)
         if status:
             conditions.append("ea.status = ?")
             params.append(status)

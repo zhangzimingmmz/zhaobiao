@@ -71,14 +71,8 @@ export function EnterpriseTable({ view, navigate }: EnterpriseTableProps) {
         const pageSize = params.pageSize ?? 20;
         const query = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
         const searchKeys = [
+          "keyword",
           "status",
-          "username",
-          "userMobile",
-          "idCardKeyword",
-          "creditCode",
-          "legalPersonName",
-          "legalPersonPhone",
-          "auditedByName",
           "createdFrom",
           "createdTo",
           "auditFrom",
@@ -96,9 +90,9 @@ export function EnterpriseTable({ view, navigate }: EnterpriseTableProps) {
       }}
       rowKey="id"
       search={{
-        labelWidth: 92,
+        labelWidth: "auto",
         defaultCollapsed: false,
-        span: 6,
+        span: 8,
         optionRender: (_, __, dom) => [<div key="actions" className="enterprise-search-actions">{dom}</div>],
       }}
       form={{ initialValues: { status: isApplications ? "" : undefined } }}

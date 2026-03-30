@@ -51,10 +51,23 @@ export const createEnterpriseColumns = (
 
   const columns: ProColumns<ReviewItem>[] = [
     {
+      title: "关键词",
+      dataIndex: "keyword",
+      key: "keyword",
+      hideInTable: true,
+      order: 100,
+      fieldProps: {
+        placeholder: "登录名/手机号/身份证/信用代码/法人",
+      },
+      search: {
+        transform: (value) => ({ keyword: value }),
+      },
+    },
+    {
       title: "登录名",
       dataIndex: "username",
       key: "username",
-      order: 90,
+      hideInSearch: true,
       width: 140,
       render: (v) => v || "-",
     },
@@ -62,7 +75,7 @@ export const createEnterpriseColumns = (
       title: "注册手机号",
       dataIndex: "userMobile",
       key: "userMobile",
-      order: 80,
+      hideInSearch: true,
       width: 140,
       render: (v) => v || "-",
     },
@@ -70,18 +83,15 @@ export const createEnterpriseColumns = (
       title: "身份证号",
       dataIndex: "idCardMasked",
       key: "idCardMasked",
-      order: 70,
+      hideInSearch: true,
       width: 170,
-      search: {
-        transform: (value) => ({ idCardKeyword: value }),
-      },
       render: (v) => v || "-",
     },
     {
       title: "统一社会信用代码",
       dataIndex: "creditCode",
       key: "creditCode",
-      order: 60,
+      hideInSearch: true,
       width: 180,
       render: (v) => v || "-",
     },
@@ -89,7 +99,7 @@ export const createEnterpriseColumns = (
       title: "法人姓名",
       dataIndex: "legalPersonName",
       key: "legalPersonName",
-      order: 50,
+      hideInSearch: true,
       width: 140,
       render: (v) => v || "-",
     },
@@ -97,7 +107,7 @@ export const createEnterpriseColumns = (
       title: "法人手机号",
       dataIndex: "legalPersonPhone",
       key: "legalPersonPhone",
-      order: 40,
+      hideInSearch: true,
       width: 140,
       render: (v) => v || "-",
     },
@@ -113,7 +123,7 @@ export const createEnterpriseColumns = (
         rejected: { text: "已驳回" },
         invalidated: { text: "已作废" },
       },
-      order: 30,
+      order: 90,
       render: (_, r) => (
         <span className={reviewStatusBadgeClass(r.status)}>{reviewStatusLabel(r.status)}</span>
       ),
@@ -122,7 +132,7 @@ export const createEnterpriseColumns = (
       title: "审核人",
       dataIndex: "auditedByName",
       key: "auditedByName",
-      order: 20,
+      hideInSearch: true,
       width: 120,
       render: (_, r) => r.auditedByName || r.auditedBy || "-",
     },
@@ -135,8 +145,10 @@ export const createEnterpriseColumns = (
       key: "createdDateRange",
       valueType: "dateRange",
       hideInTable: true,
-      colSize: 2,
-      order: 10,
+      order: 80,
+      fieldProps: {
+        placeholder: ["开始日期", "结束日期"],
+      },
       search: {
         transform: (value) => {
           const range = transformDateRange(value as Dayjs[]);
@@ -162,8 +174,10 @@ export const createEnterpriseColumns = (
       key: "auditDateRange",
       valueType: "dateRange",
       hideInTable: true,
-      colSize: 2,
-      order: 10,
+      order: 80,
+      fieldProps: {
+        placeholder: ["开始日期", "结束日期"],
+      },
       search: {
         transform: (value) => {
           const range = transformDateRange(value as Dayjs[]);

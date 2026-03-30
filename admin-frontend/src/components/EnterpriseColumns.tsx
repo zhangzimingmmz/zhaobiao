@@ -1,6 +1,7 @@
 import React from "react";
 import type { ProColumns } from "@ant-design/pro-components";
 import { Button } from "antd";
+import type { Dayjs } from "dayjs";
 import type { ReviewItem } from "../lib/types";
 import { reviewStatusLabel, reviewStatusBadgeClass } from "../lib/statusLabels";
 
@@ -31,6 +32,18 @@ export interface EnterpriseColumnsOptions {
   timeMode?: "created" | "audit";
 }
 
+function transformDateRange(
+  value?: Dayjs[]
+): Record<string, string> | undefined {
+  if (!value || value.length !== 2 || !value[0] || !value[1]) {
+    return undefined;
+  }
+  return {
+    from: value[0].format("YYYY-MM-DD"),
+    to: value[1].format("YYYY-MM-DD"),
+  };
+}
+
 export const createEnterpriseColumns = (
   options: EnterpriseColumnsOptions = {}
 ): ProColumns<ReviewItem>[] => {
@@ -56,6 +69,9 @@ export const createEnterpriseColumns = (
       dataIndex: "idCardMasked",
       key: "idCardMasked",
       width: 170,
+      search: {
+        transform: (value) => ({ idCardKeyword: value }),
+      },
       render: (v) => v || "-",
     },
     {
@@ -107,9 +123,25 @@ export const createEnterpriseColumns = (
   if (timeMode === "created") {
     columns.push({
       title: "提交时间",
+      dataIndex: "createdDateRange",
+      key: "createdDateRange",
+      valueType: "dateRange",
+      hideInTable: true,
+      order: 98,
+      search: {
+        transform: (value) => {
+          const range = transformDateRange(value as Dayjs[]);
+          if (!range) return {};
+          return { createdFrom: range.from, createdTo: range.to };
+        },
+      },
+    });
+    columns.push({
+      title: "提交时间",
       dataIndex: "createdAt",
       key: "createdAt",
       width: 160,
+      hideInSearch: true,
       render: (v) => formatListTime(typeof v === "string" ? v : v == null ? null : String(v)),
     });
   }
@@ -117,9 +149,25 @@ export const createEnterpriseColumns = (
   if (timeMode === "audit") {
     columns.push({
       title: "审核时间",
+      dataIndex: "auditDateRange",
+      key: "auditDateRange",
+      valueType: "dateRange",
+      hideInTable: true,
+      order: 98,
+      search: {
+        transform: (value) => {
+          const range = transformDateRange(value as Dayjs[]);
+          if (!range) return {};
+          return { auditFrom: range.from, auditTo: range.to };
+        },
+      },
+    });
+    columns.push({
+      title: "审核时间",
       dataIndex: "auditAt",
       key: "auditAt",
       width: 160,
+      hideInSearch: true,
       render: (v) => formatListTime(typeof v === "string" ? v : v == null ? null : String(v)),
     });
   }

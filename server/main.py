@@ -1733,10 +1733,13 @@ def admin_review_list(
     status: Optional[str] = Query(None),
     username: Optional[str] = Query(None),
     userMobile: Optional[str] = Query(None),
+    idCardKeyword: Optional[str] = Query(None),
     creditCode: Optional[str] = Query(None),
     legalPersonName: Optional[str] = Query(None),
     legalPersonPhone: Optional[str] = Query(None),
     auditedByName: Optional[str] = Query(None),
+    createdFrom: Optional[str] = Query(None),
+    createdTo: Optional[str] = Query(None),
     page: int = Query(1, ge=1),
     pageSize: int = Query(10, ge=1, le=100),
     authorization: Optional[str] = Header(None),
@@ -1758,6 +1761,11 @@ def admin_review_list(
         if userMobile:
             conditions.append("u.mobile LIKE ?")
             params.append(f"%{userMobile.strip()}%")
+        if idCardKeyword:
+            normalized_keyword = re.sub(r"[^0-9Xx]", "", idCardKeyword)[-4:]
+            if normalized_keyword:
+                conditions.append("u.id_card_last4 LIKE ?")
+                params.append(f"%{normalized_keyword}%")
         if creditCode:
             conditions.append("ea.credit_code LIKE ?")
             params.append(f"%{creditCode.strip()}%")
@@ -1770,6 +1778,12 @@ def admin_review_list(
         if auditedByName:
             conditions.append("au.username LIKE ?")
             params.append(f"%{auditedByName.strip()}%")
+        if createdFrom:
+            conditions.append("ea.created_at >= ?")
+            params.append(f"{createdFrom.strip()}T00:00:00")
+        if createdTo:
+            conditions.append("ea.created_at <= ?")
+            params.append(f"{createdTo.strip()}T23:59:59")
 
         where = " AND ".join(conditions)
         count_sql = f"""SELECT COUNT(*)
@@ -2004,10 +2018,13 @@ def admin_company_list(
     status: Optional[str] = Query(None),
     username: Optional[str] = Query(None),
     userMobile: Optional[str] = Query(None),
+    idCardKeyword: Optional[str] = Query(None),
     creditCode: Optional[str] = Query(None),
     legalPersonName: Optional[str] = Query(None),
     legalPersonPhone: Optional[str] = Query(None),
     auditedByName: Optional[str] = Query(None),
+    auditFrom: Optional[str] = Query(None),
+    auditTo: Optional[str] = Query(None),
     page: int = Query(1, ge=1),
     pageSize: int = Query(10, ge=1, le=100),
     authorization: Optional[str] = Header(None),
@@ -2029,6 +2046,11 @@ def admin_company_list(
         if userMobile:
             conditions.append("u.mobile LIKE ?")
             params.append(f"%{userMobile.strip()}%")
+        if idCardKeyword:
+            normalized_keyword = re.sub(r"[^0-9Xx]", "", idCardKeyword)[-4:]
+            if normalized_keyword:
+                conditions.append("u.id_card_last4 LIKE ?")
+                params.append(f"%{normalized_keyword}%")
         if creditCode:
             conditions.append("ea.credit_code LIKE ?")
             params.append(f"%{creditCode.strip()}%")
@@ -2041,6 +2063,12 @@ def admin_company_list(
         if auditedByName:
             conditions.append("au.username LIKE ?")
             params.append(f"%{auditedByName.strip()}%")
+        if auditFrom:
+            conditions.append("ea.audit_at >= ?")
+            params.append(f"{auditFrom.strip()}T00:00:00")
+        if auditTo:
+            conditions.append("ea.audit_at <= ?")
+            params.append(f"{auditTo.strip()}T23:59:59")
 
         where = " AND ".join(conditions)
         

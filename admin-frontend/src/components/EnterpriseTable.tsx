@@ -73,10 +73,15 @@ export function EnterpriseTable({ view, navigate }: EnterpriseTableProps) {
           "status",
           "username",
           "userMobile",
+          "idCardKeyword",
           "creditCode",
           "legalPersonName",
           "legalPersonPhone",
           "auditedByName",
+          "createdFrom",
+          "createdTo",
+          "auditFrom",
+          "auditTo",
         ] as const;
         for (const key of searchKeys) {
           const value = params[key];

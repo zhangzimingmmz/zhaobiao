@@ -2,10 +2,29 @@ import React, { useEffect, useState } from "react";
 import { Card, Descriptions, Button, Form, Input, Modal, message } from "antd";
 import { deleteTestCompanyData, getCompanyDetail, resetCompanyUserPassword, updateCompanyDetail } from "../lib/api";
 import type { ReviewDetail } from "../lib/types";
-import { ApiUnavailableState, ErrorState, LoadingState } from "../components/States";
+import { ErrorState, LoadingState } from "../components/States";
 import { reviewStatusBadgeClass, reviewStatusLabel } from "../lib/statusLabels";
 import { EnterpriseModuleTabs } from "../components/EnterpriseModuleTabs";
 import { isSuperAdmin } from "../lib/auth";
+
+const BEIJING = "Asia/Shanghai";
+
+function formatDetailTime(iso?: string | null): string {
+  if (!iso) return "-";
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return iso;
+  return date
+    .toLocaleString("zh-CN", {
+      timeZone: BEIJING,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    })
+    .replace(/\//g, "-");
+}
 
 export function CompanyDetailPage({
   id,
@@ -160,7 +179,7 @@ export function CompanyDetailPage({
     <div className="stack">
       <EnterpriseModuleTabs active="companies" navigate={navigate} />
       <Card
-        title="企业档案"
+        title="注册资料"
         extra={
           <div style={{ display: "flex", gap: 8 }}>
             <Button type="link" onClick={() => navigate("/enterprise/companies")}>
@@ -180,36 +199,28 @@ export function CompanyDetailPage({
           </div>
         }
       >
-        <Descriptions column={1} bordered size="small">
+        <Descriptions column={2} bordered size="small">
           <Descriptions.Item label="登录名">{item.username || "-"}</Descriptions.Item>
           <Descriptions.Item label="注册手机号">{item.userMobile || "-"}</Descriptions.Item>
           <Descriptions.Item label="注册人身份证号">{item.idCardMasked || "-"}</Descriptions.Item>
           <Descriptions.Item label="统一社会信用代码">{item.creditCode || "-"}</Descriptions.Item>
           <Descriptions.Item label="法人姓名">{item.legalPersonName || "-"}</Descriptions.Item>
           <Descriptions.Item label="法人手机号">{item.legalPersonPhone || "-"}</Descriptions.Item>
-          <Descriptions.Item label="经营范围">{item.businessScope || "-"}</Descriptions.Item>
-          <Descriptions.Item label="经营场所地址">{item.businessAddress || "-"}</Descriptions.Item>
+          <Descriptions.Item label="经营范围" span={2}>{item.businessScope || "-"}</Descriptions.Item>
+          <Descriptions.Item label="经营场所地址" span={2}>{item.businessAddress || "-"}</Descriptions.Item>
         </Descriptions>
       </Card>
 
       <Card title="审核信息">
-        <Descriptions column={1} bordered size="small">
+        <Descriptions column={2} bordered size="small">
           <Descriptions.Item label="当前状态">
             <span className={reviewStatusBadgeClass(item.status)}>{reviewStatusLabel(item.status)}</span>
           </Descriptions.Item>
-          <Descriptions.Item label="提交时间">{item.createdAt || "-"}</Descriptions.Item>
-          <Descriptions.Item label="最近审核时间">{item.auditAt || "-"}</Descriptions.Item>
           <Descriptions.Item label="审核人">{item.auditedByName || item.auditedBy || "-"}</Descriptions.Item>
-          <Descriptions.Item label="驳回原因">{item.rejectReason || "-"}</Descriptions.Item>
+          <Descriptions.Item label="提交时间">{formatDetailTime(item.createdAt)}</Descriptions.Item>
+          <Descriptions.Item label="审核时间">{formatDetailTime(item.auditAt)}</Descriptions.Item>
+          <Descriptions.Item label="驳回原因" span={2}>{item.rejectReason || "-"}</Descriptions.Item>
         </Descriptions>
-      </Card>
-
-      <Card title="运营备注">
-        <ApiUnavailableState label="运营备注与人工跟进记录尚未接入独立 API，当前阶段先保留结构位。" />
-      </Card>
-
-      <Card title="关联能力预留">
-        <ApiUnavailableState label="企业关联的采集、告警、台账等扩展能力仍待后端补齐，当前页先以只读占位态呈现。" />
       </Card>
 
       <Modal

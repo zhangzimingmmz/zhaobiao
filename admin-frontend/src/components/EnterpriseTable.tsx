@@ -63,6 +63,7 @@ export function EnterpriseTable({ view, navigate }: EnterpriseTableProps) {
 
   return (
     <ProTable<ReviewItem>
+      className={`enterprise-table enterprise-table--${view}`}
       actionRef={actionRef}
       columns={columns}
       request={async (params) => {
@@ -94,7 +95,12 @@ export function EnterpriseTable({ view, navigate }: EnterpriseTableProps) {
         return { data: data.list, success: true, total: data.total };
       }}
       rowKey="id"
-      search={{ labelWidth: "auto", defaultCollapsed: false }}
+      search={{
+        labelWidth: 92,
+        defaultCollapsed: false,
+        span: 6,
+        optionRender: (_, __, dom) => [<div key="actions" className="enterprise-search-actions">{dom}</div>],
+      }}
       form={{ initialValues: { status: isApplications ? "" : undefined } }}
       pagination={{ defaultPageSize: 20, showSizeChanger: true }}
     />

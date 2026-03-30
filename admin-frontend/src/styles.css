@@ -177,6 +177,48 @@ button {
   text-indent: 0.28em;
 }
 
+.enterprise-table .ant-pro-table-search {
+  margin-bottom: 18px;
+}
+
+.enterprise-table .ant-pro-query-filter {
+  padding-bottom: 2px;
+}
+
+.enterprise-table .ant-pro-query-filter .ant-row {
+  row-gap: 8px;
+}
+
+.enterprise-table .ant-pro-query-filter .ant-form-item {
+  margin-bottom: 10px;
+}
+
+.enterprise-table .ant-pro-query-filter .ant-form-item-label > label {
+  font-size: 15px;
+  line-height: 40px;
+}
+
+.enterprise-table .ant-pro-query-filter .ant-input,
+.enterprise-table .ant-pro-query-filter .ant-input-affix-wrapper,
+.enterprise-table .ant-pro-query-filter .ant-picker,
+.enterprise-table .ant-pro-query-filter .ant-select-selector {
+  min-height: 40px;
+  border-radius: 10px !important;
+}
+
+.enterprise-table .ant-pro-query-filter .ant-picker {
+  width: 100%;
+}
+
+.enterprise-search-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-end;
+  gap: 12px;
+  min-height: 40px;
+  padding-bottom: 10px;
+}
+
 .eyebrow,
 .brand-subtitle,
 .card-label,

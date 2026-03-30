@@ -29,10 +29,10 @@ export function CompanyDetailPage({
       const data = await getCompanyDetail(id);
       setItem(data);
       form.setFieldsValue({
-        companyName: data.companyName,
+        username: data.username || "",
+        userMobile: data.userMobile || "",
+        idCard: "",
         creditCode: data.creditCode,
-        contactName: data.contactPersonName || data.contactName || "",
-        contactPhone: data.contactPhone || "",
         legalPersonName: data.legalPersonName || "",
         legalPersonPhone: data.legalPersonPhone || "",
         businessScope: data.businessScope || "",
@@ -160,7 +160,7 @@ export function CompanyDetailPage({
     <div className="stack">
       <EnterpriseModuleTabs active="companies" navigate={navigate} />
       <Card
-        title="公司档案"
+        title="企业档案"
         extra={
           <div style={{ display: "flex", gap: 8 }}>
             <Button type="link" onClick={() => navigate("/enterprise/companies")}>
@@ -181,19 +181,23 @@ export function CompanyDetailPage({
         }
       >
         <Descriptions column={1} bordered size="small">
-          <Descriptions.Item label="企业名称">{item.companyName}</Descriptions.Item>
-          <Descriptions.Item label="统一社会信用代码">{item.creditCode}</Descriptions.Item>
+          <Descriptions.Item label="登录名">{item.username || "-"}</Descriptions.Item>
+          <Descriptions.Item label="注册手机号">{item.userMobile || "-"}</Descriptions.Item>
+          <Descriptions.Item label="注册人身份证号">{item.idCardMasked || "-"}</Descriptions.Item>
+          <Descriptions.Item label="统一社会信用代码">{item.creditCode || "-"}</Descriptions.Item>
+          <Descriptions.Item label="法人姓名">{item.legalPersonName || "-"}</Descriptions.Item>
+          <Descriptions.Item label="法人手机号">{item.legalPersonPhone || "-"}</Descriptions.Item>
+          <Descriptions.Item label="经营范围">{item.businessScope || "-"}</Descriptions.Item>
+          <Descriptions.Item label="经营场所地址">{item.businessAddress || "-"}</Descriptions.Item>
+        </Descriptions>
+      </Card>
+
+      <Card title="审核信息">
+        <Descriptions column={1} bordered size="small">
           <Descriptions.Item label="当前状态">
             <span className={reviewStatusBadgeClass(item.status)}>{reviewStatusLabel(item.status)}</span>
           </Descriptions.Item>
-          <Descriptions.Item label="登录名">{item.username || "-"}</Descriptions.Item>
-          <Descriptions.Item label="注册手机号">{item.userMobile || "-"}</Descriptions.Item>
-          <Descriptions.Item label="联系人">{item.contactPersonName || item.contactName || "-"}</Descriptions.Item>
-          <Descriptions.Item label="联系人电话">{item.contactPhone || "-"}</Descriptions.Item>
-          <Descriptions.Item label="法人姓名">{item.legalPersonName || "-"}</Descriptions.Item>
-          <Descriptions.Item label="法人电话">{item.legalPersonPhone || "-"}</Descriptions.Item>
-          <Descriptions.Item label="经营范围">{item.businessScope || "-"}</Descriptions.Item>
-          <Descriptions.Item label="经营场所地址">{item.businessAddress || "-"}</Descriptions.Item>
+          <Descriptions.Item label="提交时间">{item.createdAt || "-"}</Descriptions.Item>
           <Descriptions.Item label="最近审核时间">{item.auditAt || "-"}</Descriptions.Item>
           <Descriptions.Item label="审核人">{item.auditedByName || item.auditedBy || "-"}</Descriptions.Item>
           <Descriptions.Item label="驳回原因">{item.rejectReason || "-"}</Descriptions.Item>
@@ -217,28 +221,32 @@ export function CompanyDetailPage({
         destroyOnClose
       >
         <Form form={form} layout="vertical">
-          <Form.Item name="companyName" label="企业名称" rules={[{ required: true, message: "请输入企业名称" }]}>
+          <Form.Item name="username" label="登录名" rules={[{ required: true, message: "请输入登录名" }]}>
+            <Input />
+          </Form.Item>
+          <Form.Item name="userMobile" label="注册手机号" rules={[{ required: true, message: "请输入注册手机号" }]}>
+            <Input />
+          </Form.Item>
+          <Form.Item
+            name="idCard"
+            label="注册人身份证号"
+            extra={`当前：${item.idCardMasked || "-"}`}
+          >
             <Input />
           </Form.Item>
           <Form.Item name="creditCode" label="统一社会信用代码" rules={[{ required: true, message: "请输入统一社会信用代码" }]}>
             <Input />
           </Form.Item>
-          <Form.Item name="contactName" label="联系人">
+          <Form.Item name="legalPersonName" label="法人姓名" rules={[{ required: true, message: "请输入法人姓名" }]}>
             <Input />
           </Form.Item>
-          <Form.Item name="contactPhone" label="联系人电话">
-            <Input />
-          </Form.Item>
-          <Form.Item name="legalPersonName" label="法人姓名">
-            <Input />
-          </Form.Item>
-          <Form.Item name="legalPersonPhone" label="法人电话">
+          <Form.Item name="legalPersonPhone" label="法人手机号">
             <Input />
           </Form.Item>
           <Form.Item name="businessScope" label="经营范围">
             <Input.TextArea rows={3} />
           </Form.Item>
-          <Form.Item name="businessAddress" label="经营地址">
+          <Form.Item name="businessAddress" label="经营场所地址" rules={[{ required: true, message: "请输入经营场所地址" }]}>
             <Input.TextArea rows={3} />
           </Form.Item>
         </Form>

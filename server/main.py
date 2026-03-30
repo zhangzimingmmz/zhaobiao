@@ -593,11 +593,13 @@ def _require_super_admin(admin: dict) -> None:
 def _application_to_admin_payload(row: sqlite3.Row) -> dict[str, Any]:
     audited_by = row["audited_by"]
     audited_by_username = row["audited_by_username"] if "audited_by_username" in row.keys() else None
+    id_card_last4 = row["id_card_last4"] if "id_card_last4" in row.keys() else None
     return {
         "id": row["id"],
         "userId": row["user_id"],
         "username": row["username"],
         "userMobile": row["mobile"],
+        "idCardMasked": f"{'*' * 14}{id_card_last4}" if id_card_last4 else None,
         "companyName": row["company_name"] or row["username"] or "-",
         "creditCode": row["credit_code"],
         "contactName": row["contact_name"] or row["legal_person_name"],
@@ -1761,7 +1763,7 @@ def admin_review_list(
                        ea.status, ea.reject_reason,
                        ea.created_at, ea.updated_at, ea.audit_at, ea.audited_by,
                        au.username AS audited_by_username,
-                       u.mobile, u.username, u.account_status
+                       u.mobile, u.username, u.account_status, u.id_card_last4
                 FROM enterprise_applications ea
                 LEFT JOIN users u ON ea.user_id = u.id
                 LEFT JOIN admin_users au ON ea.audited_by = au.id
@@ -1784,7 +1786,7 @@ def admin_review_detail(application_id: str, authorization: Optional[str] = Head
     conn = _get_conn()
     try:
         row = conn.execute(
-            """SELECT ea.*, au.username AS audited_by_username, u.mobile, u.username, u.account_status
+            """SELECT ea.*, au.username AS audited_by_username, u.mobile, u.username, u.account_status, u.id_card_last4
                FROM enterprise_applications ea
                LEFT JOIN users u ON ea.user_id = u.id
                LEFT JOIN admin_users au ON ea.audited_by = au.id
@@ -2013,7 +2015,7 @@ def admin_company_list(
                        ea.business_scope, ea.business_address, ea.status, ea.reject_reason,
                        ea.created_at, ea.updated_at, ea.audit_at, ea.audited_by,
                        au.username AS audited_by_username,
-                       u.mobile, u.username, u.account_status
+                       u.mobile, u.username, u.account_status, u.id_card_last4
                 FROM enterprise_applications ea
                 LEFT JOIN users u ON ea.user_id = u.id
                 LEFT JOIN admin_users au ON ea.audited_by = au.id
@@ -2044,7 +2046,7 @@ def admin_company_detail(application_id: str, authorization: Optional[str] = Hea
     conn = _get_conn()
     try:
         row = conn.execute(
-            """SELECT ea.*, au.username AS audited_by_username, u.mobile, u.username, u.account_status
+            """SELECT ea.*, au.username AS audited_by_username, u.mobile, u.username, u.account_status, u.id_card_last4
                FROM enterprise_applications ea
                LEFT JOIN users u ON ea.user_id = u.id
                LEFT JOIN admin_users au ON ea.audited_by = au.id
@@ -2063,14 +2065,14 @@ def admin_company_detail(application_id: str, authorization: Optional[str] = Hea
 
 
 class AdminCompanyUpdateRequest(BaseModel):
-    companyName: str
+    username: str
+    userMobile: str
+    idCard: Optional[str] = None
     creditCode: str
-    contactName: Optional[str] = None
-    contactPhone: Optional[str] = None
-    legalPersonName: Optional[str] = None
+    legalPersonName: str
     legalPersonPhone: Optional[str] = None
     businessScope: Optional[str] = None
-    businessAddress: Optional[str] = None
+    businessAddress: str
 
 
 @app.put("/api/admin/companies/{application_id}")
@@ -2083,33 +2085,67 @@ def admin_company_update(
     admin = get_admin_user(authorization)
     _require_super_admin(admin)
 
-    if not req.companyName.strip():
-        return {"code": 400, "message": "企业名称不能为空"}
+    if not req.username.strip():
+        return {"code": 400, "message": "登录名不能为空"}
+    if not re.fullmatch(r"\d{11}", req.userMobile):
+        return {"code": 400, "message": "注册手机号格式不正确"}
     if not req.creditCode.strip():
         return {"code": 400, "message": "统一社会信用代码不能为空"}
+    if not req.legalPersonName.strip():
+        return {"code": 400, "message": "法人姓名不能为空"}
+    if req.legalPersonPhone and not re.fullmatch(r"\d{11}", req.legalPersonPhone):
+        return {"code": 400, "message": "法人手机号格式不正确"}
+    if not req.businessAddress.strip():
+        return {"code": 400, "message": "经营场所地址不能为空"}
 
     now = _now_iso()
     conn = _get_conn()
     try:
         row = conn.execute(
-            "SELECT id FROM enterprise_applications WHERE id = ? LIMIT 1",
+            "SELECT id, user_id FROM enterprise_applications WHERE id = ? LIMIT 1",
             (application_id,),
         ).fetchone()
         if not row:
             return {"code": 404, "message": "企业档案不存在"}
 
+        conflict = conn.execute(
+            """SELECT id, username, mobile
+               FROM users
+               WHERE id != ? AND (username = ? OR mobile = ?)
+               LIMIT 1""",
+            (row["user_id"], req.username.strip(), req.userMobile),
+        ).fetchone()
+        if conflict:
+            if conflict["username"] == req.username.strip():
+                return {"code": 409, "message": "登录名已存在"}
+            return {"code": 409, "message": "注册手机号已存在"}
+
+        update_user_fields: list[str] = ["username = ?", "mobile = ?", "updated_at = ?"]
+        update_user_params: list[Any] = [req.username.strip(), req.userMobile, now]
+        if req.idCard:
+            try:
+                id_card = _normalize_id_card(req.idCard)
+            except ValueError as err:
+                return {"code": 400, "message": str(err)}
+            update_user_fields.extend(["id_card_hash = ?", "id_card_last4 = ?"])
+            update_user_params.extend([_hash_id_card(id_card), id_card[-4:]])
+        update_user_params.append(row["user_id"])
+
+        conn.execute(
+            f"""UPDATE users
+                SET {", ".join(update_user_fields)}
+                WHERE id = ?""",
+            update_user_params,
+        )
+
         conn.execute(
             """UPDATE enterprise_applications
-               SET company_name = ?, credit_code = ?, contact_name = ?, contact_phone = ?,
-                   legal_person_name = ?, legal_person_phone = ?, business_scope = ?,
+               SET credit_code = ?, legal_person_name = ?, legal_person_phone = ?, business_scope = ?,
                    business_address = ?, updated_at = ?
                WHERE id = ?""",
             (
-                req.companyName.strip(),
                 req.creditCode.strip(),
-                req.contactName.strip() if req.contactName else None,
-                req.contactPhone.strip() if req.contactPhone else None,
-                req.legalPersonName.strip() if req.legalPersonName else None,
+                req.legalPersonName.strip(),
                 req.legalPersonPhone.strip() if req.legalPersonPhone else None,
                 req.businessScope.strip() if req.businessScope else None,
                 req.businessAddress.strip() if req.businessAddress else None,

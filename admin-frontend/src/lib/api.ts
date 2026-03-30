@@ -152,14 +152,14 @@ export type AdminLoginResponse = {
 };
 
 export type CompanyUpdateInput = {
-  companyName: string;
+  username: string;
+  userMobile: string;
+  idCard?: string;
   creditCode: string;
-  contactName?: string;
-  contactPhone?: string;
-  legalPersonName?: string;
+  legalPersonName: string;
   legalPersonPhone?: string;
   businessScope?: string;
-  businessAddress?: string;
+  businessAddress: string;
 };
 
 export async function getCompanyDetail(id: string): Promise<ReviewDetail> {

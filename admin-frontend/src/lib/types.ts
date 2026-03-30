@@ -18,6 +18,7 @@ export type ReviewItem = {
   userId: string;
   username: string;
   userMobile: string;
+  idCardMasked?: string | null;
   companyName: string;
   creditCode: string;
   contactName: string | null;

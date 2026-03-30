@@ -126,37 +126,31 @@ export function ReviewDetailPage({
             {reviewStatusLabel(item.status)}
           </span>
         </div>
-        <div className="detail-grid" style={{ marginBottom: 16 }}>
-          <div>
-            <div className="detail-label">提交时间</div>
-            <div>{item.createdAt || "-"}</div>
-          </div>
-          <div>
-            <div className="detail-label">审核时间</div>
-            <div>{item.auditAt || "-"}</div>
-          </div>
-          <div>
-            <div className="detail-label">审核人</div>
-            <div>{item.auditedByName || item.auditedBy || "-"}</div>
-          </div>
-          <div>
-            <div className="detail-label">账号状态</div>
-            <div>{item.accountStatus || "-"}</div>
-          </div>
-        </div>
-        <div className="detail-label" style={{ marginBottom: 8 }}>企业信息</div>
+        <div className="detail-label" style={{ marginBottom: 8 }}>注册资料</div>
         <div className="detail-grid">
           <div>
-            <div className="detail-label">企业名称</div>
-            <div>{item.companyName}</div>
+            <div className="detail-label">登录名</div>
+            <div>{item.username || "-"}</div>
+          </div>
+          <div>
+            <div className="detail-label">注册手机号</div>
+            <div>{item.userMobile || "-"}</div>
+          </div>
+          <div>
+            <div className="detail-label">注册人身份证号</div>
+            <div>{item.idCardMasked || "-"}</div>
           </div>
           <div>
             <div className="detail-label">统一社会信用代码</div>
-            <div>{item.creditCode}</div>
+            <div>{item.creditCode || "-"}</div>
           </div>
           <div>
-            <div className="detail-label">登录名</div>
-            <div>{item.username}</div>
+            <div className="detail-label">法人姓名</div>
+            <div>{item.legalPersonName || "-"}</div>
+          </div>
+          <div>
+            <div className="detail-label">法人手机号</div>
+            <div>{item.legalPersonPhone || "-"}</div>
           </div>
           <div>
             <div className="detail-label">经营范围</div>
@@ -169,23 +163,23 @@ export function ReviewDetailPage({
         </div>
       </div>
       <div className="card">
-        <div className="detail-label" style={{ marginBottom: 8 }}>人员信息</div>
+        <div className="detail-label" style={{ marginBottom: 8 }}>审核信息</div>
         <div className="detail-grid">
           <div>
-            <div className="detail-label">法人姓名</div>
-            <div>{item.legalPersonName || "-"}</div>
+            <div className="detail-label">当前状态</div>
+            <div>{reviewStatusLabel(item.status)}</div>
           </div>
           <div>
-            <div className="detail-label">法人电话</div>
-            <div>{item.legalPersonPhone || "-"}</div>
+            <div className="detail-label">提交时间</div>
+            <div>{item.createdAt || "-"}</div>
           </div>
           <div>
-            <div className="detail-label">联系人姓名</div>
-            <div>{item.contactPersonName || item.contactName || "-"}</div>
+            <div className="detail-label">审核时间</div>
+            <div>{item.auditAt || "-"}</div>
           </div>
           <div>
-            <div className="detail-label">联系人/注册手机号</div>
-            <div>{item.contactPhone || item.userMobile || "-"}</div>
+            <div className="detail-label">审核人</div>
+            <div>{item.auditedByName || item.auditedBy || "-"}</div>
           </div>
         </div>
       </div>

@@ -4,6 +4,25 @@ import { Button } from "antd";
 import type { ReviewItem } from "../lib/types";
 import { reviewStatusLabel, reviewStatusBadgeClass } from "../lib/statusLabels";
 
+const BEIJING = "Asia/Shanghai";
+
+function formatListTime(iso?: string | null): string {
+  if (!iso) return "-";
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return iso;
+  return date
+    .toLocaleString("zh-CN", {
+      timeZone: BEIJING,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    })
+    .replace(/\//g, "-");
+}
+
 export interface EnterpriseColumnsOptions {
   showActions?: boolean;
   onView?: (record: ReviewItem) => void;
@@ -30,6 +49,13 @@ export const createEnterpriseColumns = (
       dataIndex: "userMobile",
       key: "userMobile",
       width: 140,
+      render: (v) => v || "-",
+    },
+    {
+      title: "身份证号",
+      dataIndex: "idCardMasked",
+      key: "idCardMasked",
+      width: 170,
       render: (v) => v || "-",
     },
     {
@@ -83,6 +109,8 @@ export const createEnterpriseColumns = (
       title: "提交时间",
       dataIndex: "createdAt",
       key: "createdAt",
+      width: 160,
+      render: (v) => formatListTime(typeof v === "string" ? v : v == null ? null : String(v)),
     });
   }
 
@@ -91,7 +119,8 @@ export const createEnterpriseColumns = (
       title: "审核时间",
       dataIndex: "auditAt",
       key: "auditAt",
-      render: (v) => v ?? "-",
+      width: 160,
+      render: (v) => formatListTime(typeof v === "string" ? v : v == null ? null : String(v)),
     });
   }
 

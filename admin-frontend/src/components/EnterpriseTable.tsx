@@ -93,7 +93,6 @@ export function EnterpriseTable({ view, navigate }: EnterpriseTableProps) {
         labelWidth: "auto",
         defaultCollapsed: false,
         span: 8,
-        optionRender: (_, __, dom) => [<div key="actions" className="enterprise-search-actions">{dom}</div>],
       }}
       form={{ initialValues: { status: isApplications ? "" : undefined } }}
       pagination={{ defaultPageSize: 20, showSizeChanger: true }}

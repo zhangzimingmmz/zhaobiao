@@ -14,9 +14,9 @@ import { useProtectedPage } from '../../hooks/useProtectedPage'
 import './index.scss'
 
 const SECONDARY_TABS = [
-  { id: 'work_dynamics', label: '工作动态' },
+  { id: 'work_dynamics', label: '招引资讯' },
+  { id: 'other', label: '国有资产' },
   { id: 'policy', label: '政策法规' },
-  { id: 'other', label: '其他' },
 ]
 
 const CATEGORY_MAP = {
@@ -26,9 +26,9 @@ const CATEGORY_MAP = {
 }
 
 const EMPTY_STATES = {
-  work_dynamics: { title: '暂无工作动态', description: '当前分类下还没有可展示的内容，请稍后再试。' },
+  work_dynamics: { title: '暂无招引资讯', description: '当前分类下还没有可展示的内容，请稍后再试。' },
   policy: { title: '暂无政策法规', description: '当前分类下还没有可展示的内容，请稍后再试。' },
-  other: { title: '暂无其他内容', description: '当前分类下还没有可展示的内容，请稍后再试。' },
+  other: { title: '暂无国有资产', description: '当前分类下还没有可展示的内容，请稍后再试。' },
 }
 
 const PLACEHOLDER_SUMMARIES = [
@@ -71,7 +71,7 @@ function normalizeInfoItem(item) {
 const PAGE_SIZE = 10
 
 export default function InformationPage() {
-  const isAuthorized = useProtectedPage('请先登录后访问信息公开')
+  const isAuthorized = useProtectedPage('请先登录后访问综合信息')
   const [secondary, setSecondary] = useState('work_dynamics')
   const [keyword, setKeyword] = useState('')
 
@@ -202,7 +202,7 @@ export default function InformationPage() {
 
   return (
     <View className="page channel-page">
-      <TopBar title="信息公开" variant="secondary" showBack />
+      <TopBar title="综合信息" variant="secondary" showBack />
       <View className="channel-page__body">
         <View className="channel-page__control-panel">
           <SecondaryTabs tabs={SECONDARY_TABS} value={secondary} onChange={handleSecondaryChange} />

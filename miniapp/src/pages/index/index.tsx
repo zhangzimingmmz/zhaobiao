@@ -21,7 +21,7 @@ const CHANNEL_ENTRIES = [
   },
   {
     id: 'information',
-    title: '信息公开',
+    title: '综合信息',
     path: '/pages/information/index',
     accent: 'information',
     icon: 'filetext',

@@ -109,7 +109,7 @@ export default function Profile() {
 
   const handleVerificationAction = () => {
     if (nextAction === 'resubmit') {
-      Taro.redirectTo({ url: '/pages/register/index' })
+      Taro.redirectTo({ url: '/pages/audit-status/index' })
     } else if (nextAction === 'wait') {
       Taro.redirectTo({ url: '/pages/audit-status/index' })
     } else if (nextAction === 'login') {
@@ -127,7 +127,7 @@ export default function Profile() {
   }
 
   const getActionLabel = () => {
-    if (nextAction === 'resubmit') return '重新提交'
+    if (nextAction === 'resubmit') return '查看驳回原因'
     if (nextAction === 'wait') return '查看审核状态'
     if (nextAction === 'login') return isLoggedIn ? '进入首页' : '去登录'
     return '去注册'

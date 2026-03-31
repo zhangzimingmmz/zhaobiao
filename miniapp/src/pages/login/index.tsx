@@ -80,8 +80,16 @@ export default function Login() {
               }
 
               if (status === 'rejected' || status === 'none') {
-                Taro.showToast({ title: '登录成功，请完成企业认证', icon: 'none', duration: 2000 })
-                setTimeout(() => Taro.redirectTo({ url: '/pages/register/index' }), 900)
+                const isRejected = status === 'rejected'
+                Taro.showToast({
+                  title: isRejected ? '登录成功，请先查看驳回原因' : '登录成功，请完成企业认证',
+                  icon: 'none',
+                  duration: 2000,
+                })
+                setTimeout(
+                  () => Taro.redirectTo({ url: isRejected ? '/pages/audit-status/index' : '/pages/register/index' }),
+                  900,
+                )
                 return
               }
 
@@ -100,9 +108,8 @@ export default function Login() {
             applicationId: res.data.data.applicationId,
             username,
           })
-          const title = res.data?.data?.status === 'rejected' ? '账号审核未通过，请重新提交资料' : '账号审核中'
-          const target =
-            res.data?.data?.status === 'rejected' ? '/pages/register/index' : '/pages/audit-status/index'
+          const title = res.data?.data?.status === 'rejected' ? '账号审核未通过，请先查看驳回原因' : '账号审核中'
+          const target = '/pages/audit-status/index'
           Taro.showToast({ title, icon: 'none', duration: 2000 })
           setTimeout(() => Taro.redirectTo({ url: target }), 1000)
           return

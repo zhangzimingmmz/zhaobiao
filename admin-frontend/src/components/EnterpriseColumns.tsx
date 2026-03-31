@@ -146,6 +146,7 @@ export const createEnterpriseColumns = (
       valueType: "dateRange",
       hideInTable: true,
       order: 80,
+      colSize: 2,
       fieldProps: {
         placeholder: ["开始日期", "结束日期"],
       },
@@ -175,6 +176,7 @@ export const createEnterpriseColumns = (
       valueType: "dateRange",
       hideInTable: true,
       order: 80,
+      colSize: 2,
       fieldProps: {
         placeholder: ["开始日期", "结束日期"],
       },

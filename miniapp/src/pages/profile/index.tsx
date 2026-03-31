@@ -7,7 +7,7 @@ import AvatarInitials from '../../components/AvatarInitials'
 import AppIcon from '../../components/AppIcon'
 import { api } from '../../services/api'
 import { normalizeSupportContacts, presentSupportContacts } from '../../utils/contact'
-import { getRegistrationContext, saveRegistrationContext } from '../../utils/registration'
+import { clearRegistrationContext } from '../../utils/registration'
 import { formatDateTime } from '../../utils/formatDate'
 import './index.scss'
 
@@ -47,34 +47,10 @@ export default function Profile() {
       return
     }
 
-    const context = getRegistrationContext()
-    if (!context.applicationId || (!context.username && !context.mobile)) {
-      setAuditData(null)
-      setAuditStatus('')
-      setNextAction('')
-      return
-    }
-
-    setAuditLoading(true)
-    api.auditStatus(context)
-      .then((res) => {
-        if (res.data?.code === 200 && res.data?.data) {
-          const { status, nextAction: na, ...rest } = res.data.data
-          setAuditData(rest)
-          setAuditStatus(status || '')
-          setNextAction(na || '')
-        } else {
-          setAuditData(null)
-          setAuditStatus('')
-          setNextAction('')
-        }
-      })
-      .catch(() => {
-        setAuditData(null)
-        setAuditStatus('')
-        setNextAction('')
-      })
-      .finally(() => setAuditLoading(false))
+    setAuditData(null)
+    setAuditStatus('')
+    setNextAction('')
+    setAuditLoading(false)
   }, [isLoggedIn])
 
   const handleContact = async () => {
@@ -97,6 +73,7 @@ export default function Profile() {
       success: (res) => {
         if (res.confirm) {
           Taro.removeStorageSync('token')
+          clearRegistrationContext()
           setIsLoggedIn(false)
           setAuditData(null)
           setAuditStatus('')

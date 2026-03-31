@@ -4,7 +4,7 @@ import Taro from '@tarojs/taro'
 import { AtSteps, AtButton } from 'taro-ui'
 import TopBar from '../../components/TopBar'
 import { api } from '../../services/api'
-import { getRegistrationContext } from '../../utils/registration'
+import { clearRegistrationContext, getRegistrationContext } from '../../utils/registration'
 import { formatDateTime } from '../../utils/formatDate'
 import './index.scss'
 
@@ -33,9 +33,15 @@ export default function AuditStatus() {
   }, [])
 
   const handleEnterHome = () => Taro.switchTab({ url: '/pages/index/index' })
-  const handleResubmit = () => Taro.redirectTo({ url: '/pages/register/index' })
-  const handleLogin = () => Taro.redirectTo({ url: '/pages/login/index' })
-  const handleRegister = () => Taro.redirectTo({ url: '/pages/register/index' })
+  const handleResubmit = () => Taro.redirectTo({ url: '/pages/register/index?mode=resubmit' })
+  const handleLogin = () => {
+    if (status === 'approved') clearRegistrationContext()
+    Taro.redirectTo({ url: '/pages/login/index' })
+  }
+  const handleRegister = () => {
+    clearRegistrationContext()
+    Taro.redirectTo({ url: '/pages/register/index' })
+  }
 
   const stateMeta = {
     none: {

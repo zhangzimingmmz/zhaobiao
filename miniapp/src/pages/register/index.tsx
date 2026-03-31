@@ -1,17 +1,20 @@
 import { useState, useEffect } from 'react'
 import { View, Text } from '@tarojs/components'
 import Taro from '@tarojs/taro'
-import { AtInput, AtButton, AtTextarea } from 'taro-ui'
+import { AtInput, AtButton } from 'taro-ui'
 import TopBar from '../../components/TopBar'
 import AgreementConsent from '../../components/AgreementConsent'
 import { api } from '../../services/api'
 import { getRegistrationContext, saveRegistrationContext } from '../../utils/registration'
+import { hasAuthToken } from '../../utils/auth'
 import './index.scss'
 
 const BUSINESS_ADDRESS_MAX_LENGTH = 64
 const REQUIRED_MARK = '＊'
 
 export default function Register() {
+  const routerParams = Taro.getCurrentInstance().router?.params || {}
+  const isResubmitMode = routerParams.mode === 'resubmit'
   const [username, setUsername] = useState('')
   const [usernameCursor, setUsernameCursor] = useState(0)
   const [password, setPassword] = useState('')
@@ -29,6 +32,7 @@ export default function Register() {
   const [businessScope, setBusinessScope] = useState('')
   const [businessScopeCursor, setBusinessScopeCursor] = useState(0)
   const [businessAddress, setBusinessAddress] = useState('')
+  const [businessAddressCursor, setBusinessAddressCursor] = useState(0)
   const [agreementAccepted, setAgreementAccepted] = useState(false)
   const [loading, setLoading] = useState(false)
   const [isResubmit, setIsResubmit] = useState(false)
@@ -40,6 +44,52 @@ export default function Register() {
   }
 
   useEffect(() => {
+    if (!isResubmitMode) {
+      setIsResubmit(false)
+      return
+    }
+
+    const applyPayload = (payload) => {
+      setIsResubmit(true)
+      setUsername(payload.username || '')
+      setUsernameCursor((payload.username || '').length)
+      setMobile(payload.mobile || '')
+      setMobileCursor((payload.mobile || '').length)
+      setCreditCode(payload.creditCode || '')
+      setCreditCodeCursor((payload.creditCode || '').length)
+      setLegalPersonName(payload.legalPersonName || '')
+      setLegalPersonNameCursor((payload.legalPersonName || '').length)
+      setLegalPersonPhone(payload.legalPersonPhone || '')
+      setLegalPersonPhoneCursor((payload.legalPersonPhone || '').length)
+      setBusinessScope(payload.businessScope || '')
+      setBusinessScopeCursor((payload.businessScope || '').length)
+      setBusinessAddress(payload.businessAddress || '')
+      setBusinessAddressCursor((payload.businessAddress || '').length)
+    }
+
+    if (hasAuthToken()) {
+      api.me()
+        .then((res) => {
+          if (res.data?.code !== 200 || !res.data?.data) return
+          const payload = res.data.data
+          if (payload.status === 'rejected') {
+            applyPayload(payload)
+            return
+          }
+          if (payload.status === 'pending') {
+            Taro.showToast({ title: '账号审核中，请先查看审核状态', icon: 'none' })
+            setTimeout(() => Taro.redirectTo({ url: '/pages/audit-status/index' }), 1000)
+            return
+          }
+          if (payload.status === 'approved') {
+            Taro.showToast({ title: '账号已审核通过，请直接使用', icon: 'none' })
+            setTimeout(() => Taro.switchTab({ url: '/pages/index/index' }), 1000)
+          }
+        })
+        .catch(() => {})
+      return
+    }
+
     const context = getRegistrationContext()
     if (!context.applicationId || (!context.username && !context.mobile)) return
 
@@ -48,31 +98,26 @@ export default function Register() {
         if (res.data?.code !== 200 || !res.data?.data) return
 
         const payload = res.data.data
+        if (payload.status === 'rejected') {
+          applyPayload({
+            ...payload,
+            username: payload.username || context.username,
+            mobile: payload.mobile || context.mobile,
+          })
+          return
+        }
         if (payload.status === 'pending') {
           Taro.showToast({ title: '已有审核中的申请', icon: 'none' })
-          setTimeout(() => Taro.redirectTo({ url: '/pages/audit-status/index' }), 1200)
+          setTimeout(() => Taro.redirectTo({ url: '/pages/audit-status/index' }), 1000)
           return
         }
-
         if (payload.status === 'approved') {
           Taro.showToast({ title: '账号已审核通过，请直接登录', icon: 'none' })
-          setTimeout(() => Taro.redirectTo({ url: '/pages/login/index' }), 1200)
-          return
-        }
-
-        if (payload.status === 'rejected') {
-          setIsResubmit(true)
-          setUsername(payload.username || context.username || '')
-          setMobile(payload.mobile || context.mobile || '')
-          setCreditCode(payload.creditCode || '')
-          setLegalPersonName(payload.legalPersonName || '')
-          setLegalPersonPhone(payload.legalPersonPhone || '')
-          setBusinessScope(payload.businessScope || '')
-          setBusinessAddress(payload.businessAddress || '')
+          setTimeout(() => Taro.redirectTo({ url: '/pages/login/index' }), 1000)
         }
       })
       .catch(() => {})
-  }, [])
+  }, [isResubmitMode])
 
   const handleSubmit = () => {
     if (!username || !password || !mobile || !idCard || !creditCode || !legalPersonName || !businessAddress) {
@@ -123,7 +168,7 @@ export default function Register() {
             username,
             mobile,
           })
-          Taro.showToast({ title: isResubmit ? '重新提交成功' : '注册成功', icon: 'success' })
+          Taro.showToast({ title: isResubmit ? '重新提交成功' : '注册申请已提交', icon: 'success' })
           setTimeout(() => Taro.redirectTo({ url: '/pages/audit-status/index' }), 600)
           return
         }
@@ -153,9 +198,11 @@ export default function Register() {
           <View className="secondary-card form-card auth-page__card auth-page__card--primary register-page__card">
             <View className="auth-page__section register-page__header">
               <Text className="auth-page__title">
-                {isResubmit ? '重新提交注册审核资料' : '先注册，再等待后台审核'}
+                {isResubmit ? '修改资料后重新提交审核' : '先注册，再等待后台审核'}
               </Text>
-              <Text className="auth-page__desc">请填写账号和企业资料，审核通过后即可登录使用。</Text>
+              <Text className="auth-page__desc">
+                {isResubmit ? '请根据驳回原因修正资料后重新提交。' : '请填写账号和企业资料，审核通过后即可登录使用。'}
+              </Text>
             </View>
             {isResubmit ? (
               <View className="auth-page__notice auth-page__notice--info">
@@ -272,13 +319,16 @@ export default function Register() {
                   <Text className="auth-form__required">{REQUIRED_MARK}</Text>
                   经营场所地址
                 </Text>
-                <AtTextarea
+                <AtInput
+                  name="businessAddress"
                   placeholder="请输入经营场所地址"
                   value={businessAddress}
-                  onChange={(v) => setBusinessAddress(v)}
+                  cursor={businessAddressCursor}
+                  onChange={syncInput(
+                    (value) => setBusinessAddress(value.slice(0, BUSINESS_ADDRESS_MAX_LENGTH)),
+                    setBusinessAddressCursor,
+                  )}
                   maxLength={BUSINESS_ADDRESS_MAX_LENGTH}
-                  height={108}
-                  className="auth-form__textarea register-page__textarea"
                 />
               </View>
               <AgreementConsent

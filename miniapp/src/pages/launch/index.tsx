@@ -38,8 +38,6 @@ export default function Launch() {
         src={cityNightImage}
         mode="aspectFill"
       />
-      <View className="launch-page__overlay" />
-      <View className="launch-page__overlay launch-page__overlay--vignette" />
       <View className="launch-page__content">
         <Text className="launch-page__title">金堂招讯通</Text>
         <Text className="launch-page__subtitle">信息决策 助推企业拓八方</Text>

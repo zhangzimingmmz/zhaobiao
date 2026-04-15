@@ -17,9 +17,9 @@ type ArticleEditorPageProps = {
 };
 
 const CATEGORY_OPTIONS = [
-  { value: "company_news", label: "工作动态" },
+  { value: "company_news", label: "招引资讯" },
   { value: "policy", label: "政策法规" },
-  { value: "other", label: "其他" },
+  { value: "other", label: "国有资产" },
 ];
 
 const OFFICIAL_ACCOUNT_PUBLISH_URL = "https://mp.weixin.qq.com/";
@@ -159,7 +159,7 @@ export function ArticleEditorPage({ id, navigate }: ArticleEditorPageProps) {
         <div>
           <div className="article-editor-shortcut__title">公众号信息发布快捷入口</div>
           <Typography.Text type="secondary">
-            登录自己企业微信公众号，创建所需的“政策法规”或“工作动态”等文章。再将文章链接粘贴到下方“公众号文章链接”框内，最后点击【创建并发布】。
+            登录自己企业微信公众号，创建所需的“政策法规”或“招引资讯”等文章。再将文章链接粘贴到下方“公众号文章链接”框内，最后点击【创建并发布】。
           </Typography.Text>
         </div>
         <Space wrap>

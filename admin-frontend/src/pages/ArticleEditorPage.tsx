@@ -18,8 +18,8 @@ type ArticleEditorPageProps = {
 
 const CATEGORY_OPTIONS = [
   { value: "company_news", label: "招引资讯" },
-  { value: "policy", label: "政策法规" },
   { value: "other", label: "国有资产" },
+  { value: "policy", label: "政策法规" },
 ];
 
 const OFFICIAL_ACCOUNT_PUBLISH_URL = "https://mp.weixin.qq.com/";

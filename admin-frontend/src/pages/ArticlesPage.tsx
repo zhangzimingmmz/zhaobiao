@@ -15,9 +15,9 @@ const OFFICIAL_ACCOUNT_PUBLISH_URL = "https://mp.weixin.qq.com/";
 
 const CATEGORY_LABELS: Record<string, string> = {
   company_news: "招引资讯",
-  policy: "政策法规",
   announcement: "国有资产",
   other: "国有资产",
+  policy: "政策法规",
 };
 
 type ArticlesPageProps = {
@@ -100,9 +100,9 @@ export function ArticlesPage({ navigate }: ArticlesPageProps) {
       valueEnum: {
         "": { text: "全部分类" },
         company_news: { text: "招引资讯" },
-        policy: { text: "政策法规" },
         announcement: { text: "国有资产" },
         other: { text: "国有资产" },
+        policy: { text: "政策法规" },
       },
       render: (_, r) => categoryLabel(r.category),
     },

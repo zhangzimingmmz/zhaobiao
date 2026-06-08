@@ -1,0 +1,19 @@
+crawler/site2/tasks/incremental.py
+  s_9f0f303c829911::t_9d102a7e0002bc 33
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "ac5cb3e47dbf26503615593749ff2c019ccb49ad",
+  "prompts": {},
+  "sessions": {
+    "s_9f0f303c829911": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019e1b2d-a98e-7c22-94da-f2b6d27ba120",
+        "model": "gpt-5.5"
+      },
+      "human_author": "liguo2 <liguo2@lenovo.com>"
+    }
+  }
+}

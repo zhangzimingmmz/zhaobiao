@@ -1,0 +1,19 @@
+crawler/site1/windowing.py
+  s_9f0f303c829911::t_69597eb9485aa3 11,14,21-25,61,86
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "6ccca00df54e9baa39371cbe22e09ffd991d3fb8",
+  "prompts": {},
+  "sessions": {
+    "s_9f0f303c829911": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019e1b2d-a98e-7c22-94da-f2b6d27ba120",
+        "model": "gpt-5.5"
+      },
+      "human_author": "liguo2 <liguo2@lenovo.com>"
+    }
+  }
+}

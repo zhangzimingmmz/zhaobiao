@@ -160,9 +160,7 @@ def verify_failure_recovery(
     """
     Verify recovery can fill gaps: run recovery for last 48h, report any remaining gaps.
     """
-    from datetime import datetime, timedelta
-    now = datetime.now()
-    windows = last_48h_windows(now)
+    windows = last_48h_windows(None)
     if not windows:
         return {"passed": True, "message": "No windows to verify"}
     start_date = windows[0][0][:10]

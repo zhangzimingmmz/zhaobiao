@@ -9,7 +9,7 @@ import BidCard from '../../components/BidCard'
 import EmptyState from '../../components/EmptyState'
 import BidCardSkeleton from '../../components/BidCardSkeleton'
 import { api } from '../../services/api'
-import { formatDate } from '../../utils/formatDate'
+import { buildBeijingTimeFilter, formatDate } from '../../utils/formatDate'
 import { useProtectedPage } from '../../hooks/useProtectedPage'
 import './index.scss'
 
@@ -64,19 +64,7 @@ function normalizeBidItem(item) {
 }
 
 function parseTimeFilter(value) {
-  if (!value) return {}
-  if (value.includes('|')) {
-    const [start, end] = value.split('|')
-    return { timeStart: start ? `${start} 00:00:00` : undefined, timeEnd: end ? `${end} 23:59:59` : undefined }
-  }
-  const now = new Date()
-  const pad = (n) => String(n).padStart(2, '0')
-  const fmt = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
-  if (value === 'today') return { timeStart: `${fmt(now)} 00:00:00`, timeEnd: `${fmt(now)} 23:59:59` }
-  if (value === '3d') { const past = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000); return { timeStart: `${fmt(past)} 00:00:00`, timeEnd: `${fmt(now)} 23:59:59` } }
-  if (value === '7d') { const past = new Date(now.getTime() - 6 * 24 * 60 * 60 * 1000); return { timeStart: `${fmt(past)} 00:00:00`, timeEnd: `${fmt(now)} 23:59:59` } }
-  if (value === '30d') { const past = new Date(now.getTime() - 29 * 24 * 60 * 60 * 1000); return { timeStart: `${fmt(past)} 00:00:00`, timeEnd: `${fmt(now)} 23:59:59` } }
-  return {}
+  return buildBeijingTimeFilter(value)
 }
 
 const PAGE_SIZE = 10

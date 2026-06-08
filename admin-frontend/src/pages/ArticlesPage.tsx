@@ -10,6 +10,7 @@ import {
   deleteArticle,
   type Article,
 } from "../lib/api";
+import { formatBeijingDateTime } from "../lib/time";
 
 const OFFICIAL_ACCOUNT_PUBLISH_URL = "https://mp.weixin.qq.com/";
 
@@ -126,8 +127,7 @@ export function ArticlesPage({ navigate }: ArticlesPageProps) {
       title: "发布时间",
       dataIndex: "publishTime",
       key: "publishTime",
-      render: (_, r) =>
-        r.publishTime ? new Date(r.publishTime).toLocaleString() : "-",
+      render: (_, r) => formatBeijingDateTime(r.publishTime),
     },
     { title: "浏览量", dataIndex: "viewCount", key: "viewCount", width: 90 },
     {

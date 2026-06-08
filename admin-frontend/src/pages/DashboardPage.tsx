@@ -10,21 +10,7 @@ import {
   runResultLabel,
   runStatusBadgeClass,
 } from "../lib/statusLabels";
-
-const BEIJING = "Asia/Shanghai";
-
-function toBeijingDateStr(iso: string): string {
-  return new Date(iso).toLocaleDateString("zh-CN", { timeZone: BEIJING }).replace(/\//g, "-");
-}
-
-function toBeijingTimeStr(iso: string): string {
-  return new Date(iso).toLocaleTimeString("zh-CN", {
-    timeZone: BEIJING,
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  });
-}
+import { beijingToday, formatBeijingDate, formatBeijingTime } from "../lib/time";
 
 type DashboardProps = {
   navigate: (path: string) => void;
@@ -58,14 +44,11 @@ export function DashboardPage({ navigate }: DashboardProps) {
     void load();
   }, []);
 
-  const todayStr = useMemo(
-    () => new Date().toLocaleDateString("zh-CN", { timeZone: BEIJING }).replace(/\//g, "-"),
-    [],
-  );
+  const todayStr = useMemo(() => beijingToday(), []);
   const todayRuns = useMemo(
     () =>
       runs
-        .filter((r) => toBeijingDateStr(r.requestedAt) === todayStr)
+        .filter((r) => formatBeijingDate(r.requestedAt) === todayStr)
         .sort(
           (a, b) =>
             new Date(b.requestedAt).getTime() - new Date(a.requestedAt).getTime(),
@@ -77,7 +60,7 @@ export function DashboardPage({ navigate }: DashboardProps) {
   if (error) return <ErrorState error={error} />;
 
   const todayColumns = [
-    { title: "时间（北京）", dataIndex: "requestedAt", key: "time", render: (_: unknown, r: CrawlRun) => toBeijingTimeStr(r.requestedAt) },
+    { title: "时间（北京）", dataIndex: "requestedAt", key: "time", render: (_: unknown, r: CrawlRun) => formatBeijingTime(r.requestedAt) },
     { title: "任务", dataIndex: "actionKey", key: "action", render: (_: unknown, r: CrawlRun) => actionKeyLabel(r.actionKey) },
     {
       title: "状态",

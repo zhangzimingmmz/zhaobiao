@@ -12,12 +12,12 @@ from __future__ import annotations
 import argparse
 import logging
 import sys
-from datetime import datetime
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 from crawler import storage
+from crawler.time_utils import source_date_str
 from crawler.site2 import config
 from .cleanup import run as run_cleanup_dry
 
@@ -25,6 +25,10 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(mess
 logger = logging.getLogger(__name__)
 
 FORMAL_START = "2026-03-01"
+
+
+def expected_end_date() -> str:
+    return source_date_str()
 
 
 def run(db_path: str = "notices.db") -> bool:
@@ -53,7 +57,7 @@ def run(db_path: str = "notices.db") -> bool:
             logger.info(f"  - {r['category_num'] or 'NULL'}: {r['cnt']}")
 
         # 2. Expected backfill range
-        end_date = datetime.now().strftime("%Y-%m-%d")
+        end_date = expected_end_date()
         logger.info(f"Expected backfill range: {FORMAL_START} ~ {end_date}")
 
         # 3. Target notice types

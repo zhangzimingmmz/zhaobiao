@@ -13,6 +13,7 @@ import {
 import type { AdminReviewer } from "../lib/types";
 import { isSuperAdmin } from "../lib/auth";
 import { UnauthorizedState } from "../components/States";
+import { formatBeijingDateTime } from "../lib/time";
 
 const USERNAME_RULES = [
   { required: true, message: "请输入审核员用户名" },
@@ -190,14 +191,14 @@ export function ReviewerManagementPage({ navigate }: ReviewerManagementPageProps
       title: "创建时间",
       dataIndex: "createdAt",
       key: "createdAt",
-      render: (_, record) => new Date(record.createdAt).toLocaleString(),
+      render: (_, record) => formatBeijingDateTime(record.createdAt),
       width: 180,
     },
     {
       title: "更新时间",
       dataIndex: "updatedAt",
       key: "updatedAt",
-      render: (_, record) => new Date(record.updatedAt).toLocaleString(),
+      render: (_, record) => formatBeijingDateTime(record.updatedAt),
       width: 180,
     },
     {

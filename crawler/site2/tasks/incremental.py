@@ -15,6 +15,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
+from crawler.time_utils import source_now
 from crawler.site2 import config
 from .core import run_window_series
 
@@ -29,7 +30,7 @@ def safety_overlap_windows(now: datetime | None = None, overlap_hours: int = 4) 
     This ensures boundary records and delayed publications are captured.
     """
     if now is None:
-        now = datetime.now()
+        now = source_now()
     
     fmt = "%Y-%m-%d %H:%M:%S"
     

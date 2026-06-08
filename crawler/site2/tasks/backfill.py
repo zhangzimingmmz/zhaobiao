@@ -10,11 +10,11 @@ from __future__ import annotations
 import argparse
 import logging
 import sys
-from datetime import datetime
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
+from crawler.time_utils import source_date_str
 from crawler.site1.windowing import daily_windows
 from crawler.site2 import config
 from .core import run_window_series
@@ -24,6 +24,10 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(mess
 logger = logging.getLogger(__name__)
 
 FORMAL_START_DATE = "2026-03-01"
+
+
+def default_end_date() -> str:
+    return source_date_str()
 
 
 def run(
@@ -60,7 +64,7 @@ def main() -> None:
 
     if args.formal:
         start_date = FORMAL_START_DATE
-        end_date = datetime.now().strftime("%Y-%m-%d")
+        end_date = default_end_date()
         if not args.skip_cleanup:
             logger.info("=== Formal init: cleaning site2 test data ===")
             run_cleanup(args.db, dry_run=False)

@@ -4,24 +4,10 @@ import { Button } from "antd";
 import type { Dayjs } from "dayjs";
 import type { ReviewItem } from "../lib/types";
 import { reviewStatusLabel, reviewStatusBadgeClass } from "../lib/statusLabels";
-
-const BEIJING = "Asia/Shanghai";
+import { formatBeijingDateTime } from "../lib/time";
 
 function formatListTime(iso?: string | null): string {
-  if (!iso) return "-";
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return iso;
-  return date
-    .toLocaleString("zh-CN", {
-      timeZone: BEIJING,
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    })
-    .replace(/\//g, "-");
+  return formatBeijingDateTime(iso);
 }
 
 export interface EnterpriseColumnsOptions {

@@ -212,6 +212,16 @@ python3 -m crawler.notice_retention --db data/notices.db --days 30 --apply
 - 补偿 run id：`5362868e-34c1-455b-aa08-4b6b646b53fd`
 - 补偿结果：`recovery saved=40`
 
+### 时间处理治理约定
+
+为避免前端展示、筛选日期、爬虫窗口重复出现 8 小时偏移，时间处理统一按以下边界：
+
+- **源站采集窗口**：使用 `crawler.time_utils.source_now()` / `source_date_str()`，固定 `Asia/Shanghai`；
+- **后台管理展示**：使用 `admin-frontend/src/lib/time.ts`，不要在页面里直接写 `toLocaleString()`；
+- **小程序展示与日期筛选**：使用 `miniapp/src/utils/formatDate.js`，不要在页面里手写 `new Date()` + `getFullYear()` 生成筛选日期；
+- **系统运行记录、JWT、retention、落库审计时间**：可以继续使用 UTC，但必须显式 `timezone.utc`；
+- 新增时间逻辑后至少补一条回归测试，优先覆盖 UTC 跨北京时间日期边界（如 `2026-06-07T16:30:00Z` 应视为北京时间 `2026-06-08`）。
+
 ### 管理端 403
 
 - 确认请求头带 `Authorization: Bearer <ADMIN_TOKEN>`，且与后端配置的 ADMIN_TOKEN 一致。

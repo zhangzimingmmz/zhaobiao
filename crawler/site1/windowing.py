@@ -8,19 +8,13 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from zoneinfo import ZoneInfo
+
+from crawler.time_utils import source_now
 
 _FMT = "%Y-%m-%d %H:%M:%S"
-_SOURCE_TZ = ZoneInfo("Asia/Shanghai")
-
 
 def _fmt(dt: datetime) -> str:
     return dt.strftime(_FMT)
-
-
-def source_now() -> datetime:
-    """Return current time in the source site's wall-clock timezone."""
-    return datetime.now(_SOURCE_TZ).replace(tzinfo=None)
 
 
 def daily_windows(

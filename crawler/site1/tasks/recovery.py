@@ -26,8 +26,6 @@ logger = logging.getLogger(__name__)
 
 
 def run(db_path: str = "notices.db", now: datetime | None = None) -> None:
-    if now is None:
-        now = datetime.now()
     windows = windowing.last_48h_windows(now)
     logger.info("=== recovery: 窗口数=%d ===", len(windows))
 

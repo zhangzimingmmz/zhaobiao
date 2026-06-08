@@ -8,12 +8,19 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 
 _FMT = "%Y-%m-%d %H:%M:%S"
+_SOURCE_TZ = ZoneInfo("Asia/Shanghai")
 
 
 def _fmt(dt: datetime) -> str:
     return dt.strftime(_FMT)
+
+
+def source_now() -> datetime:
+    """Return current time in the source site's wall-clock timezone."""
+    return datetime.now(_SOURCE_TZ).replace(tzinfo=None)
 
 
 def daily_windows(
@@ -51,7 +58,7 @@ def previous_two_hour_window(now: datetime | None = None) -> tuple[str, str]:
     例如 now=14:05 → ("12:00:00", "13:59:59")。
     """
     if now is None:
-        now = datetime.now()
+        now = source_now()
     hour = now.hour
     # 向下取偶数整点，再往前 2 小时
     current_slot_start = hour - (hour % 2)
@@ -76,7 +83,7 @@ def last_48h_windows(
     按时间正序排列，最后一个窗口不超过 now。
     """
     if now is None:
-        now = datetime.now()
+        now = source_now()
     cutoff = now - timedelta(hours=48)
     # 对齐到 step_hours 的整数倍
     base_hour = cutoff.hour - (cutoff.hour % step_hours)

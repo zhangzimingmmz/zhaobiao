@@ -196,6 +196,22 @@ python3 -m crawler.notice_retention --db data/notices.db --days 30 --apply
 - IP 池配置问题：检查 `crawler/site2/config.py` 中的代理认证信息是否正确，青果短效代理 IP 有效期为 60 秒，系统会在 50 秒时主动轮换。
 - 代理提取失败：查看日志中是否有 `ProxyError`、`RemoteDisconnected` 等错误，可能是代理服务不可用或认证信息过期。
 
+### site1 工程建设最新数据停在 6 月 5 日附近
+
+2026-06-08 生产排查确认：`2026-06-05` 当天工程建设数据实际已同步，问题是后续最新数据出现 8 小时左右延迟。根因是 API/scheduler 容器使用 UTC 时间，而 site1 `incremental` / `recovery` 在调用窗口工具前先执行 `datetime.now()`，导致 `windowing.source_now()` 的 `Asia/Shanghai` 时间未生效。
+
+修复要点：
+
+- `crawler.site1.windowing` 统一用 `Asia/Shanghai` 生成源站窗口；
+- `crawler.site1.tasks.incremental` 与 `crawler.site1.tasks.recovery` 不再自行读取容器时间，直接把 `now=None` 传给窗口工具；
+- 修复后执行一次 `site1.recovery` 补最近 48 小时数据。
+
+本次生产处理记录：
+
+- 生产库备份：`/opt/zhaobiao/backups/site1-timefix-20260608-120920/notices.db`
+- 补偿 run id：`5362868e-34c1-455b-aa08-4b6b646b53fd`
+- 补偿结果：`recovery saved=40`
+
 ### 管理端 403
 
 - 确认请求头带 `Authorization: Bearer <ADMIN_TOKEN>`，且与后端配置的 ADMIN_TOKEN 一致。

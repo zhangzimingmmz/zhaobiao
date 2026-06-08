@@ -26,8 +26,6 @@ logger = logging.getLogger(__name__)
 
 
 def run(db_path: str = "notices.db", now: datetime | None = None) -> None:
-    if now is None:
-        now = datetime.now()
     start_time, end_time = windowing.previous_two_hour_window(now)
     logger.info("=== incremental: 窗口 %s ~ %s ===", start_time, end_time)
 

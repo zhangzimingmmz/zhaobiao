@@ -46,6 +46,7 @@ class FavoritesApiTests(unittest.TestCase):
                 "username": "favorite-user",
                 "password": "password123",
                 "mobile": "13800000000",
+                "idCard": "510121199001016789",
                 "creditCode": "91510100MA6C123456",
                 "legalPersonName": "测试法人",
                 "legalPersonPhone": "13800000001",
@@ -71,7 +72,11 @@ class FavoritesApiTests(unittest.TestCase):
         )
         self.assertEqual(login_response.status_code, 200)
         self.assertEqual(login_response.json()["code"], 200)
-        token = login_response.json()["data"]["token"]
+        data = login_response.json()["data"]
+        self.user_id = data["userId"]
+        self.username = data["username"]
+        self.mobile = data["mobile"]
+        token = data["token"]
         return {"Authorization": f"Bearer {token}"}
 
     def _insert_notice(self, notice_id: str, *, site: str, category_num: str = "002001001", title: str = "测试公告"):
@@ -190,6 +195,35 @@ class FavoritesApiTests(unittest.TestCase):
         article_detail_response = self.client.get(f"/api/articles/{article_id}", headers=self.user_headers)
         self.assertEqual(article_detail_response.status_code, 200)
         self.assertTrue(article_detail_response.json()["data"]["favorited"])
+
+    def test_expired_approved_user_token_still_supports_legacy_miniapp_favorites(self):
+        self._insert_notice("notice-legacy", site="site1", title="旧 token 收藏公告")
+        expired_token = self.server_main.create_access_token(
+            {
+                "userId": self.user_id,
+                "username": self.username,
+                "mobile": self.mobile,
+            },
+            expires_days=-1,
+        )
+        expired_headers = {"Authorization": f"Bearer {expired_token}"}
+
+        toggle_response = self.client.post(
+            "/api/favorites/toggle",
+            headers=expired_headers,
+            json={"targetId": "notice-legacy", "targetType": "bid", "targetSite": "site1"},
+        )
+
+        self.assertEqual(toggle_response.status_code, 200)
+        self.assertEqual(toggle_response.json()["code"], 200)
+        self.assertTrue(toggle_response.json()["data"]["favorited"])
+
+        list_response = self.client.get(
+            "/api/list?page=1&pageSize=10&category=002001001",
+            headers=expired_headers,
+        )
+        self.assertEqual(list_response.status_code, 200)
+        self.assertTrue(list_response.json()["data"]["list"][0]["favorited"])
 
     def test_favorites_list_filters_disappeared_source_records(self):
         self._insert_notice("notice-keep", site="site1", title="保留公告")

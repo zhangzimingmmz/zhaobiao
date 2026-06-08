@@ -11,7 +11,7 @@ import re
 import sys
 import uuid
 from bs4 import BeautifulSoup
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from urllib.parse import urljoin, urlparse
 from pathlib import Path
 from typing import Any, Optional
@@ -53,6 +53,7 @@ ADMIN_REVIEWER1_USERNAME = os.environ.get("ADMIN_REVIEWER1_USERNAME", "reviewer1
 ADMIN_REVIEWER1_PASSWORD = os.environ.get("ADMIN_REVIEWER1_PASSWORD", "reviewer123456")
 ADMIN_REVIEWER2_USERNAME = os.environ.get("ADMIN_REVIEWER2_USERNAME", "reviewer2")
 ADMIN_REVIEWER2_PASSWORD = os.environ.get("ADMIN_REVIEWER2_PASSWORD", "reviewer223456")
+USER_TOKEN_LEGACY_GRACE_DAYS = int(os.environ.get("USER_TOKEN_LEGACY_GRACE_DAYS", "365"))
 
 # 站点 Base URL，拼装 originUrl 用
 SITE1_BASE = "https://ggzyjy.sc.gov.cn"
@@ -463,6 +464,48 @@ def _get_conn() -> sqlite3.Connection:
     return get_connection(DB_PATH)
 
 
+def _token_expired_within_user_grace(payload: dict) -> bool:
+    exp = payload.get("exp")
+    if exp is None:
+        return False
+    try:
+        expires_at = datetime.fromtimestamp(float(exp), tz=timezone.utc)
+    except (TypeError, ValueError, OSError):
+        return False
+    now = datetime.now(timezone.utc)
+    return expires_at <= now <= expires_at + timedelta(days=USER_TOKEN_LEGACY_GRACE_DAYS)
+
+
+def _approved_user_exists(user_id: str) -> bool:
+    conn = _get_conn()
+    try:
+        row = conn.execute(
+            "SELECT account_status FROM users WHERE id = ? LIMIT 1",
+            (user_id,),
+        ).fetchone()
+        return bool(row and row["account_status"] == "approved")
+    finally:
+        conn.close()
+
+
+def _decode_user_token(token: str, *, allow_expired_legacy: bool = False) -> Optional[dict]:
+    payload = decode_access_token(token)
+    if payload is not None:
+        return payload
+
+    if not allow_expired_legacy:
+        return None
+
+    legacy_payload = decode_access_token(token, verify_exp=False)
+    if not legacy_payload or legacy_payload.get("role") or not legacy_payload.get("userId"):
+        return None
+    if not _token_expired_within_user_grace(legacy_payload):
+        return None
+    if not _approved_user_exists(legacy_payload["userId"]):
+        return None
+    return legacy_payload
+
+
 # ────────────────────────────────────────────────────────────
 # 鉴权依赖
 # ────────────────────────────────────────────────────────────
@@ -475,7 +518,7 @@ def get_current_user(authorization: Optional[str] = Header(None)) -> dict:
             detail={"code": 401, "message": "请先登录"},
         )
     token = authorization.removeprefix("Bearer ").strip()
-    payload = decode_access_token(token)
+    payload = _decode_user_token(token, allow_expired_legacy=True)
     if payload is None:
         raise HTTPException(
             status_code=200,
@@ -489,7 +532,7 @@ def get_optional_user(authorization: Optional[str]) -> Optional[dict]:
     if not authorization or not authorization.startswith("Bearer "):
         return None
     token = authorization.removeprefix("Bearer ").strip()
-    return decode_access_token(token)
+    return _decode_user_token(token, allow_expired_legacy=True)
 
 
 def get_admin_user(authorization: Optional[str] = Header(None)) -> dict:

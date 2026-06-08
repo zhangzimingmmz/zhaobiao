@@ -12,18 +12,19 @@ _ALGORITHM = "HS256"
 _PASSWORD_CONTEXT = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 
 
-def create_access_token(payload: dict, expires_days: int = 7) -> str:
-    """生成 JWT token，默认有效期 7 天。"""
+def create_access_token(payload: dict, expires_days: int = 365) -> str:
+    """生成 JWT token，默认有效期 365 天。"""
     data = payload.copy()
     expire = datetime.now(timezone.utc) + timedelta(days=expires_days)
     data["exp"] = expire
     return jwt.encode(data, _SECRET, algorithm=_ALGORITHM)
 
 
-def decode_access_token(token: str) -> Optional[dict]:
+def decode_access_token(token: str, *, verify_exp: bool = True) -> Optional[dict]:
     """解析 JWT token，返回 payload；无效或过期返回 None。"""
     try:
-        return jwt.decode(token, _SECRET, algorithms=[_ALGORITHM])
+        options = None if verify_exp else {"verify_exp": False}
+        return jwt.decode(token, _SECRET, algorithms=[_ALGORITHM], options=options)
     except JWTError:
         return None
 

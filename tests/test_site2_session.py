@@ -1,4 +1,5 @@
 import unittest
+import hashlib
 from unittest import mock
 
 from curl_cffi import requests as curl_requests
@@ -52,6 +53,23 @@ class _DummySession:
 
 
 class Site2SessionTests(unittest.TestCase):
+    def test_generate_sign_headers_signs_path_only_and_sends_url_header(self):
+        url = f"{config.LIST_URL}?currPage=1&pageSize=1"
+        fixed_time = 1710000000.123
+        expected_timestamp = str(int(fixed_time * 1000))
+        signed_path = "/gpcms/rest/web/v2/info/selectInfoForIndex"
+        raw = f"{expected_timestamp}_{signed_path}{config.SIGN_SALT}"
+        expected_sign = hashlib.md5(hashlib.sha1(raw.encode("utf-8")).hexdigest().encode("utf-8")).hexdigest()
+
+        with mock.patch.object(session.time, "time", return_value=fixed_time):
+            headers = session.generate_sign_headers(url)
+
+        self.assertEqual(headers["time"], expected_timestamp)
+        self.assertEqual(headers["url"], signed_path)
+        self.assertEqual(headers["sign"], expected_sign)
+        self.assertTrue(headers["nsssjss"])
+        self.assertNotIn("currPage", headers["url"])
+
     @mock.patch.object(session, "solve_captcha")
     @mock.patch.object(session, "get_fresh_proxy")
     @mock.patch.object(session.transport, "new_session")

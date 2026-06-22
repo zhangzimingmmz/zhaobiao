@@ -212,6 +212,19 @@ python3 -m crawler.notice_retention --db data/notices.db --days 30 --apply
 - 补偿 run id：`5362868e-34c1-455b-aa08-4b6b646b53fd`
 - 补偿结果：`recovery saved=40`
 
+### site2 政府采购同步任务显示成功但数据落后
+
+2026-06-22 生产排查确认：site2 定时任务一直被提交并执行，但政府采购数据最新停在 `2026-06-16`。根因是四川政府采购网前端升级到 `V6.5.16.0_1_20260512_gpcms-center-web` 后，接口签名规则发生变化：新版前端只对 API path 生成 `sign`，并在请求头中携带 `url`，不再把 query string 纳入签名。旧实现仍按完整 query 签名，源站返回 `code=4009`、`msg=验签比对失败`。
+
+历史实现还存在一个治理问题：site2 列表接口遇到非 `200` 业务返回时会记录 warning 后当作 `total=0`，导致控制面显示 `succeeded, fetched=0`，不会明显报警。
+
+修复要点：
+
+- `crawler.site2.session.generate_sign_headers()` 按新版前端规则只签 API path，并返回 `url` 请求头；
+- `crawler.site2.client.fetch_list()` 遇到源站业务错误直接抛出 `Site2ApiError`；
+- `site2.incremental` / `site2.recovery` / `site2.backfill` 在聚合错误数大于 0 时以非 0 退出，让控制面 run 标记为失败；
+- 修复后需对落后窗口执行受控 backfill，例如 `2026-06-16` 至当天，已有记录会通过 `(site, id)` upsert 收敛。
+
 ### 时间处理治理约定
 
 为避免前端展示、筛选日期、爬虫窗口重复出现 8 小时偏移，时间处理统一按以下边界：

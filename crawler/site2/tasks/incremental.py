@@ -61,7 +61,9 @@ def main() -> None:
     parser.add_argument("--db", default="notices.db", help="SQLite DB path")
     args = parser.parse_args()
     
-    run(args.db)
+    stats = run(args.db)
+    if stats.get("errors", 0):
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":

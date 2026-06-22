@@ -68,11 +68,13 @@ def main() -> None:
         if not args.skip_cleanup:
             logger.info("=== Formal init: cleaning site2 test data ===")
             run_cleanup(args.db, dry_run=False)
-        run(start_date, end_date, None, args.db)
+        stats = run(start_date, end_date, None, args.db)
     else:
         if not args.start or not args.end:
             parser.error("--start and --end are required unless --formal")
-        run(args.start, args.end, args.type, args.db)
+        stats = run(args.start, args.end, args.type, args.db)
+    if stats.get("errors", 0):
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":

@@ -14,10 +14,14 @@ from . import transport
 logger = logging.getLogger(__name__)
 DEFAULT_USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
 
+
 def generate_sign_headers(url):
     """
-    Generate signature headers (nsssjss, sign, time) for Site 2 APIs.
-    url can be full URL or path.
+    Generate signature headers (nsssjss, sign, time, url) for Site 2 APIs.
+
+    The current site frontend signs only the API path. Query parameters are
+    appended by Axios after the signing interceptor runs, so including them in
+    the signature causes the upstream API to return code=4009.
     """
     import urllib.parse
     parsed = urllib.parse.urlparse(url)
@@ -28,35 +32,32 @@ def generate_sign_headers(url):
         if not path.startswith("/"):
             path = "/" + path
         if not path.startswith("/gpcms"):
-             path = "/gpcms" + path
-             
-    query = parsed.query
-    full_path_with_query = path
-    if query:
-        full_path_with_query = f"{path}?{query}"
-        
+            path = "/gpcms" + path
+
     timestamp = int(time.time() * 1000)
-    
+
     # 1. nsssjss = RSA encrypt (path + "$$" + timestamp)
     plain_text = f"{path}$${timestamp}"
-    
+
     pem_key = f"-----BEGIN PUBLIC KEY-----\n{config.RSA_PUBLIC_KEY}\n-----END PUBLIC KEY-----"
     rsa_key = RSA.import_key(pem_key)
     cipher = PKCS1_v1_5.new(rsa_key)
-    
+
     cipher_text_bytes = cipher.encrypt(plain_text.encode('utf-8'))
     nsssjss = base64.b64encode(cipher_text_bytes).decode('utf-8')
-    
-    # 2. sign = MD5(SHA1(timestamp + "_" + full_path_with_query + "_bosssoft_platform_095285"))
-    raw_str = f"{timestamp}_{full_path_with_query}{config.SIGN_SALT}"
+
+    # 2. sign = MD5(SHA1(timestamp + "_" + path + "_bosssoft_platform_095285"))
+    raw_str = f"{timestamp}_{path}{config.SIGN_SALT}"
     sha1_hash = hashlib.sha1(raw_str.encode('utf-8')).hexdigest()
     sign = hashlib.md5(sha1_hash.encode('utf-8')).hexdigest()
-    
+
     return {
         "nsssjss": nsssjss,
         "sign": sign,
-        "time": str(timestamp)
+        "time": str(timestamp),
+        "url": path,
     }
+
 
 def _apply_session_defaults(sess):
     sess.headers.update({"User-Agent": DEFAULT_USER_AGENT})

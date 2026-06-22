@@ -11,6 +11,7 @@ class _DummySession:
 
 
 class Site2CoreTests(unittest.TestCase):
+    @mock.patch.object(core.storage, "check_existing_ids")
     @mock.patch.object(core.storage, "upsert_records")
     @mock.patch.object(core.client, "fetch_detail")
     @mock.patch.object(core.client, "fetch_list")
@@ -23,6 +24,7 @@ class Site2CoreTests(unittest.TestCase):
         mock_fetch_list,
         mock_fetch_detail,
         mock_upsert_records,
+        mock_check_existing_ids,
     ):
         sess = _DummySession()
         rows = [
@@ -37,6 +39,7 @@ class Site2CoreTests(unittest.TestCase):
             {"id": "row-1", "content": "Detail 1"},
             {"id": "row-2", "content": "Detail 2"},
         ]
+        mock_check_existing_ids.return_value = set()
         mock_upsert_records.return_value = 2
 
         with mock.patch.object(core.config, "DETAIL_PARALLEL_WORKERS", 2), mock.patch.object(

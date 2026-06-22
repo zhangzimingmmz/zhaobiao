@@ -7,12 +7,29 @@ from .session import generate_sign_headers
 
 logger = logging.getLogger(__name__)
 
+
+class Site2ApiError(RuntimeError):
+    """Raised when the upstream Site2 API returns a business-level error."""
+
+
 def _build_api_headers(full_url_for_sign: str, referer: str = "https://www.ccgp-sichuan.gov.cn/pay/view/sczc/index") -> Dict[str, str]:
     headers = generate_sign_headers(full_url_for_sign)
     headers["Accept"] = "application/json, text/plain, */*"
     headers["X-Requested-With"] = "XMLHttpRequest"
     headers["Referer"] = referer
     return headers
+
+
+def _require_success(data: Dict[str, Any], context: str) -> Dict[str, Any]:
+    code = str(data.get("code", ""))
+    if code != "200":
+        msg = data.get("msg") or data.get("message") or "unknown upstream error"
+        raise Site2ApiError(f"{context} API error: code={code}, msg={msg}")
+    payload = data.get("data")
+    if payload is None:
+        raise Site2ApiError(f"{context} API error: code=200 but data is empty")
+    return payload
+
 
 def fetch_list(session, notice_type: str, start_time: str, end_time: str, curr_page: int, page_size: int) -> Dict[str, Any]:
     """
@@ -57,15 +74,15 @@ def fetch_list(session, notice_type: str, start_time: str, end_time: str, curr_p
             timeout=config.REQUEST_TIMEOUT,
         )
 
-        if data.get("code") == "200" and data.get("data"):
-            return {
-                "total": data["data"].get("total", 0),
-                "rows": data["data"].get("rows", [])
-            }
-        else:
-            logger.warning(f"List API error or empty: {data}")
-            return {"total": 0, "rows": []}
+        payload = _require_success(data, "List")
+        return {
+            "total": payload.get("total", 0),
+            "rows": payload.get("rows", []),
+        }
 
+    except Site2ApiError:
+        logger.error("Site2 list API returned a business error", exc_info=True)
+        raise
     except Exception as e:
         if not transport.is_transport_error(e):
             logger.error(f"Failed to fetch list page: {e}")
@@ -73,12 +90,14 @@ def fetch_list(session, notice_type: str, start_time: str, end_time: str, curr_p
         logger.error(f"Transport error in fetch_list: {e}")
         raise
 
+
 def probe_total(session, notice_type: str, start_time: str, end_time: str) -> int:
     """
     Probe the total number of records for the given time window.
     """
     result = fetch_list(session, notice_type, start_time, end_time, 1, 1)
     return result.get("total", 0)
+
 
 def fetch_detail(session, notice_type: str, record: Dict[str, Any]) -> Dict[str, Any]:
     """
@@ -116,19 +135,21 @@ def fetch_detail(session, notice_type: str, record: Dict[str, Any]) -> Dict[str,
             timeout=config.REQUEST_TIMEOUT,
         )
 
-        if data.get("code") == "200" and data.get("data"):
-            raw = data["data"]
-            # selectInfoByOpenTenderCode 返回 { rows: [...] }，需按 id 匹配
-            if notice_type == "00101" and isinstance(raw, dict) and "rows" in raw:
-                target_id = record.get("id")
-                matched = next((r for r in raw["rows"] if r.get("id") == target_id), None)
-                if matched:
-                    return matched
-                return raw["rows"][0] if raw["rows"] else {}
+        raw = _require_success(data, f"Detail type={notice_type} id={record.get('id')}")
+        # selectInfoByOpenTenderCode 返回 { rows: [...] }，需按 id 匹配
+        if notice_type == "00101" and isinstance(raw, dict) and "rows" in raw:
+            target_id = record.get("id")
+            matched = next((r for r in raw["rows"] if r.get("id") == target_id), None)
+            if matched:
+                return matched
+            return raw["rows"][0] if raw["rows"] else {}
+        if isinstance(raw, dict):
             return raw
-        else:
-            logger.warning(f"Detail API error for type {notice_type}, id {record.get('id')}: {data}")
-            return {}
+        logger.warning(f"Detail API payload is not an object for type {notice_type}, id {record.get('id')}: {data}")
+        return {}
+    except Site2ApiError:
+        logger.error("Site2 detail API returned a business error", exc_info=True)
+        raise
     except Exception as e:
         if not transport.is_transport_error(e):
             logger.error(f"Failed to fetch detail for type {notice_type}, id {record.get('id')}: {e}")

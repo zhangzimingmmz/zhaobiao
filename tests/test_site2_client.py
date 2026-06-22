@@ -49,6 +49,14 @@ class Site2ClientTests(unittest.TestCase):
             client.fetch_list(sess, "59", "2026-03-14 00:00:00", "2026-03-14 23:59:59", 1, 1)
 
     @mock.patch.object(client.transport, "get_json")
+    def test_fetch_list_raises_on_upstream_business_error(self, mock_get_json):
+        sess = _DummySession()
+        mock_get_json.return_value = {"code": "4009", "msg": "验签比对失败", "data": None}
+
+        with self.assertRaisesRegex(client.Site2ApiError, "code=4009"):
+            client.fetch_list(sess, "59", "2026-03-14 00:00:00", "2026-03-14 23:59:59", 1, 1)
+
+    @mock.patch.object(client.transport, "get_json")
     @mock.patch.object(client, "generate_sign_headers")
     def test_fetch_detail_matches_00101_row_by_id(self, mock_sign_headers, mock_get_json):
         record = {"id": "keep-me", "planId": "plan-1"}

@@ -1,0 +1,38 @@
+crawler/site2/client.py
+  s_bc7e5b52f830e8::t_4b90504d34f5c6 33,93
+  s_bc7e5b52f830e8::t_47bccfc12ba407 83-85,150-152
+  s_bc7e5b52f830e8::t_6337bb9ff5c6d5 10-14,22-32,77-81,138-146,148-149
+crawler/site2/tasks/recovery.py
+  s_bc7e5b52f830e8::t_6337bb9ff5c6d5 47-49
+tests/test_site2_session.py
+  s_bc7e5b52f830e8::t_6337bb9ff5c6d5 2,56-72
+tests/test_site2_client.py
+  s_bc7e5b52f830e8::t_6337bb9ff5c6d5 52-58
+crawler/site2/session.py
+  s_bc7e5b52f830e8::t_6337bb9ff5c6d5 20-24,36,49-50,57-58
+  s_bc7e5b52f830e8::t_4b90504d34f5c6 17,35,38,41,45,48,53
+docs/06-运维与FAQ.md
+  s_bc7e5b52f830e8::t_37a9fa85e96225 215-227
+crawler/site2/tasks/incremental.py
+  s_bc7e5b52f830e8::t_6337bb9ff5c6d5 64-66
+tests/test_site2_core.py
+  s_bc7e5b52f830e8::t_150b770030f8cd 14,27,42
+crawler/site2/tasks/backfill.py
+  s_bc7e5b52f830e8::t_6337bb9ff5c6d5 71,75-77
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.9",
+  "base_commit_sha": "bc704683877e66cfc65fe9465adede0330f1811a",
+  "prompts": {},
+  "sessions": {
+    "s_bc7e5b52f830e8": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019ea50e-7855-7a72-bde4-19936c08e018",
+        "model": "gpt-5.5"
+      },
+      "human_author": "liguo2 <liguo2@lenovo.com>"
+    }
+  }
+}
